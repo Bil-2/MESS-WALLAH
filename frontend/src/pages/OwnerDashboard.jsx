@@ -82,14 +82,14 @@ const OwnerDashboard = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="relative">
         <img
-          src={room.images?.[0]?.url || '/placeholder-room.jpg'}
+          src={room.images?.[0]?.url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNzUgMTI1SDE1MFYxNzVIMTc1VjEyNVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTIyNSAxMjVIMjAwVjE3NUgyMjVWMTI1WiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMjAwIDEwMEgxNzVWMTUwSDIwMFYxMDBaIiBmaWxsPSIjOUNBM0FGIi8+CjwvZz4KPC9zdmc+'}
           alt={room.title}
           className="w-full h-48 object-cover"
         />
         <div className="absolute top-3 right-3 flex gap-2">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${room.isActive
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
+            ? 'bg-green-100 text-green-700'
+            : 'bg-red-100 text-red-700'
             }`}>
             {room.isActive ? 'Active' : 'Inactive'}
           </span>
@@ -164,8 +164,8 @@ const OwnerDashboard = () => {
               status: !room.isActive
             })}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${room.isActive
-                ? 'bg-red-100 hover:bg-red-200 text-red-700'
-                : 'bg-green-100 hover:bg-green-200 text-green-700'
+              ? 'bg-red-100 hover:bg-red-200 text-red-700'
+              : 'bg-green-100 hover:bg-green-200 text-green-700'
               }`}
           >
             {room.isActive ? 'Deactivate' : 'Activate'}
@@ -184,9 +184,9 @@ const OwnerDashboard = () => {
           <p className="text-xs text-gray-500">{booking.tenant?.email}</p>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-            booking.status === 'approved' ? 'bg-green-100 text-green-700' :
-              booking.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                'bg-blue-100 text-blue-700'
+          booking.status === 'approved' ? 'bg-green-100 text-green-700' :
+            booking.status === 'rejected' ? 'bg-red-100 text-red-700' :
+              'bg-blue-100 text-blue-700'
           }`}>
           {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
         </span>
@@ -210,8 +210,8 @@ const OwnerDashboard = () => {
         <div>
           <span className="text-gray-500">Payment:</span>
           <p className={`font-semibold ${booking.paymentStatus === 'completed' ? 'text-green-600' :
-              booking.paymentStatus === 'partial' ? 'text-yellow-600' :
-                'text-red-600'
+            booking.paymentStatus === 'partial' ? 'text-yellow-600' :
+              'text-red-600'
             }`}>
             {booking.paymentStatus}
           </p>
@@ -292,8 +292,8 @@ const OwnerDashboard = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   <Icon className="h-5 w-5 mr-2" />
@@ -351,8 +351,8 @@ const OwnerDashboard = () => {
                         <p className="text-sm text-gray-600">{booking.room?.title}</p>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                          booking.status === 'approved' ? 'bg-green-100 text-green-700' :
-                            'bg-red-100 text-red-700'
+                        booking.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-700'
                         }`}>
                         {booking.status}
                       </span>

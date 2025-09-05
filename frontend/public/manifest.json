@@ -1,15 +1,100 @@
 {
-  "short_name": "RoomRental",
-  "name": "Room Rental Platform",
+  "short_name": "MESS WALLAH",
+  "name": "MESS WALLAH - Your Mess, Your Home",
+  "description": "Find and book mess accommodations with ease. Affordable student housing and mess services.",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3e%3cpath fill='%23ea580c' d='M16 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-13-5z'/%3e%3c/svg%3e",
+      "sizes": "32x32",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3e%3cpath fill='%23ea580c' d='M96 10L15 35v50c0 27.75 19.2 53.7 45 60 25.8-6.3 45-32.25 45-60V35l-65-25z'/%3e%3c/svg%3e",
+      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3e%3cpath fill='%23ea580c' d='M256 26.7L40 93.3v133.4c0 74 51.2 143.2 120 160 68.8-16.8 120-86 120-160V93.3L256 26.7z'/%3e%3c/svg%3e",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "theme_color": "#ea580c",
+  "background_color": "#ffffff",
+  "orientation": "any",
+  "scope": "/",
+  "categories": [
+    "lifestyle",
+    "travel",
+    "accommodation",
+    "education",
+    "food"
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Browse Rooms",
+      "short_name": "Rooms",
+      "description": "Browse available mess rooms",
+      "url": "/rooms",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea580c'%3e%3cpath d='M3 21V12L12 3L21 12V21H15V16C15 15.4477 14.5523 15 14 15H10C9.44772 15 9 15.4477 9 16V21H3Z'/%3e%3c/svg%3e",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "My Bookings",
+      "short_name": "Bookings",
+      "description": "View your bookings",
+      "url": "/bookings",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea580c'%3e%3cpath d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z'/%3e%3c/svg%3e",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Access your dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea580c'%3e%3cpath d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'/%3e%3c/svg%3e",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "MESS WALLAH Desktop View"
+    },
+    {
+      "src": "/screenshots/mobile.jpg",
+      "sizes": "360x640",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "MESS WALLAH Mobile View"
+    }
+  ]
 }

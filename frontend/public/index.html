@@ -1,20 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Room Rental Platform - Find and rent rooms for students, bachelors, and families"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>RoomRental - Find Your Perfect Room</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3e%3cpath fill='%23ea580c' d='M16 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-13-5z'/%3e%3c/svg%3e" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+  <meta name="theme-color" content="#ea580c" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="MESS WALLAH" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-tap-highlight" content="no" />
+
+  <!-- Performance and SEO Meta Tags -->
+  <meta name="description"
+    content="MESS WALLAH - Find and book mess accommodations with ease. Your mess, your home. Affordable student housing and mess services." />
+  <meta name="keywords"
+    content="mess, accommodation, student housing, room booking, mess services, affordable housing" />
+  <meta name="author" content="MESS WALLAH" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="MESS WALLAH - Your Mess, Your Home" />
+  <meta property="og:description"
+    content="Find and book mess accommodations with ease. Affordable student housing and mess services." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="%PUBLIC_URL%/og-image.jpg" />
+  <meta property="og:url" content="https://messwallah.com" />
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MESS WALLAH - Your Mess, Your Home" />
+  <meta name="twitter:description" content="Find and book mess accommodations with ease." />
+  <meta name="twitter:image" content="%PUBLIC_URL%/twitter-image.jpg" />
+
+  <!-- Preconnect to external domains for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="//api.messwallah.com" />
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon" sizes="180x180"
+    href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3e%3cpath fill='%23ea580c' d='M96 10L15 35v50c0 27.75 19.2 53.7 45 60 25.8-6.3 45-32.25 45-60V35l-65-25z'/%3e%3c/svg%3e" />
+  <link rel="icon" type="image/png" sizes="32x32"
+    href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3e%3cpath fill='%23ea580c' d='M16 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-13-5z'/%3e%3c/svg%3e" />
+
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+  <!-- Critical CSS for above-the-fold content -->
+  <style>
+    /* Critical CSS for initial page load */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+    }
+
+    #root {
+      min-height: 100vh;
+    }
+
+    /* Loading spinner */
+    .initial-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loader-content {
+      text-align: center;
+      color: white;
+    }
+
+    .loader-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loader-text {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .loader-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Hide loader when app loads */
+    .app-loaded .initial-loader {
+      display: none;
+    }
+  </style>
+
+  <title>MESS WALLAH - Your Mess, Your Home</title>
+</head>
+
+<body>
+  <noscript>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+      <h1>JavaScript Required</h1>
+      <p>You need to enable JavaScript to run this app.</p>
+      <p>Please enable JavaScript in your browser settings and refresh the page.</p>
+    </div>
+  </noscript>
+
+  <!-- Initial loading screen -->
+  <div class="initial-loader" id="initial-loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">MESS WALLAH</div>
+      <div class="loader-subtitle">Loading your perfect mess...</div>
+    </div>
+  </div>
+
+  <div id="root"></div>
+
+  <!-- Performance monitoring script -->
+  <script>
+    // Performance monitoring
+    window.addEventListener('load', function () {
+      // Hide initial loader
+      document.body.classList.add('app-loaded');
+
+      // Log performance metrics
+      if ('performance' in window) {
+        const perfData = performance.getEntriesByType('navigation')[0];
+        console.log('Page Load Time:', perfData.loadEventEnd - perfData.fetchStart, 'ms');
+      }
+    });
+
+    // Service Worker registration for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('%PUBLIC_URL%/sw.js')
+          .then(function (registration) {
+            console.log('SW registered: ', registration);
+          })
+          .catch(function (registrationError) {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+</body>
+
 </html>

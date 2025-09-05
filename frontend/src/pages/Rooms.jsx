@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { roomAPI } from '../services/api';
 import {
   FiSearch, FiFilter, FiMapPin, FiUsers, FiStar, FiWifi, FiShield,
-  FiCoffee, FiHome, FiClock, FiHeart, FiEye, FiChevronDown
+  FiCoffee, FiHome, FiHeart, FiEye, FiChevronDown
 } from 'react-icons/fi';
 
 const Rooms = () => {
@@ -83,7 +83,7 @@ const Rooms = () => {
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100">
       <div className="relative">
         <img
-          src={room.images?.[0]?.url || '/placeholder-room.jpg'}
+          src={room.images?.[0]?.url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNzUgMTI1SDE1MFYxNzVIMTc1VjEyNVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTIyNSAxMjVIMjAwVjE3NUgyMjVWMTI1WiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMjAwIDEwMEgxNzVWMTUwSDIwMFYxMDBaIiBmaWxsPSIjOUNBM0FGIi8+CjwvZz4KPC9zdmc+'}
           alt={room.title}
           className="w-full h-48 object-cover"
         />
@@ -100,8 +100,8 @@ const Rooms = () => {
         <button
           onClick={() => toggleSaveRoom(room._id)}
           className={`absolute top-3 left-3 p-2 rounded-full transition-colors ${savedRooms.has(room._id)
-              ? 'bg-red-500 text-white'
-              : 'bg-white text-gray-600 hover:text-red-500'
+            ? 'bg-red-500 text-white'
+            : 'bg-white text-gray-600 hover:text-red-500'
             }`}
         >
           <FiHeart className="h-4 w-4" />
@@ -139,10 +139,10 @@ const Rooms = () => {
           <div className="flex items-center space-x-1">
             {room.messDetails?.messType && (
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${room.messDetails.messType === 'vegetarian'
-                  ? 'bg-green-100 text-green-700'
-                  : room.messDetails.messType === 'non-vegetarian'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-blue-100 text-blue-700'
+                ? 'bg-green-100 text-green-700'
+                : room.messDetails.messType === 'non-vegetarian'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-blue-100 text-blue-700'
                 }`}>
                 {room.messDetails.messType}
               </span>
@@ -345,8 +345,8 @@ const Rooms = () => {
                       key={cuisine}
                       onClick={() => handleArrayFilterChange('cuisine', cuisine)}
                       className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${filters.cuisine.includes(cuisine)
-                          ? 'bg-orange-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-orange-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
                       {cuisine.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
@@ -426,8 +426,8 @@ const Rooms = () => {
                       <button
                         key={pageNum}
                         className={`px-4 py-2 rounded-lg font-medium ${pageNum === pagination.page
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-orange-600 text-white'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
                           }`}
                       >
                         {pageNum}
