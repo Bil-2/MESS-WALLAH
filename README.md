@@ -415,7 +415,7 @@ We welcome contributions! Please follow these steps:
 
 1. **Fork the Repository**
 ```bash
-git clone https://github.com/yourusername/mess-wallah.git
+git clone https://github.com/Bil-2/mess-wallah.git
 cd mess-wallah
 ```
 
@@ -464,9 +464,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support & Contact
 
 - **Email**: support@messwallah.com
-- **Documentation**: [Wiki](https://github.com/yourusername/mess-wallah/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/mess-wallah/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mess-wallah/discussions)
+- **Documentation**: [Wiki](https://github.com/Bil-2/mess-wallah/wiki)
+- **Issues**: [GitHub Issues](https://github.com/Bil-2/mess-wallah/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Bil-2/mess-wallah/discussions)
 
 ## 📋 Changelog
 
@@ -503,6 +503,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ![India](https://img.shields.io/badge/Made%20in-India-orange?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIGZpbGw9IiNGRjk5MzMiLz4KPHJlY3QgeT0iOCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjgiIGZpbGw9IiNGRkZGRkYiLz4KPHJlY3QgeT0iMTYiIHdpZHRoPSIyNCIgaGVpZ2h0PSI4IiBmaWxsPSIjMTM4ODA4Ii8+Cjwvc3ZnPgo=)
 
-[⭐ Star this repo](https://github.com/yourusername/mess-wallah) • [🐛 Report Bug](https://github.com/yourusername/mess-wallah/issues) • [💡 Request Feature](https://github.com/yourusername/mess-wallah/issues)
+[⭐ Star this repo](https://github.com/Bil-2/mess-wallah) • [🐛 Report Bug](https://github.com/Bil-2/mess-wallah/issues) • [💡 Request Feature](https://github.com/Bil-2/mess-wallah/issues)
 
 </div>
