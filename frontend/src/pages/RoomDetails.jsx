@@ -81,18 +81,18 @@ const RoomDetails = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
-            <div className="h-64 bg-gray-300 rounded-lg mb-6"></div>
+            <div className="h-64 bg-gray-300 dark:bg-gray-600 rounded-lg mb-6"></div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <div className="h-8 bg-gray-300 rounded mb-4"></div>
-                <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded mb-4"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
               </div>
-              <div className="h-64 bg-gray-300 rounded"></div>
+              <div className="h-64 bg-gray-300 dark:bg-gray-600 rounded"></div>
             </div>
           </div>
         </div>
@@ -102,13 +102,16 @@ const RoomDetails = () => {
 
   if (error || !room) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="card text-center">
-            <p className="text-red-600 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 text-center border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <p className="text-red-600 dark:text-red-400 mb-4 transition-colors duration-200">
               {error?.response?.data?.message || 'Room not found'}
             </p>
-            <button onClick={() => navigate('/rooms')} className="btn-primary">
+            <button
+              onClick={() => navigate('/rooms')}
+              className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+            >
               Back to Rooms
             </button>
           </div>
@@ -118,7 +121,7 @@ const RoomDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Image Gallery */}
         <div className="relative mb-6">
@@ -133,13 +136,13 @@ const RoomDetails = () => {
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 hover:bg-opacity-100 dark:hover:bg-opacity-100 rounded-full p-2 text-gray-900 dark:text-gray-100 transition-colors duration-200"
                 >
                   <FiChevronLeft className="h-6 w-6" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 hover:bg-opacity-100 dark:hover:bg-opacity-100 rounded-full p-2 text-gray-900 dark:text-gray-100 transition-colors duration-200"
                 >
                   <FiChevronRight className="h-6 w-6" />
                 </button>
@@ -149,7 +152,7 @@ const RoomDetails = () => {
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`w-3 h-3 rounded-full ${index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                      className={`w-3 h-3 rounded-full transition-colors duration-200 ${index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
                         }`}
                     />
                   ))}
@@ -162,64 +165,64 @@ const RoomDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Room Details */}
           <div className="lg:col-span-2">
-            <div className="card">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 transition-colors duration-200">
                     {room.title}
                   </h1>
-                  <div className="flex items-center text-gray-600 mb-2">
+                  <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2 transition-colors duration-200">
                     <FiMapPin className="h-5 w-5 mr-2" />
                     <span>{room.address.street}, {room.address.area}, {room.address.city}</span>
                   </div>
                   <div className="flex items-center">
-                    <FiStar className="h-5 w-5 text-yellow-500 mr-1" />
-                    <span className="font-semibold">{room.averageRating?.toFixed(1) || 'New'}</span>
-                    <span className="text-gray-600 ml-2">({room.totalReviews || 0} reviews)</span>
+                    <FiStar className="h-5 w-5 text-yellow-500 dark:text-yellow-400 mr-1 transition-colors duration-200" />
+                    <span className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">{room.averageRating?.toFixed(1) || 'New'}</span>
+                    <span className="text-gray-600 dark:text-gray-400 ml-2 transition-colors duration-200">({room.totalReviews || 0} reviews)</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-primary-600">
+                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 transition-colors duration-200">
                     ₹{room.rent}
                   </div>
-                  <div className="text-gray-600">per month</div>
+                  <div className="text-gray-600 dark:text-gray-400 transition-colors duration-200">per month</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
-                  <FiUsers className="h-6 w-6 mx-auto mb-2 text-gray-600" />
-                  <div className="text-sm text-gray-600">Capacity</div>
-                  <div className="font-semibold">{room.capacity} people</div>
+                  <FiUsers className="h-6 w-6 mx-auto mb-2 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
+                  <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Capacity</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">{room.capacity} people</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-gray-600">Type</div>
-                  <div className="font-semibold capitalize">{room.type}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Type</div>
+                  <div className="font-semibold capitalize text-gray-900 dark:text-gray-100 transition-colors duration-200">{room.type}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-gray-600">Deposit</div>
-                  <div className="font-semibold">₹{room.securityDeposit}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Deposit</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">₹{room.securityDeposit}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-gray-600">Available</div>
-                  <div className="font-semibold">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">Available</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">
                     {room.isAvailable ? 'Yes' : 'No'}
                   </div>
                 </div>
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Description</h3>
-                <p className="text-gray-700">{room.description}</p>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100 transition-colors duration-200">Description</h3>
+                <p className="text-gray-700 dark:text-gray-300 transition-colors duration-200">{room.description}</p>
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Amenities</h3>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100 transition-colors duration-200">Amenities</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {room.amenities.map((amenity, index) => (
                     <div key={index} className="flex items-center">
-                      <FiWifi className="h-4 w-4 mr-2 text-green-600" />
-                      <span className="text-sm">{amenity}</span>
+                      <FiWifi className="h-4 w-4 mr-2 text-green-600 dark:text-green-400 transition-colors duration-200" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200">{amenity}</span>
                     </div>
                   ))}
                 </div>
@@ -227,10 +230,10 @@ const RoomDetails = () => {
 
               {room.rules?.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">House Rules</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100 transition-colors duration-200">House Rules</h3>
                   <ul className="list-disc list-inside space-y-1">
                     {room.rules.map((rule, index) => (
-                      <li key={index} className="text-gray-700 text-sm">{rule}</li>
+                      <li key={index} className="text-gray-700 dark:text-gray-300 text-sm transition-colors duration-200">{rule}</li>
                     ))}
                   </ul>
                 </div>
@@ -240,16 +243,16 @@ const RoomDetails = () => {
 
           {/* Booking Card */}
           <div className="lg:col-span-1">
-            <div className="card sticky top-8">
-              <h3 className="text-lg font-semibold mb-4">Book This Room</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 sticky top-8 transition-colors duration-200">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 transition-colors duration-200">Book This Room</h3>
 
               {room.isAvailable ? (
                 <>
                   <div className="mb-4">
-                    <div className="text-2xl font-bold text-primary-600 mb-1">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1 transition-colors duration-200">
                       ₹{room.rent}/month
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
                       + ₹{room.securityDeposit} security deposit
                     </div>
                   </div>
@@ -257,7 +260,7 @@ const RoomDetails = () => {
                   {isAuthenticated && user?.role === 'student' ? (
                     <button
                       onClick={() => setShowBookingModal(true)}
-                      className="w-full btn-primary mb-4"
+                      className="w-full bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-medium mb-4 transition-colors duration-200"
                     >
                       Request Booking
                     </button>
@@ -266,12 +269,12 @@ const RoomDetails = () => {
                       {!isAuthenticated ? (
                         <button
                           onClick={() => navigate('/login')}
-                          className="w-full btn-primary mb-2"
+                          className="w-full bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-medium mb-2 transition-colors duration-200"
                         >
                           Login to Book
                         </button>
                       ) : (
-                        <div className="text-center text-gray-600 text-sm">
+                        <div className="text-center text-gray-600 dark:text-gray-400 text-sm transition-colors duration-200">
                           Only students can book rooms
                         </div>
                       )}
@@ -279,22 +282,22 @@ const RoomDetails = () => {
                   )}
                 </>
               ) : (
-                <div className="text-center text-red-600 font-semibold mb-4">
+                <div className="text-center text-red-600 dark:text-red-400 font-semibold mb-4 transition-colors duration-200">
                   Currently Unavailable
                 </div>
               )}
 
               {/* Owner Contact */}
-              <div className="border-t pt-4">
-                <h4 className="font-semibold mb-3">Contact Owner</h4>
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 transition-colors duration-200">
+                <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100 transition-colors duration-200">Contact Owner</h4>
                 <div className="space-y-2">
                   <div className="flex items-center text-sm">
-                    <FiPhone className="h-4 w-4 mr-2 text-gray-600" />
-                    <span>{room.owner?.phone || 'Not provided'}</span>
+                    <FiPhone className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
+                    <span className="text-gray-700 dark:text-gray-300 transition-colors duration-200">{room.owner?.phone || 'Not provided'}</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <FiMail className="h-4 w-4 mr-2 text-gray-600" />
-                    <span>{room.owner?.email || 'Not provided'}</span>
+                    <FiMail className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
+                    <span className="text-gray-700 dark:text-gray-300 transition-colors duration-200">{room.owner?.email || 'Not provided'}</span>
                   </div>
                 </div>
               </div>
@@ -304,43 +307,43 @@ const RoomDetails = () => {
 
         {/* Booking Modal */}
         {showBookingModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6">
-              <h3 className="text-lg font-semibold mb-4">Request Booking</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50 transition-colors duration-200">
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 transition-colors duration-200">Request Booking</h3>
 
               <form onSubmit={handleBooking}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200">
                     Preferred Check-in Date
                   </label>
                   <input
                     type="date"
                     required
-                    className="input-field"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
                     value={bookingData.checkIn}
                     onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200">
                     Preferred Check-out Date (Optional)
                   </label>
                   <input
                     type="date"
-                    className="input-field"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
                     value={bookingData.checkOut}
                     onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-200">
                     Message to Owner
                   </label>
                   <textarea
                     rows="3"
-                    className="input-field"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200"
                     placeholder="Tell the owner about yourself..."
                     value={bookingData.message}
                     onChange={(e) => setBookingData({ ...bookingData, message: e.target.value })}
@@ -351,11 +354,14 @@ const RoomDetails = () => {
                   <button
                     type="button"
                     onClick={() => setShowBookingModal(false)}
-                    className="flex-1 btn-secondary"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="flex-1 btn-primary">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200"
+                  >
                     Send Request
                   </button>
                 </div>
