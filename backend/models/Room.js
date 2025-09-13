@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const RoomSchema = new mongoose.Schema({
-  ownerId: {
+  owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -17,10 +17,29 @@ const RoomSchema = new mongoose.Schema({
     required: [true, 'Room description is required'],
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
+  roomType: {
+    type: String,
+    enum: ['single', 'shared', 'studio', 'apartment'],
+    required: [true, 'Room type is required']
+  },
+  rentPerMonth: {
+    type: Number,
+    required: [true, 'Monthly rent is required'],
+    min: [0, 'Rent cannot be negative']
+  },
+  securityDeposit: {
+    type: Number,
+    required: [true, 'Security deposit is required'],
+    min: [0, 'Deposit cannot be negative']
+  },
   address: {
-    line1: {
+    street: {
       type: String,
-      required: [true, 'Address line 1 is required']
+      required: [true, 'Street address is required']
+    },
+    area: {
+      type: String,
+      required: [true, 'Area is required']
     },
     city: {
       type: String,
@@ -35,41 +54,45 @@ const RoomSchema = new mongoose.Schema({
       required: [true, 'Pincode is required'],
       match: [/^[1-9][0-9]{5}$/, 'Please enter a valid pincode']
     },
-    lat: Number,
-    lng: Number
-  },
-  rentPerMonth: {
-    type: Number,
-    required: [true, 'Monthly rent is required'],
-    min: [0, 'Rent cannot be negative']
-  },
-  deposit: {
-    type: Number,
-    required: [true, 'Deposit amount is required'],
-    min: [0, 'Deposit cannot be negative']
+    coordinates: {
+      lat: Number,
+      lng: Number
+    }
   },
   amenities: [{
     type: String,
     enum: [
       'wifi', 'ac', 'parking', 'laundry', 'kitchen', 'balcony',
       'furnished', 'gym', 'security', 'elevator', 'water_supply',
-      'power_backup', 'tv', 'fridge', 'washing_machine'
+      'power_backup', 'tv', 'fridge', 'washing_machine', 'mess'
     ]
   }],
-  photos: [String],
+  photos: [{
+    url: {
+      type: String,
+      required: true
+    },
+    publicId: {
+      type: String,
+      required: true
+    },
+    caption: String,
+    isPrimary: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  rules: [String],
+  preferences: [String],
   availableFrom: {
     type: Date,
-    required: [true, 'Available from date is required']
+    default: Date.now
   },
   maxOccupancy: {
     type: Number,
     required: [true, 'Maximum occupancy is required'],
-    min: [1, 'Occupancy must be at least 1']
-  },
-  roomType: {
-    type: String,
-    enum: ['bachelor', 'family', 'student', 'pg'],
-    required: [true, 'Room type is required']
+    min: [1, 'Occupancy must be at least 1'],
+    default: 1
   },
   isActive: {
     type: Boolean,
@@ -79,11 +102,52 @@ const RoomSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  featured: {
+    type: Boolean,
+    default: false
+  },
   views: {
     type: Number,
     default: 0
   },
-  createdAt: {
+  rating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
+  },
+  reviews: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5
+    },
+    comment: {
+      type: String,
+      required: true,
+      maxlength: 500
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  verified: {
+    type: Boolean,
+    default: false
+  },
+  verificationDate: Date,
+  lastUpdated: {
     type: Date,
     default: Date.now
   }
@@ -91,17 +155,87 @@ const RoomSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Virtual for owner name (for backward compatibility)
+RoomSchema.virtual('ownerName').get(function () {
+  return this.owner?.name || 'Unknown';
+});
+
+// Virtual for location string
+RoomSchema.virtual('location').get(function () {
+  return `${this.address.area}, ${this.address.city}`;
+});
+
+// Virtual for rent (alias for rentPerMonth)
+RoomSchema.virtual('rent').get(function () {
+  return this.rentPerMonth;
+});
+
+// Ensure virtuals are included in JSON output
+RoomSchema.set('toJSON', { virtuals: true });
+RoomSchema.set('toObject', { virtuals: true });
+
+// Pre-save middleware to update lastUpdated
+RoomSchema.pre('save', function (next) {
+  this.lastUpdated = new Date();
+  next();
+});
+
+// Method to calculate average rating
+RoomSchema.methods.calculateAverageRating = function () {
+  if (this.reviews.length === 0) {
+    this.rating = 0;
+    this.totalReviews = 0;
+    return 0;
+  }
+
+  const totalRating = this.reviews.reduce((sum, review) => sum + review.rating, 0);
+  this.rating = Math.round((totalRating / this.reviews.length) * 10) / 10;
+  this.totalReviews = this.reviews.length;
+
+  return this.rating;
+};
+
+// Method to add review
+RoomSchema.methods.addReview = function (userId, rating, comment) {
+  this.reviews.push({
+    user: userId,
+    rating,
+    comment
+  });
+
+  this.calculateAverageRating();
+  return this.save();
+};
+
+// Method to increment views
+RoomSchema.methods.incrementViews = function () {
+  this.views += 1;
+  return this.save();
+};
+
 // Indexes for better query performance
-RoomSchema.index({ ownerId: 1 });
+RoomSchema.index({ owner: 1 });
 RoomSchema.index({ 'address.city': 1 });
 RoomSchema.index({ 'address.state': 1 });
 RoomSchema.index({ roomType: 1 });
 RoomSchema.index({ rentPerMonth: 1 });
 RoomSchema.index({ isActive: 1, isAvailable: 1 });
+RoomSchema.index({ featured: 1 });
 RoomSchema.index({ createdAt: -1 });
+RoomSchema.index({ rating: -1 });
+RoomSchema.index({ views: -1 });
 
 // Compound indexes for common queries
 RoomSchema.index({ 'address.city': 1, roomType: 1, isActive: 1 });
 RoomSchema.index({ rentPerMonth: 1, 'address.city': 1, isActive: 1 });
+RoomSchema.index({ isActive: 1, isAvailable: 1, featured: 1 });
+
+// Text index for search functionality
+RoomSchema.index({
+  title: 'text',
+  description: 'text',
+  'address.area': 'text',
+  'address.city': 'text'
+});
 
 module.exports = mongoose.model('Room', RoomSchema);

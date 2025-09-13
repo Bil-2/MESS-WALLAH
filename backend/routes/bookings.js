@@ -4,14 +4,21 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const { sendEmail } = require('../utils/email');
+const { sendEmail } = require('../services/notify');
+const { rateLimiters, csrfProtection } = require('../middleware/advancedSecurity');
 
 const router = express.Router();
+
+// Apply rate limiting to all booking routes
+router.use(rateLimiters.general);
 
 // @desc    Create new booking request
 // @route   POST /api/bookings
 // @access  Private (Room seekers only)
-router.post('/', protect, authorize('seeker'), [
+router.post('/', [
+  protect,
+  csrfProtection,
+  authorize('user'),
   body('roomId').isMongoId().withMessage('Invalid room ID'),
   body('checkInDate').isISO8601().withMessage('Invalid check-in date'),
   body('duration').isInt({ min: 1, max: 24 }).withMessage('Duration must be between 1-24 months'),
@@ -43,7 +50,7 @@ router.post('/', protect, authorize('seeker'), [
       });
     }
 
-    if (!room.checkAvailability()) {
+    if (!room.isActive || !room.isAvailable) {
       return res.status(400).json({
         success: false,
         message: 'Room is not available for booking'
@@ -64,9 +71,9 @@ router.post('/', protect, authorize('seeker'), [
 
     // Check for existing pending/confirmed bookings for this user and room
     const existingBooking = await Booking.findOne({
-      room: roomId,
-      seeker: req.user.id,
-      status: { $in: ['pending', 'confirmed', 'active'] }
+      roomId: roomId,
+      userId: req.user.id,
+      status: { $in: ['requested', 'confirmed'] }
     });
 
     if (existingBooking) {
@@ -77,28 +84,26 @@ router.post('/', protect, authorize('seeker'), [
     }
 
     // Calculate pricing
-    const monthlyRent = room.rent.monthly;
-    const securityDeposit = room.rent.deposit;
-    const maintenanceCharges = room.rent.maintenanceCharges || 0;
-    const totalAmount = (monthlyRent * duration) + securityDeposit + (maintenanceCharges * duration);
+    const monthlyRent = room.rentPerMonth;
+    const securityDeposit = room.securityDeposit;
+    const totalAmount = (monthlyRent * duration) + securityDeposit;
 
     // Create booking
     const booking = await Booking.create({
-      room: roomId,
-      seeker: req.user.id,
-      owner: room.owner._id,
+      roomId: roomId,
+      userId: req.user.id,
+      ownerId: room.owner._id,
       checkInDate: checkIn,
       duration: parseInt(duration),
       pricing: {
         monthlyRent,
         securityDeposit,
-        maintenanceCharges,
         totalAmount
       },
       seekerInfo,
       specialRequests,
       statusHistory: [{
-        status: 'pending',
+        status: 'requested',
         timestamp: new Date(),
         updatedBy: req.user.id
       }]
@@ -106,33 +111,31 @@ router.post('/', protect, authorize('seeker'), [
 
     // Populate booking details
     await booking.populate([
-      { path: 'room', select: 'title location.address location.city location.state' },
-      { path: 'seeker', select: 'name email phone' },
-      { path: 'owner', select: 'name email phone' }
+      { path: 'roomId', select: 'title address' },
+      { path: 'userId', select: 'name email phone' },
+      { path: 'ownerId', select: 'name email phone' }
     ]);
 
     // Send email notifications
     try {
       // Email to room owner
-      await sendEmail({
-        to: room.owner.email,
-        template: 'booking-request',
-        data: {
-          ownerName: room.owner.name,
-          bookingId: booking.bookingId,
-          roomTitle: room.title,
-          checkInDate: checkIn.toLocaleDateString('en-IN'),
-          duration: duration,
-          totalAmount: totalAmount.toLocaleString('en-IN'),
-          seekerName: seekerInfo.name,
-          seekerPhone: seekerInfo.phone,
-          seekerEmail: seekerInfo.email,
-          seekerOccupation: seekerInfo.occupation
-        }
-      });
-
-      booking.notifications.emailSent.toOwner = true;
-      await booking.save();
+      await sendEmail(room.owner.email, `New Booking Request - ${booking.bookingId}`, `
+        <h2>New Booking Request</h2>
+        <p>Hi ${room.owner.name},</p>
+        <p>You have received a new booking request for "${room.title}".</p>
+        <p><strong>Booking Details:</strong></p>
+        <ul>
+          <li>Booking ID: ${booking.bookingId}</li>
+          <li>Check-in Date: ${checkIn.toLocaleDateString('en-IN')}</li>
+          <li>Duration: ${duration} months</li>
+          <li>Total Amount: ₹${totalAmount.toLocaleString('en-IN')}</li>
+          <li>Seeker: ${seekerInfo.name}</li>
+          <li>Phone: ${seekerInfo.phone}</li>
+          <li>Email: ${seekerInfo.email}</li>
+        </ul>
+        <p>Please log in to your dashboard to review and respond to this request.</p>
+        <p>Best regards,<br>MESS WALLAH Team</p>
+      `);
     } catch (emailError) {
       console.error('Email notification failed:', emailError);
     }
@@ -174,10 +177,10 @@ router.get('/my-bookings', protect, [
 
     // Build query based on user type
     const searchQuery = {};
-    if (req.user.userType === 'seeker') {
-      searchQuery.seeker = req.user.id;
-    } else if (req.user.userType === 'owner') {
-      searchQuery.owner = req.user.id;
+    if (req.user.role === 'user') {
+      searchQuery.userId = req.user.id;
+    } else if (req.user.role === 'owner') {
+      searchQuery.ownerId = req.user.id;
     }
 
     if (status) {
@@ -188,9 +191,9 @@ router.get('/my-bookings', protect, [
 
     const [bookings, totalCount] = await Promise.all([
       Booking.find(searchQuery)
-        .populate('room', 'title images location.address location.city location.state')
-        .populate('seeker', 'name email phone profile.occupation')
-        .populate('owner', 'name email phone')
+        .populate('roomId', 'title images address')
+        .populate('userId', 'name email phone profile.occupation')
+        .populate('ownerId', 'name email phone')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
@@ -229,9 +232,9 @@ router.get('/my-bookings', protect, [
 router.get('/:id', protect, async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('room', 'title images location amenities contact')
-      .populate('seeker', 'name email phone profile')
-      .populate('owner', 'name email phone profile')
+      .populate('roomId', 'title images address amenities contact')
+      .populate('userId', 'name email phone profile')
+      .populate('ownerId', 'name email phone profile')
       .populate('statusHistory.updatedBy', 'name');
 
     if (!booking) {
@@ -242,8 +245,8 @@ router.get('/:id', protect, async (req, res) => {
     }
 
     // Check if user is authorized to view this booking
-    const isAuthorized = booking.seeker._id.toString() === req.user.id ||
-      booking.owner._id.toString() === req.user.id;
+    const isAuthorized = booking.userId.toString() === req.user.id ||
+      booking.ownerId.toString() === req.user.id;
 
     if (!isAuthorized) {
       return res.status(403).json({
@@ -269,7 +272,10 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    Update booking status (confirm/reject by owner)
 // @route   PATCH /api/bookings/:id/status
 // @access  Private (Room owner only)
-router.patch('/:id/status', protect, authorize('owner'), [
+router.patch('/:id/status', [
+  protect,
+  csrfProtection,
+  authorize('owner'),
   body('status').isIn(['confirmed', 'rejected']).withMessage('Status must be confirmed or rejected'),
   body('reason').optional().isLength({ max: 500 }).withMessage('Reason cannot exceed 500 characters')
 ], async (req, res) => {
@@ -286,9 +292,9 @@ router.patch('/:id/status', protect, authorize('owner'), [
     const { status, reason } = req.body;
 
     const booking = await Booking.findById(req.params.id)
-      .populate('room', 'title location')
-      .populate('seeker', 'name email phone')
-      .populate('owner', 'name email phone');
+      .populate('roomId', 'title address')
+      .populate('userId', 'name email phone')
+      .populate('ownerId', 'name email phone');
 
     if (!booking) {
       return res.status(404).json({
@@ -298,7 +304,7 @@ router.patch('/:id/status', protect, authorize('owner'), [
     }
 
     // Check if user owns this room
-    if (booking.owner._id.toString() !== req.user.id) {
+    if (booking.ownerId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this booking'
@@ -306,7 +312,7 @@ router.patch('/:id/status', protect, authorize('owner'), [
     }
 
     // Check if booking can be updated
-    if (booking.status !== 'pending') {
+    if (booking.status !== 'requested') {
       return res.status(400).json({
         success: false,
         message: `Cannot update booking with status: ${booking.status}`
@@ -314,12 +320,20 @@ router.patch('/:id/status', protect, authorize('owner'), [
     }
 
     // Update booking status
-    await booking.updateStatus(status, req.user.id, reason);
+    booking.status = status;
+    booking.statusHistory.push({
+      status,
+      timestamp: new Date(),
+      updatedBy: req.user.id,
+      reason
+    });
+
+    await booking.save();
 
     // Handle room availability based on status
     if (status === 'confirmed') {
       try {
-        await booking.room.bookRoom();
+        await Room.findByIdAndUpdate(booking.roomId._id, { isAvailable: false });
       } catch (roomError) {
         return res.status(400).json({
           success: false,
@@ -331,41 +345,30 @@ router.patch('/:id/status', protect, authorize('owner'), [
     // Send email notification to seeker
     try {
       if (status === 'confirmed') {
-        await sendEmail({
-          to: booking.seeker.email,
-          template: 'booking-confirmation',
-          data: {
-            seekerName: booking.seeker.name,
-            bookingId: booking.bookingId,
-            roomTitle: booking.room.title,
-            roomAddress: `${booking.room.location.address}, ${booking.room.location.city}, ${booking.room.location.state}`,
-            checkInDate: booking.checkInDate.toLocaleDateString('en-IN'),
-            duration: booking.duration,
-            monthlyRent: booking.pricing.monthlyRent.toLocaleString('en-IN'),
-            securityDeposit: booking.pricing.securityDeposit.toLocaleString('en-IN'),
-            totalAmount: booking.pricing.totalAmount.toLocaleString('en-IN'),
-            ownerName: booking.owner.name,
-            ownerPhone: booking.owner.phone,
-            ownerEmail: booking.owner.email
-          }
-        });
+        await sendEmail(booking.userId.email, `Booking Confirmed - ${booking.bookingId}`, `
+          <h2>Booking Confirmed</h2>
+          <p>Hi ${booking.userId.name},</p>
+          <p>Your booking request for "${booking.roomId.title}" has been confirmed!</p>
+          <p><strong>Booking Details:</strong></p>
+          <ul>
+            <li>Booking ID: ${booking.bookingId}</li>
+            <li>Check-in Date: ${booking.checkInDate.toLocaleDateString('en-IN')}</li>
+            <li>Duration: ${booking.duration} months</li>
+            <li>Total Amount: ₹${booking.pricing.totalAmount.toLocaleString('en-IN')}</li>
+          </ul>
+          <p>Owner Contact: ${booking.ownerId.name} - ${booking.ownerId.phone}</p>
+          <p>Best regards,<br>MESS WALLAH Team</p>
+        `);
       } else {
-        await sendEmail({
-          to: booking.seeker.email,
-          subject: `Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)} - ${booking.bookingId}`,
-          html: `
-            <h2>Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)}</h2>
-            <p>Hi ${booking.seeker.name},</p>
-            <p>Your booking request for "${booking.room.title}" has been ${status}.</p>
-            ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-            <p>Booking ID: ${booking.bookingId}</p>
-            <p>Best regards,<br>MESS WALLAH Team</p>
-          `
-        });
+        await sendEmail(booking.userId.email, `Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)} - ${booking.bookingId}`, `
+          <h2>Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)}</h2>
+          <p>Hi ${booking.userId.name},</p>
+          <p>Your booking request for "${booking.roomId.title}" has been ${status}.</p>
+          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+          <p>Booking ID: ${booking.bookingId}</p>
+          <p>Best regards,<br>MESS WALLAH Team</p>
+        `);
       }
-
-      booking.notifications.emailSent.toSeeker = true;
-      await booking.save();
     } catch (emailError) {
       console.error('Email notification failed:', emailError);
     }
@@ -388,16 +391,18 @@ router.patch('/:id/status', protect, authorize('owner'), [
 // @desc    Cancel booking
 // @route   PATCH /api/bookings/:id/cancel
 // @access  Private (Seeker or Owner)
-router.patch('/:id/cancel', protect, [
+router.patch('/:id/cancel', [
+  protect,
+  csrfProtection,
   body('reason').optional().isLength({ max: 500 }).withMessage('Reason cannot exceed 500 characters')
 ], async (req, res) => {
   try {
     const { reason } = req.body;
 
     const booking = await Booking.findById(req.params.id)
-      .populate('room')
-      .populate('seeker', 'name email')
-      .populate('owner', 'name email');
+      .populate('roomId')
+      .populate('userId', 'name email')
+      .populate('ownerId', 'name email');
 
     if (!booking) {
       return res.status(404).json({
@@ -407,8 +412,8 @@ router.patch('/:id/cancel', protect, [
     }
 
     // Check authorization
-    const isAuthorized = booking.seeker._id.toString() === req.user.id ||
-      booking.owner._id.toString() === req.user.id;
+    const isAuthorized = booking.userId.toString() === req.user.id ||
+      booking.ownerId.toString() === req.user.id;
 
     if (!isAuthorized) {
       return res.status(403).json({
@@ -418,7 +423,7 @@ router.patch('/:id/cancel', protect, [
     }
 
     // Check if booking can be cancelled
-    if (!booking.canBeCancelled()) {
+    if (!['requested', 'confirmed'].includes(booking.status)) {
       return res.status(400).json({
         success: false,
         message: `Cannot cancel booking with status: ${booking.status}`
@@ -426,34 +431,38 @@ router.patch('/:id/cancel', protect, [
     }
 
     // Update booking status
-    await booking.updateStatus('cancelled', req.user.id, reason);
+    booking.status = 'cancelled';
+    booking.statusHistory.push({
+      status: 'cancelled',
+      timestamp: new Date(),
+      updatedBy: req.user.id,
+      reason
+    });
+
+    await booking.save();
 
     // If booking was confirmed, make room available again
     if (booking.status === 'confirmed') {
       try {
-        await booking.room.cancelBooking();
+        await Room.findByIdAndUpdate(booking.roomId._id, { isAvailable: true });
       } catch (roomError) {
         console.error('Room availability update failed:', roomError);
       }
     }
 
     // Send notification to the other party
-    const notifyUser = booking.seeker._id.toString() === req.user.id ? booking.owner : booking.seeker;
-    const cancelledBy = booking.seeker._id.toString() === req.user.id ? 'seeker' : 'owner';
+    const notifyUser = booking.userId.toString() === req.user.id ? booking.ownerId : booking.userId;
+    const cancelledBy = booking.userId.toString() === req.user.id ? 'seeker' : 'owner';
 
     try {
-      await sendEmail({
-        to: notifyUser.email,
-        subject: `Booking Cancelled - ${booking.bookingId}`,
-        html: `
-          <h2>Booking Cancelled</h2>
-          <p>Hi ${notifyUser.name},</p>
-          <p>The booking for "${booking.room.title}" has been cancelled by the ${cancelledBy}.</p>
-          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-          <p>Booking ID: ${booking.bookingId}</p>
-          <p>Best regards,<br>MESS WALLAH Team</p>
-        `
-      });
+      await sendEmail(notifyUser.email, `Booking Cancelled - ${booking.bookingId}`, `
+        <h2>Booking Cancelled</h2>
+        <p>Hi ${notifyUser.name},</p>
+        <p>The booking for "${booking.roomId.title}" has been cancelled by the ${cancelledBy}.</p>
+        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+        <p>Booking ID: ${booking.bookingId}</p>
+        <p>Best regards,<br>MESS WALLAH Team</p>
+      `);
     } catch (emailError) {
       console.error('Cancellation email failed:', emailError);
     }
@@ -501,8 +510,8 @@ router.post('/:id/messages', protect, [
     }
 
     // Check authorization
-    const isAuthorized = booking.seeker.toString() === req.user.id ||
-      booking.owner.toString() === req.user.id;
+    const isAuthorized = booking.userId.toString() === req.user.id ||
+      booking.ownerId.toString() === req.user.id;
 
     if (!isAuthorized) {
       return res.status(403).json({
@@ -512,13 +521,20 @@ router.post('/:id/messages', protect, [
     }
 
     // Add message
-    await booking.addMessage(req.user.id, message);
+    booking.messages = booking.messages || [];
+    booking.messages.push({
+      sender: req.user.id,
+      message,
+      timestamp: new Date()
+    });
+
+    await booking.save();
 
     // Populate the updated booking
     await booking.populate([
       { path: 'messages.sender', select: 'name' },
-      { path: 'seeker', select: 'name email' },
-      { path: 'owner', select: 'name email' }
+      { path: 'userId', select: 'name email' },
+      { path: 'ownerId', select: 'name email' }
     ]);
 
     res.status(201).json({
@@ -556,13 +572,13 @@ router.get('/stats/overview', protect, authorize('owner'), async (req, res) => {
       completedBookings,
       totalRevenue
     ] = await Promise.all([
-      Booking.countDocuments({ owner: ownerId }),
-      Booking.countDocuments({ owner: ownerId, status: 'pending' }),
-      Booking.countDocuments({ owner: ownerId, status: 'confirmed' }),
-      Booking.countDocuments({ owner: ownerId, status: 'active' }),
-      Booking.countDocuments({ owner: ownerId, status: 'completed' }),
+      Booking.countDocuments({ ownerId: ownerId }),
+      Booking.countDocuments({ ownerId: ownerId, status: 'requested' }),
+      Booking.countDocuments({ ownerId: ownerId, status: 'confirmed' }),
+      Booking.countDocuments({ ownerId: ownerId, status: 'active' }),
+      Booking.countDocuments({ ownerId: ownerId, status: 'completed' }),
       Booking.aggregate([
-        { $match: { owner: ownerId, status: { $in: ['active', 'completed'] } } },
+        { $match: { ownerId: ownerId, status: { $in: ['active', 'completed'] } } },
         { $group: { _id: null, total: { $sum: '$pricing.totalAmount' } } }
       ]).then(result => result[0]?.total || 0)
     ]);
@@ -570,7 +586,7 @@ router.get('/stats/overview', protect, authorize('owner'), async (req, res) => {
     const monthlyBookings = await Booking.aggregate([
       {
         $match: {
-          owner: ownerId,
+          ownerId: ownerId,
           createdAt: { $gte: new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000) }
         }
       },

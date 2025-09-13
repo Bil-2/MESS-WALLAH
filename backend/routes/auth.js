@@ -6,13 +6,22 @@ const Otp = require('../models/Otp');
 const User = require('../models/User');
 const { sendSms } = require('../services/notify');
 const { protect } = require('../middleware/auth');
+const {
+  rateLimiters,
+  createBruteForceProtector,
+  csrfProtection
+} = require('../middleware/advancedSecurity');
 
 const router = express.Router();
+
+// Apply rate limiting to all auth routes
+router.use(rateLimiters.auth);
 
 // @desc    Send OTP to phone number
 // @route   POST /api/auth/send-otp
 // @access  Public
 router.post('/send-otp', [
+  rateLimiters.general,
   body('phone')
     .matches(/^[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number')
@@ -72,6 +81,7 @@ router.post('/send-otp', [
 // @route   POST /api/auth/verify-otp
 // @access  Public
 router.post('/verify-otp', [
+  createBruteForceProtector,
   body('phone')
     .matches(/^[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number'),
@@ -217,7 +227,9 @@ router.get('/me', protect, async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-router.put('/profile', protect, [
+router.put('/profile', [
+  protect,
+  csrfProtection,
   body('name').optional().trim().isLength({ min: 2, max: 50 }).withMessage('Name must be between 2-50 characters'),
   body('email').optional().isEmail().normalizeEmail().withMessage('Please provide a valid email'),
   body('profile.age').optional().isInt({ min: 18, max: 100 }).withMessage('Age must be between 18-100'),
@@ -287,7 +299,7 @@ router.put('/profile', protect, [
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private
-router.post('/logout', (req, res) => {
+router.post('/logout', [protect, csrfProtection], (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
     expires: new Date(0)

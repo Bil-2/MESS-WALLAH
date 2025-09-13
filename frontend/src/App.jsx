@@ -1,136 +1,57 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import Header from './components/Header';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext.jsx';
+import { ThemeProvider } from './context/ThemeContext';
+import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import LoginOtp from './pages/LoginOtp';
-import SearchResults from './pages/SearchResults';
-import RoomDetail from './pages/RoomDetail';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Rooms from './pages/Rooms';
+import RoomDetails from './pages/RoomDetails';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
-
-// Public Route Component (redirect if authenticated)
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
-
-  return !isAuthenticated ? children : <Navigate to="/" replace />;
-};
-
-// Layout Component
-const Layout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main>{children}</main>
-    </div>
-  );
-};
+import Bookings from './pages/Bookings';
+import HowItWorks from './pages/HowItWorks';
+import ListMess from './pages/ListMess';
+import OwnerGuide from './pages/OwnerGuide';
+import Pricing from './pages/Pricing';
+import Help from './pages/Help';
+import Contact from './pages/Contact';
+import Terms from './pages/Terms';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginOtp />
-              </PublicRoute>
-            }
-          />
-
-          {/* Public Routes with Layout */}
-          <Route
-            path="/"
-            element={
-              <Layout>
-                <Home />
-              </Layout>
-            }
-          />
-          <Route
-            path="/search"
-            element={
-              <Layout>
-                <SearchResults />
-              </Layout>
-            }
-          />
-          <Route
-            path="/room/:id"
-            element={
-              <Layout>
-                <RoomDetail />
-              </Layout>
-            }
-          />
-
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Profile />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Catch all route */}
-          <Route
-            path="*"
-            element={
-              <Layout>
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                    <p className="text-gray-600 mb-8">Page not found</p>
-                    <a href="/" className="btn-primary">
-                      Go Home
-                    </a>
-                  </div>
-                </div>
-              </Layout>
-            }
-          />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
+          <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+            <Navbar />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/rooms" element={<Rooms />} />
+                <Route path="/rooms/:id" element={<RoomDetails />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/list-mess" element={<ListMess />} />
+                <Route path="/owner-guide" element={<OwnerGuide />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/terms" element={<Terms />} />
+              </Routes>
+            </main>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

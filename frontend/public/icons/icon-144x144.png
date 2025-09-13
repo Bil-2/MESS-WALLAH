@@ -1,0 +1,6 @@
+# This is a placeholder for the PWA icon
+# In a real project, you would place actual PNG icon files here
+# For now, we'll create a simple SVG-based icon that can be converted to PNG
+
+# Create a simple MESS WALLAH icon using SVG data URL in the manifest
+# The actual icon files should be created using design tools like Figma or Canva

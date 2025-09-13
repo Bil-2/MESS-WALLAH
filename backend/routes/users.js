@@ -3,14 +3,28 @@ const { query, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Room = require('../models/Room');
 const Booking = require('../models/Booking');
-const { protect, authorize } = require('../middleware/auth');
+const {
+  protect,
+  authorize
+} = require('../middleware/auth');
+const {
+  getUserProfile,
+  updateUserProfile,
+  changePassword,
+  getDashboardStats,
+  getActivityFeed,
+  toggleFavourite,
+  getFavourites,
+  deactivateAccount,
+  getPlatformStats
+} = require('../controllers/userController');
 
 const router = express.Router();
 
 // @desc    Get all users (for admin purposes)
 // @route   GET /api/users
 // @access  Private (Admin only - for future implementation)
-router.get('/', protect, [
+router.get('/', protect, authorize('admin'), [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1-50'),
   query('role').optional().isIn(['user', 'owner', 'admin']).withMessage('Invalid user role'),
@@ -136,102 +150,7 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    Get user dashboard stats
 // @route   GET /api/users/dashboard/stats
 // @access  Private
-router.get('/dashboard/stats', protect, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    let stats = {};
-
-    if (userRole === 'owner') {
-      // Owner dashboard stats
-      const [
-        totalRooms,
-        activeRooms,
-        totalBookings,
-        pendingBookings,
-        confirmedBookings,
-        totalViews,
-        monthlyRevenue
-      ] = await Promise.all([
-        Room.countDocuments({ ownerId: userId }),
-        Room.countDocuments({ ownerId: userId, isActive: true, isAvailable: true }),
-        Booking.countDocuments({ ownerId: userId }),
-        Booking.countDocuments({ ownerId: userId, status: 'requested' }),
-        Booking.countDocuments({ ownerId: userId, status: 'confirmed' }),
-        Room.aggregate([
-          { $match: { ownerId: userId } },
-          { $group: { _id: null, totalViews: { $sum: '$views' } } }
-        ]).then(result => result[0]?.totalViews || 0),
-        Booking.aggregate([
-          {
-            $match: {
-              ownerId: userId,
-              status: { $in: ['confirmed', 'completed'] },
-              createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-            }
-          },
-          { $group: { _id: null, revenue: { $sum: '$pricing.totalAmount' } } }
-        ]).then(result => result[0]?.revenue || 0)
-      ]);
-
-      stats = {
-        totalRooms,
-        activeRooms,
-        totalBookings,
-        pendingBookings,
-        confirmedBookings,
-        totalViews,
-        monthlyRevenue
-      };
-
-    } else if (userRole === 'user') {
-      // User dashboard stats
-      const [
-        totalBookings,
-        activeBookings,
-        completedBookings,
-        savedRooms,
-        totalSpent
-      ] = await Promise.all([
-        Booking.countDocuments({ userId: userId }),
-        Booking.countDocuments({ userId: userId, status: 'confirmed' }),
-        Booking.countDocuments({ userId: userId, status: 'completed' }),
-        // Assuming saved rooms feature will be implemented later
-        0,
-        Booking.aggregate([
-          {
-            $match: {
-              userId: userId,
-              status: { $in: ['confirmed', 'completed'] }
-            }
-          },
-          { $group: { _id: null, total: { $sum: '$pricing.totalAmount' } } }
-        ]).then(result => result[0]?.total || 0)
-      ]);
-
-      stats = {
-        totalBookings,
-        activeBookings,
-        completedBookings,
-        savedRooms,
-        totalSpent
-      };
-    }
-
-    res.status(200).json({
-      success: true,
-      data: { stats }
-    });
-
-  } catch (error) {
-    console.error('Get dashboard stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch dashboard statistics'
-    });
-  }
-});
+router.get('/dashboard/stats', protect, getDashboardStats);
 
 // @desc    Get user activity feed
 // @route   GET /api/users/dashboard/activity
@@ -239,177 +158,17 @@ router.get('/dashboard/stats', protect, async (req, res) => {
 router.get('/dashboard/activity', protect, [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 20 }).withMessage('Limit must be between 1-20')
-], async (req, res) => {
-  try {
-    const { page = 1, limit = 10 } = req.query;
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    let activities = [];
-
-    if (userRole === 'owner') {
-      // Get recent bookings and room activities
-      const recentBookings = await Booking.find({ ownerId: userId })
-        .populate('roomId', 'title')
-        .populate('userId', 'name')
-        .sort({ createdAt: -1 })
-        .limit(parseInt(limit))
-        .lean();
-
-      activities = recentBookings.map(booking => ({
-        type: 'booking',
-        action: `New booking request for "${booking.roomId.title}"`,
-        details: `${booking.userId.name} requested to book your room`,
-        status: booking.status,
-        timestamp: booking.createdAt,
-        bookingId: booking.bookingId
-      }));
-
-    } else if (userRole === 'user') {
-      // Get user's booking activities
-      const userBookings = await Booking.find({ userId: userId })
-        .populate('roomId', 'title')
-        .populate('ownerId', 'name')
-        .sort({ createdAt: -1 })
-        .limit(parseInt(limit))
-        .lean();
-
-      activities = userBookings.map(booking => ({
-        type: 'booking',
-        action: `Booking request for "${booking.roomId.title}"`,
-        details: `Status: ${booking.status}`,
-        status: booking.status,
-        timestamp: booking.createdAt,
-        bookingId: booking.bookingId
-      }));
-    }
-
-    res.status(200).json({
-      success: true,
-      data: { activities }
-    });
-
-  } catch (error) {
-    console.error('Get activity feed error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch activity feed'
-    });
-  }
-});
+], getActivityFeed);
 
 // @desc    Get platform statistics (public)
 // @route   GET /api/users/stats/platform
 // @access  Public
-router.get('/stats/platform', async (req, res) => {
-  try {
-    const [
-      totalUsers,
-      totalOwners,
-      totalSeekers,
-      totalRooms,
-      totalBookings,
-      citiesCount
-    ] = await Promise.all([
-      User.countDocuments({ isActive: true }),
-      User.countDocuments({ role: 'owner', isActive: true }),
-      User.countDocuments({ role: 'user', isActive: true }),
-      Room.countDocuments({ isActive: true }),
-      Booking.countDocuments(),
-      Room.distinct('address.city', { isActive: true }).then(cities => cities.length)
-    ]);
-
-    // Get top cities by room count
-    const topCities = await Room.aggregate([
-      { $match: { isActive: true } },
-      { $group: { _id: '$address.city', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        totalUsers,
-        totalOwners,
-        totalSeekers,
-        totalRooms,
-        totalBookings,
-        citiesCount,
-        topCities
-      }
-    });
-
-  } catch (error) {
-    console.error('Get platform stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch platform statistics'
-    });
-  }
-});
+router.get('/stats/platform', getPlatformStats);
 
 // @desc    Deactivate user account
 // @route   PATCH /api/users/deactivate
 // @access  Private
-router.patch('/deactivate', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    // Deactivate user
-    user.isActive = false;
-    await user.save();
-
-    // If owner, deactivate all their rooms
-    if (user.role === 'owner') {
-      await Room.updateMany(
-        { ownerId: req.user.id },
-        { isActive: false, isAvailable: false }
-      );
-    }
-
-    // Cancel all pending bookings
-    await Booking.updateMany(
-      {
-        $or: [
-          { userId: req.user.id },
-          { ownerId: req.user.id }
-        ],
-        status: 'requested'
-      },
-      {
-        status: 'cancelled',
-        $push: {
-          statusHistory: {
-            status: 'cancelled',
-            timestamp: new Date(),
-            updatedBy: req.user.id,
-            reason: 'Account deactivated'
-          }
-        }
-      }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: 'Account deactivated successfully'
-    });
-
-  } catch (error) {
-    console.error('Deactivate account error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to deactivate account'
-    });
-  }
-});
+router.patch('/deactivate', protect, deactivateAccount);
 
 // @desc    Reactivate user account
 // @route   PATCH /api/users/reactivate
