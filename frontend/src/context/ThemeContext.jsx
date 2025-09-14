@@ -11,47 +11,86 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('light');
+  // Initialize theme immediately from localStorage or system preference
+  const getInitialTheme = () => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+        return savedTheme;
+      }
 
-  // Check for saved theme preference or default to system preference
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (systemPrefersDark) {
-      setTheme('dark');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return systemPrefersDark ? 'dark' : 'light';
     }
-  }, []);
+    return 'light';
+  };
 
-  // Apply theme to document
+  const [theme, setTheme] = useState(getInitialTheme);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Apply theme immediately on mount and when theme changes
   useEffect(() => {
     const root = document.documentElement;
 
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    // Remove both classes first to avoid conflicts
+    root.classList.remove('light', 'dark');
+
+    // Add the current theme class
+    root.classList.add(theme);
+
+    // Save theme preference to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', theme);
     }
 
-    // Save theme preference
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    // Mark as initialized after first render
+    if (!isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [theme, isInitialized]);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      // Only update if user hasn't manually set a preference
+      const savedTheme = localStorage.getItem('theme');
+      if (!savedTheme) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setTheme(prevTheme => {
+      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
+      console.log(`Theme toggled from ${prevTheme} to ${newTheme}`);
+      return newTheme;
+    });
   };
 
-  const setLightTheme = () => setTheme('light');
-  const setDarkTheme = () => setTheme('dark');
+  const setLightTheme = () => {
+    console.log('Setting light theme');
+    setTheme('light');
+  };
+
+  const setDarkTheme = () => {
+    console.log('Setting dark theme');
+    setTheme('dark');
+  };
 
   const value = {
     theme,
     toggleTheme,
     setLightTheme,
     setDarkTheme,
-    isDark: theme === 'dark'
+    isDark: theme === 'dark',
+    isInitialized
   };
 
   return (

@@ -3,7 +3,6 @@ const router = express.Router();
 const multer = require('multer');
 const { body } = require('express-validator');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
-const advancedSecurity = require('../middleware/advancedSecurity');
 const {
   getRooms,
   getRoomById,
@@ -29,7 +28,7 @@ const upload = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 10 // Maximum 10 files
+    files: 10
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -40,51 +39,24 @@ const upload = multer({
   }
 });
 
-// Validation middleware
+// Validation rules
 const roomValidation = [
-  body('title')
-    .trim()
-    .isLength({ min: 5, max: 100 })
-    .withMessage('Title must be between 5 and 100 characters'),
-  body('description')
-    .trim()
-    .isLength({ min: 20, max: 1000 })
-    .withMessage('Description must be between 20 and 1000 characters'),
-  body('roomType')
-    .isIn(['single', 'shared', 'studio', 'apartment'])
-    .withMessage('Invalid room type'),
-  body('rentPerMonth')
-    .isInt({ min: 1000, max: 100000 })
-    .withMessage('Rent must be between ₹1,000 and ₹1,00,000'),
-  body('securityDeposit')
-    .isInt({ min: 0, max: 200000 })
-    .withMessage('Security deposit must be between ₹0 and ₹2,00,000'),
-  body('address.street')
-    .trim()
-    .isLength({ min: 5, max: 200 })
-    .withMessage('Street address must be between 5 and 200 characters'),
-  body('address.area')
-    .trim()
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Area must be between 2 and 100 characters'),
-  body('address.city')
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('City must be between 2 and 50 characters'),
-  body('address.state')
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('State must be between 2 and 50 characters'),
+  body('title').notEmpty().withMessage('Title is required'),
+  body('description').notEmpty().withMessage('Description is required'),
+  body('rentPerMonth').isNumeric().withMessage('Rent must be a number'),
+  body('address.street').notEmpty().withMessage('Street address is required'),
+  body('address.city').notEmpty().withMessage('City is required'),
+  body('address.state').notEmpty().withMessage('State is required'),
   body('address.pincode')
     .isLength({ min: 6, max: 6 })
     .isNumeric()
     .withMessage('Pincode must be exactly 6 digits')
 ];
 
-// Public routes
+// Public routes (no authentication required)
 router.get('/', optionalAuth, getRooms);
 router.get('/stats', getRoomStats);
-router.get('/featured', getFeaturedRooms);
+router.get('/featured', optionalAuth, getFeaturedRooms);
 router.get('/:id', optionalAuth, getRoomById);
 
 // Protected routes (require authentication)
@@ -106,19 +78,8 @@ router.put(
   updateRoom
 );
 
-router.delete(
-  '/:id',
-  protect,
-  authorize('owner'),
-  deleteRoom
-);
-
-router.patch(
-  '/:id/availability',
-  protect,
-  authorize('owner'),
-  toggleAvailability
-);
+router.delete('/:id', protect, authorize('owner'), deleteRoom);
+router.patch('/:id/availability', protect, authorize('owner'), toggleAvailability);
 
 // Error handling middleware for multer
 router.use((error, req, res, next) => {

@@ -1,366 +1,241 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
+  Home,
+  MapPin,
+  User,
   Menu,
   X,
-  ChevronDown,
-  User,
   LogOut,
   Settings,
-  Home,
+  Bell,
   Search,
-  Calendar,
-  HelpCircle,
-  Phone,
-  FileText
+  Shield
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../context/ThemeContext';
+import { useAuthContext } from '../context/AuthContext.jsx';
 import ThemeToggle from './ThemeToggle';
-import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const { user, logout } = useAuth();
-  const { theme } = useTheme();
-  const navigate = useNavigate();
+  const { user, logout } = useAuthContext();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/');
-    setIsOpen(false);
+    setIsMenuOpen(false);
   };
 
-  const menuItems = {
-    students: [
-      { name: 'How It Works', href: '/how-it-works', icon: HelpCircle },
-      { name: 'Find Mess Rooms', href: '/rooms', icon: Search },
-      { name: 'Sign Up', href: '/register', icon: User }
-    ],
-    owners: [
-      { name: 'List Your Mess', href: '/list-mess', icon: Home },
-      { name: 'Owner Guide', href: '/owner-guide', icon: FileText },
-      { name: 'Pricing', href: '/pricing', icon: Calendar }
-    ],
-    support: [
-      { name: 'Help Center', href: '/help', icon: HelpCircle },
-      { name: 'Contact Us', href: '/contact', icon: Phone },
-      { name: 'Terms of Service', href: '/terms', icon: FileText }
-    ]
-  };
+  const navLinks = [
+  ];
 
-  const toggleDropdown = (dropdown) => {
-    setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
-  };
-
-  const closeDropdown = () => {
-    setActiveDropdown(null);
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-gray-700/50'
+          : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm'
+        }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">MW</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                MESS WALLAH
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+              <svg
+                viewBox="0 0 24 24"
+                className="w-6 h-6 text-gray-800"
+                fill="currentColor"
+              >
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4H5V5h14v2zm0 2H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H5v-8h14v8z" />
+                <rect x="7" y="11" width="2" height="2" />
+                <rect x="11" y="11" width="2" height="2" />
+                <rect x="15" y="11" width="2" height="2" />
+              </svg>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
+                MESS
               </span>
-            </Link>
-          </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent -mt-1">
+                WALLAH
+              </span>
+            </div>
+          </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              {/* For Students Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => toggleDropdown('students')}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors duration-200"
+          <div className="hidden md:flex items-center space-x-1">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${isActive(link.path)
+                      ? 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
                 >
-                  <span>For Students</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === 'students' ? 'rotate-180' : ''}`} />
-                </button>
-
-                {activeDropdown === 'students' && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                    {menuItems.students.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          onClick={closeDropdown}
-                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* For Mess Owners Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => toggleDropdown('owners')}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors duration-200"
-                >
-                  <span>For Mess Owners</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === 'owners' ? 'rotate-180' : ''}`} />
-                </button>
-
-                {activeDropdown === 'owners' && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                    {menuItems.owners.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          onClick={closeDropdown}
-                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Support Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => toggleDropdown('support')}
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors duration-200"
-                >
-                  <span>Support</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === 'support' ? 'rotate-180' : ''}`} />
-                </button>
-
-                {activeDropdown === 'support' && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                    {menuItems.support.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.href}
-                          onClick={closeDropdown}
-                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+                  <Icon className="w-4 h-4" />
+                  <span>{link.name}</span>
+                </Link>
+              );
+            })}
           </div>
 
-          {/* Right side items */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Right side actions */}
+          <div className="flex items-center space-x-3">
             <ThemeToggle />
 
             {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => toggleDropdown('user')}
-                  className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-                >
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${activeDropdown === 'user' ? 'rotate-180' : ''}`} />
+              <div className="hidden md:flex items-center space-x-3">
+                {/* Notifications */}
+                <button className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg transition-colors">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
                 </button>
 
-                {activeDropdown === 'user' && (
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                    <Link
-                      to="/dashboard"
-                      onClick={closeDropdown}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Link>
-                    <Link
-                      to="/bookings"
-                      onClick={closeDropdown}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <Calendar className="h-4 w-4" />
-                      <span>My Bookings</span>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center space-x-2 w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Logout</span>
-                    </button>
+                {/* User Menu */}
+                <div className="relative group">
+                  <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{user.name}</span>
+                  </button>
+
+                  {/* Dropdown */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div className="p-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="hidden md:flex items-center space-x-3">
                 <Link
                   to="/login"
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 font-medium transition-colors"
                 >
-                  Sign In
+                  Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   Sign Up
                 </Link>
               </div>
             )}
-          </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
+            {/* Mobile menu button */}
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 p-2 transition-colors duration-200"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg transition-colors"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile menu */}
-        {isOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
-            <div className="space-y-1">
-              {/* Mobile navigation items */}
-              <div className="space-y-2">
-                <div className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">For Students</div>
-                {menuItems.students.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center space-x-2 px-6 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-2">
-                <div className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">For Mess Owners</div>
-                {menuItems.owners.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center space-x-2 px-6 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-2">
-                <div className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">Support</div>
-                {menuItems.support.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center space-x-2 px-6 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden overflow-hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+          >
+            <div className="px-4 py-4 space-y-2">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive(link.path)
+                        ? 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{link.name}</span>
+                  </Link>
+                );
+              })}
 
               {user ? (
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+                <>
                   <Link
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    to="/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
-                    <User className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                  <Link
-                    to="/bookings"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                  >
-                    <Calendar className="h-4 w-4" />
-                    <span>My Bookings</span>
+                    <Settings className="w-5 h-5" />
+                    <span className="font-medium">Settings</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                   >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium">Logout</span>
                   </button>
-                </div>
+                </>
               ) : (
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+                <>
                   <Link
                     to="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
-                    Sign In
+                    <User className="w-5 h-5" />
+                    <span className="font-medium">Login</span>
                   </Link>
                   <Link
                     to="/register"
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center justify-center space-x-2 mx-2 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg font-medium shadow-md"
                   >
-                    Sign Up
+                    <span>Sign Up</span>
                   </Link>
-                </div>
+                </>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
-
-      {/* Overlay for closing dropdowns */}
-      {activeDropdown && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={closeDropdown}
-        />
-      )}
+      </AnimatePresence>
     </nav>
   );
 };

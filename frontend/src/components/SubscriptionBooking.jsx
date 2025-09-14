@@ -15,10 +15,10 @@ import {
   Users,
   MapPin
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuthContext } from '../context/AuthContext.jsx';
 
 const SubscriptionBooking = ({ room, onClose }) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [selectedPlan, setSelectedPlan] = useState('monthly');
   const [selectedMeals, setSelectedMeals] = useState(['lunch', 'dinner']);
   const [dietType, setDietType] = useState('veg');

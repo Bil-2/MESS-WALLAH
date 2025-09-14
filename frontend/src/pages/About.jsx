@@ -1,210 +1,360 @@
 import React from 'react';
-import { Users, Target, Award, Heart, MapPin, Clock, Shield, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  Heart,
+  Shield,
+  Users,
+  MapPin,
+  Award,
+  Target,
+  CheckCircle,
+  Star,
+  Phone,
+  Mail,
+  Globe,
+  Building,
+  Clock,
+  TrendingUp,
+  UserCheck,
+  Home
+} from 'lucide-react';
 
 const About = () => {
-  const features = [
+  const stats = [
+    { icon: Users, label: 'Happy Residents', value: '10,000+', color: 'text-blue-600' },
+    { icon: Building, label: 'Verified Properties', value: '500+', color: 'text-green-600' },
+    { icon: MapPin, label: 'Cities Covered', value: '25+', color: 'text-purple-600' },
+    { icon: Star, label: 'Average Rating', value: '4.9/5', color: 'text-yellow-600' }
+  ];
+
+  const values = [
     {
-      icon: <MapPin className="w-6 h-6" />,
-      title: 'Wide Coverage',
-      description: 'Properties across 15+ Indian states with authentic local experiences'
+      icon: Shield,
+      title: 'Safety First',
+      description: 'We prioritize the safety and security of every resident with comprehensive background checks and 24/7 monitoring.',
+      color: 'from-red-500 to-pink-500'
     },
     {
-      icon: <Shield className="w-6 h-6" />,
-      title: 'Verified Properties',
-      description: 'All accommodations are verified for safety and quality standards'
+      icon: Heart,
+      title: 'Empowering Women',
+      description: 'Creating safe spaces that empower girls and women to pursue their dreams with confidence and independence.',
+      color: 'from-pink-500 to-purple-500'
     },
     {
-      icon: <Clock className="w-6 h-6" />,
-      title: '24/7 Support',
-      description: 'Round-the-clock customer support for all your accommodation needs'
+      icon: Users,
+      title: 'Community Building',
+      description: 'Fostering a supportive community where residents can connect, grow, and support each other.',
+      color: 'from-blue-500 to-indigo-500'
     },
     {
-      icon: <Star className="w-6 h-6" />,
-      title: 'Quality Assured',
-      description: 'Curated mess accommodations with authentic reviews and ratings'
+      icon: CheckCircle,
+      title: 'Quality Assurance',
+      description: 'Maintaining high standards in accommodation quality, cleanliness, and service delivery.',
+      color: 'from-green-500 to-emerald-500'
     }
   ];
 
-  const stats = [
-    { number: '54+', label: 'Properties Listed' },
-    { number: '15+', label: 'States Covered' },
-    { number: '1000+', label: 'Happy Students' },
-    { number: '4.8', label: 'Average Rating' }
+  const milestones = [
+    {
+      year: '2020',
+      title: 'Foundation',
+      description: 'MessWallah was founded with a vision to provide safe accommodation for girls',
+      icon: Home
+    },
+    {
+      year: '2021',
+      title: 'First 100 Properties',
+      description: 'Reached our first milestone of 100 verified properties across 5 cities',
+      icon: Building
+    },
+    {
+      year: '2022',
+      title: '5,000 Residents',
+      description: 'Welcomed our 5,000th resident and expanded to 15 cities',
+      icon: Users
+    },
+    {
+      year: '2023',
+      title: 'Safety Innovation',
+      description: 'Launched advanced safety features including AI monitoring and emergency response',
+      icon: Shield
+    },
+    {
+      year: '2024',
+      title: 'National Presence',
+      description: 'Achieved presence in 25+ cities with 10,000+ happy residents',
+      icon: TrendingUp
+    }
   ];
 
   const team = [
     {
-      name: 'Rajesh Kumar',
-      role: 'Founder & CEO',
-      image: 'https://via.placeholder.com/150x150',
-      description: 'Former student who experienced the struggle of finding good mess accommodation'
-    },
-    {
       name: 'Priya Sharma',
-      role: 'Head of Operations',
-      image: 'https://via.placeholder.com/150x150',
-      description: 'Ensures quality standards and customer satisfaction across all properties'
+      role: 'Founder & CEO',
+      image: '👩‍💼',
+      description: 'Passionate about creating safe spaces for women with 10+ years in hospitality'
     },
     {
-      name: 'Amit Patel',
-      role: 'Technology Lead',
-      image: 'https://via.placeholder.com/150x150',
-      description: 'Builds and maintains the platform that connects students with accommodations'
+      name: 'Rahul Gupta',
+      role: 'CTO',
+      image: '👨‍💻',
+      description: 'Technology leader focused on building secure and scalable platforms'
+    },
+    {
+      name: 'Anjali Patel',
+      role: 'Head of Safety',
+      image: '👩‍🔒',
+      description: 'Former security consultant ensuring comprehensive safety protocols'
+    },
+    {
+      name: 'Vikram Singh',
+      role: 'Head of Operations',
+      image: '👨‍💼',
+      description: 'Operations expert managing property partnerships and quality standards'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            About MESS WALLAH
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 py-20 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-16"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent mb-6">
+            About MessWallah
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Connecting students with quality mess accommodations across India
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Empowering girls and women with safe, secure, and comfortable accommodation solutions
+            across India. Your safety, our priority.
           </p>
-          <div className="flex justify-center">
-            <Heart className="w-12 h-12 text-red-400" />
-          </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Mission Section */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-6">
-            <Target className="w-16 h-16 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-            Our Mission
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-4xl mx-auto leading-relaxed">
-            We believe every student deserves a comfortable, safe, and affordable place to stay while pursuing their education.
-            MESS WALLAH was born from the personal experience of struggling to find quality mess accommodations during college years.
-            Our mission is to eliminate this struggle by connecting students with verified, quality mess accommodations across India.
-          </p>
-        </div>
-
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                {stat.number}
-              </div>
-              <div className="text-gray-600 dark:text-gray-400 font-medium">
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Features Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-12">
-            Why Choose MESS WALLAH?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-200 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-600 dark:text-blue-400">
-                    {feature.icon}
-                  </div>
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
+        >
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20 text-center"
+              >
+                <Icon className={`w-12 h-12 ${stat.color} mx-auto mb-4`} />
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {stat.value}
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  {feature.description}
-                </p>
+                <div className="text-gray-600 dark:text-gray-400 font-medium">
+                  {stat.label}
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* Mission & Vision */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16"
+        >
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                <Target className="w-8 h-8 text-white" />
               </div>
-            ))}
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Our Mission</h2>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+              To revolutionize the accommodation experience for girls and women by providing safe,
+              verified, and comfortable living spaces that enable them to pursue their dreams with
+              confidence and independence. We believe every woman deserves a secure home away from home.
+            </p>
           </div>
-        </div>
 
-        {/* Story Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-8 md:p-12 shadow-md mb-16 transition-colors duration-200">
-          <div className="flex justify-center mb-6">
-            <Users className="w-16 h-16 text-purple-600 dark:text-purple-400" />
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/20">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                <Award className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Our Vision</h2>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+              To become India's most trusted platform for women's accommodation, creating a network
+              of safe spaces that empowers millions of girls to live independently, pursue education,
+              and build successful careers without compromising on safety or comfort.
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">
-            Our Story
+        </motion.div>
+
+        {/* Values */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            Our Core Values
           </h2>
-          <div className="prose prose-lg max-w-4xl mx-auto text-gray-600 dark:text-gray-400">
-            <p className="mb-6">
-              MESS WALLAH started as a simple idea during our college days. Like many students, we faced the challenge of finding
-              clean, affordable, and safe mess accommodations. The process was time-consuming, unreliable, and often led to
-              disappointing experiences.
-            </p>
-            <p className="mb-6">
-              We realized that thousands of students across India face the same problem every year. That's when we decided to
-              create a platform that would bridge the gap between students looking for quality accommodations and property owners
-              who provide them.
-            </p>
-            <p>
-              Today, MESS WALLAH has grown into a trusted platform that serves students across 15+ Indian states, with over 54
-              verified properties and thousands of satisfied customers. We continue to expand our reach while maintaining our
-              commitment to quality and student satisfaction.
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {values.map((value, index) => {
+              const Icon = value.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/20"
+                >
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className={`w-14 h-14 bg-gradient-to-r ${value.color} rounded-2xl flex items-center justify-center`}>
+                      <Icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {value.title}
+                    </h3>
+                  </div>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {value.description}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Team Section */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-12">
+        {/* Journey Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            Our Journey
+          </h2>
+          <div className="relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-orange-500 to-pink-500 rounded-full" />
+            {milestones.map((milestone, index) => {
+              const Icon = milestone.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 + index * 0.1 }}
+                  className={`relative flex items-center mb-12 ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
+                    }`}
+                >
+                  <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8'}`}>
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20">
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+                        {milestone.year}
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                        {milestone.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300">
+                        {milestone.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center border-4 border-white dark:border-gray-800">
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Team */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
             Meet Our Team
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member, index) => (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition-all duration-200">
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 + index * 0.1 }}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20 text-center"
+              >
+                <div className="text-6xl mb-4">{member.image}</div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   {member.name}
                 </h3>
-                <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">
+                <p className="text-orange-600 dark:text-orange-400 font-semibold mb-3">
                   {member.role}
                 </p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
                   {member.description}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Values Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-8 md:p-12 text-white text-center">
-          <div className="flex justify-center mb-6">
-            <Award className="w-16 h-16" />
+        {/* Contact Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="bg-gradient-to-r from-orange-500 to-pink-500 rounded-3xl p-8 text-white text-center"
+        >
+          <h2 className="text-3xl font-bold mb-4">Get in Touch</h2>
+          <p className="text-xl mb-8 opacity-90">
+            Have questions about our mission or want to partner with us? We'd love to hear from you!
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <motion.a
+              href="mailto:hello@messwallah.com"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-semibold hover:bg-white/30 transition-all duration-300"
+            >
+              <Mail className="w-5 h-5" />
+              hello@messwallah.com
+            </motion.a>
+            <motion.a
+              href="tel:+919946660012"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-semibold hover:bg-white/30 transition-all duration-300"
+            >
+              <Phone className="w-5 h-5" />
+              +91 9946 66 0012
+            </motion.a>
+            <motion.a
+              href="https://messwallah.com"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-semibold hover:bg-white/30 transition-all duration-300"
+            >
+              <Globe className="w-5 h-5" />
+              messwallah.com
+            </motion.a>
           </div>
-          <h2 className="text-3xl font-bold mb-8">Our Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold mb-3">Transparency</h3>
-              <p className="text-purple-100">
-                We believe in honest communication and transparent pricing with no hidden fees.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-3">Quality</h3>
-              <p className="text-purple-100">
-                Every property is verified and maintained to ensure the highest standards of quality.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-3">Support</h3>
-              <p className="text-purple-100">
-                We're here to help 24/7, ensuring you have the support you need throughout your stay.
-              </p>
-            </div>
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

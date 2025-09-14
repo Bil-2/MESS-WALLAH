@@ -1,14 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const { applySecurityMiddleware } = require('./middleware/advancedSecurity');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
-const { initializeSocket } = require('./utils/socket');
 
 // Load environment variables
 dotenv.config();
@@ -18,169 +16,278 @@ const app = express();
 // Trust proxy for production deployment
 app.set('trust proxy', 1);
 
-// Apply comprehensive security middleware
-applySecurityMiddleware(app);
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'http://localhost:5174',
+      process.env.FRONTEND_URL,
+      process.env.CLIENT_URL
+    ].filter(Boolean);
+
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'X-Requested-With'
+  ],
+  exposedHeaders: ['set-cookie']
+};
+
+app.use(cors(corsOptions));
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+
+// Compression middleware
+app.use(compression());
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  }
 });
-app.use('/api/', limiter);
+app.use(limiter);
 
-// CORS configuration
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
-  credentials: true
-}));
+// Logging middleware
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Cookie parser middleware
 app.use(cookieParser());
-
-// Compression middleware
-app.use(compression());
-
-// Logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
 
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    console.log('🔄 Connecting to MongoDB...');
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah';
+    console.log(`📍 MongoDB URI: ${mongoURI}`);
+
+    const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}:${conn.connection.port}`);
+    console.log(`🗄️  Database: ${conn.connection.name}`);
+
+    // Check if database has rooms
+    const Room = require('./models/Room');
+    const roomCount = await Room.countDocuments();
+    console.log(`📊 Total rooms in database: ${roomCount}`);
+
+    // Auto-seed if database is empty
+    if (roomCount === 0) {
+      console.log('🌱 Database is empty. Running auto-seeding...');
+      try {
+        const { seedSampleRooms } = require('./controllers/roomController');
+        await seedSampleRooms();
+        console.log('✅ Auto-seeding completed successfully');
+      } catch (seedError) {
+        console.error('❌ Auto-seeding failed:', seedError.message);
+      }
+    }
+
+    return conn;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('❌ MongoDB connection failed:', error.message);
+    console.error('🔧 Troubleshooting steps:');
+    console.error('   1. Make sure MongoDB is running: npm run mongo:start');
+    console.error('   2. Check MongoDB status: npm run mongo:status');
+    console.error('   3. Verify connection string in .env file');
     process.exit(1);
   }
 };
 
-// Connect to database
-connectDB();
+// Start server
+const startServer = async () => {
+  try {
+    // Connect to database
+    await connectDB();
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/rooms', require('./routes/rooms'));
-app.use('/api/bookings', require('./routes/bookings'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/notifications', require('./routes/notificationRoutes'));
-app.use('/api/chat', require('./routes/chatRoutes'));
-app.use('/api/analytics', require('./routes/analyticsRoutes'));
-app.use('/api/languages', require('./routes/languageRoutes'));
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'MESS WALLAH API is running securely',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0'
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found',
-    path: req.originalUrl
-  });
-});
-
-// Global error handler
-app.use((error, req, res, next) => {
-  console.error('Global error handler:', error);
-
-  // Security: Don't leak error details in production
-  const isDevelopment = process.env.NODE_ENV === 'development';
-
-  res.status(error.status || 500).json({
-    success: false,
-    message: isDevelopment ? error.message : 'Internal server error',
-    ...(isDevelopment && { stack: error.stack })
-  });
-});
-
-// Graceful shutdown handling
-const gracefulShutdown = (signal) => {
-  console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
-
-  if (server) {
-    server.close(() => {
-      console.log('✅ HTTP server closed');
-
-      mongoose.connection.close(false, () => {
-        console.log('✅ MongoDB connection closed');
-        process.exit(0);
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+      res.status(200).json({
+        status: 'OK',
+        message: 'MESS WALLAH API is running',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
       });
     });
-  } else {
-    mongoose.connection.close(false, () => {
-      console.log('✅ MongoDB connection closed');
-      process.exit(0);
-    });
-  }
 
-  // Force close after 30 seconds
-  setTimeout(() => {
-    console.error('❌ Could not close connections in time, forcefully shutting down');
+    // Test endpoint
+    app.get('/api/test', (req, res) => {
+      res.json({
+        success: true,
+        message: 'API is working correctly',
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // Register API routes
+    console.log('📋 Registering API routes...');
+
+    try {
+      app.use('/api/auth', require('./routes/auth'));
+      console.log('   ✓ /api/auth routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/auth routes:', error.message);
+    }
+
+    try {
+      app.use('/api/users', require('./routes/users'));
+      console.log('   ✓ /api/users routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/users routes:', error.message);
+    }
+
+    try {
+      app.use('/api/rooms', require('./routes/rooms'));
+      console.log('   ✓ /api/rooms routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/rooms routes:', error.message);
+    }
+
+    try {
+      app.use('/api/bookings', require('./routes/bookings'));
+      console.log('   ✓ /api/bookings routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/bookings routes:', error.message);
+    }
+
+    // Global error handling middleware
+    app.use((err, req, res, next) => {
+      console.error('Global Error Handler:', {
+        message: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method
+      });
+
+      // Mongoose validation error
+      if (err.name === 'ValidationError') {
+        const errors = Object.values(err.errors).map(e => e.message);
+        return res.status(400).json({
+          success: false,
+          message: 'Validation Error',
+          errors
+        });
+      }
+
+      // Mongoose cast error
+      if (err.name === 'CastError') {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid ID format'
+        });
+      }
+
+      // JWT errors
+      if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token'
+        });
+      }
+
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Token expired'
+        });
+      }
+
+      // Default error
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: err.stack
+        })
+      });
+    });
+
+    // 404 handler
+    app.use('*', (req, res) => {
+      console.log('404 - Route not found:', req.method, req.originalUrl);
+      res.status(404).json({
+        success: false,
+        message: `Route ${req.method} ${req.originalUrl} not found`
+      });
+    });
+
+    const PORT = process.env.PORT || 5001;
+
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 MESS WALLAH Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📅 Started at: ${new Date().toISOString()}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received. Shutting down gracefully...');
+      server.close(() => {
+        console.log('Process terminated');
+        mongoose.connection.close();
+      });
+    });
+
+    process.on('unhandledRejection', (err) => {
+      console.error('Unhandled Promise Rejection:', err);
+      server.close(() => {
+        process.exit(1);
+      });
+    });
+
+    process.on('uncaughtException', (err) => {
+      console.error('Uncaught Exception:', err);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    console.error('❌ Server initialization failed:', error.message);
     process.exit(1);
-  }, 30000);
+  }
 };
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-// Handle termination signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-const PORT = process.env.PORT || 5001;
-
-let server;
-
-server = app.listen(PORT, () => {
-  console.log(`
-🚀 MESS WALLAH Server running securely on port ${PORT}
-🔒 Security features enabled:
-   • Rate limiting
-   • CSRF protection
-   • Input sanitization
-   • Brute force protection
-   • Security headers
-   • Request validation
-🌍 Environment: ${process.env.NODE_ENV || 'development'}
-📅 Started at: ${new Date().toISOString()}
-  `);
-});
-
-// Initialize Socket.IO for real-time features
-initializeSocket(server);
+// Start the server
+startServer();
 
 module.exports = app;

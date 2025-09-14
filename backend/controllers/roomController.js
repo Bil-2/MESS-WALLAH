@@ -1,14 +1,14 @@
 const Room = require('../models/Room');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
-const cloudinary = require('cloudinary').v2;
 
 // Get all rooms with filtering and pagination
 const getRooms = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 12,
+      limit = 50,
       search,
       location,
       minRent,
@@ -21,7 +21,7 @@ const getRooms = async (req, res) => {
     } = req.query;
 
     // Build filter object
-    const filter = {};
+    const filter = { isAvailable: true };
 
     if (search) {
       filter.$or = [
@@ -59,9 +59,6 @@ const getRooms = async (req, res) => {
       filter.featured = true;
     }
 
-    // Only show available rooms
-    filter.isAvailable = true;
-
     // Build sort object
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -95,23 +92,82 @@ const getRooms = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get rooms error:', error);
+    console.error('Error in getRooms:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch rooms',
+      message: 'Error fetching rooms',
       error: error.message
     });
   }
 };
 
-// Get single room by ID
+// Get featured rooms
+const getFeaturedRooms = async (req, res) => {
+  try {
+    const { limit = 6 } = req.query;
+
+    // Check database connection
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection not available'
+      });
+    }
+
+    console.log('Fetching featured rooms with limit:', limit);
+
+    const rooms = await Room.find({
+      featured: true,
+      isAvailable: true
+    })
+      .populate('owner', 'name phone email verified')
+      .sort({ rating: -1, createdAt: -1 })
+      .limit(parseInt(limit))
+      .lean();
+
+    console.log('Found featured rooms:', rooms.length);
+
+    // Transform rooms data for frontend compatibility
+    const transformedRooms = rooms.map(room => ({
+      ...room,
+      image: room.photos && room.photos.length > 0 ? room.photos[0].url : null,
+      rent: room.rentPerMonth,
+      location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim().replace(/^,\s*/, ''),
+      verified: room.owner?.verified || false,
+      reviews: room.totalReviews || 0
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        rooms: transformedRooms
+      }
+    });
+  } catch (error) {
+    console.error('Error in getFeaturedRooms:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching featured rooms',
+      error: error.message
+    });
+  }
+};
+
+// Get room by ID
 const getRoomById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid room ID'
+      });
+    }
+
     const room = await Room.findById(id)
-      .populate('owner', 'name phone email verified')
-      .lean();
+      .populate('owner', 'name phone email verified createdAt')
+      .populate('reviews.user', 'name');
 
     if (!room) {
       return res.status(404).json({
@@ -120,116 +176,81 @@ const getRoomById = async (req, res) => {
       });
     }
 
-    // Increment view count
-    await Room.findByIdAndUpdate(id, { $inc: { views: 1 } });
-
     res.status(200).json({
       success: true,
-      data: { room }
+      data: room
     });
   } catch (error) {
-    console.error('Get room by ID error:', error);
+    console.error('Error in getRoomById:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch room details',
+      message: 'Error fetching room',
       error: error.message
     });
   }
 };
 
-// Create new room (Owner only)
+// Create new room
 const createRoom = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
+        message: 'Validation errors',
         errors: errors.array()
       });
     }
 
-    const {
-      title,
-      description,
-      roomType,
-      rentPerMonth,
-      securityDeposit,
-      address,
-      amenities,
-      rules,
-      preferences
-    } = req.body;
-
-    // Create room object
     const roomData = {
-      owner: req.user.id,
-      title,
-      description,
-      roomType,
-      rentPerMonth: parseInt(rentPerMonth),
-      securityDeposit: parseInt(securityDeposit),
-      address,
-      amenities: Array.isArray(amenities) ? amenities : [],
-      rules: Array.isArray(rules) ? rules : [],
-      preferences: Array.isArray(preferences) ? preferences : [],
-      photos: []
+      ...req.body,
+      owner: req.user.id
     };
 
-    // Handle photo uploads if present
+    // Handle file uploads
     if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file =>
-        cloudinary.uploader.upload(file.path, {
-          folder: 'mess-wallah/rooms',
-          transformation: [
-            { width: 800, height: 600, crop: 'fill', quality: 'auto' }
-          ]
-        })
-      );
-
-      const uploadResults = await Promise.all(uploadPromises);
-      roomData.photos = uploadResults.map(result => ({
-        url: result.secure_url,
-        publicId: result.public_id
+      roomData.photos = req.files.map(file => ({
+        url: `/uploads/${file.filename}`,
+        filename: file.filename
       }));
     }
 
     const room = new Room(roomData);
     await room.save();
 
-    // Populate owner details for response
-    await room.populate('owner', 'name phone email verified');
+    const populatedRoom = await Room.findById(room._id)
+      .populate('owner', 'name phone email verified');
 
     res.status(201).json({
       success: true,
-      message: 'Room created successfully',
-      data: { room }
+      data: populatedRoom,
+      message: 'Room created successfully'
     });
   } catch (error) {
-    console.error('Create room error:', error);
+    console.error('Error in createRoom:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to create room',
+      message: 'Error creating room',
       error: error.message
     });
   }
 };
 
-// Update room (Owner only)
+// Update room
 const updateRoom = async (req, res) => {
   try {
+    const { id } = req.params;
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
+        message: 'Validation errors',
         errors: errors.array()
       });
     }
 
-    const { id } = req.params;
     const room = await Room.findById(id);
-
     if (!room) {
       return res.status(404).json({
         success: false,
@@ -237,7 +258,7 @@ const updateRoom = async (req, res) => {
       });
     }
 
-    // Check if user is the owner
+    // Check ownership
     if (room.owner.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -245,56 +266,43 @@ const updateRoom = async (req, res) => {
       });
     }
 
-    // Update room data
     const updateData = { ...req.body };
 
-    // Handle new photo uploads
+    // Handle new file uploads
     if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file =>
-        cloudinary.uploader.upload(file.path, {
-          folder: 'mess-wallah/rooms',
-          transformation: [
-            { width: 800, height: 600, crop: 'fill', quality: 'auto' }
-          ]
-        })
-      );
-
-      const uploadResults = await Promise.all(uploadPromises);
-      const newPhotos = uploadResults.map(result => ({
-        url: result.secure_url,
-        publicId: result.public_id
+      const newPhotos = req.files.map(file => ({
+        url: `/uploads/${file.filename}`,
+        filename: file.filename
       }));
-
       updateData.photos = [...(room.photos || []), ...newPhotos];
     }
 
-    const updatedRoom = await Room.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('owner', 'name phone email verified');
+    const updatedRoom = await Room.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true
+    }).populate('owner', 'name phone email verified');
 
     res.status(200).json({
       success: true,
-      message: 'Room updated successfully',
-      data: { room: updatedRoom }
+      data: updatedRoom,
+      message: 'Room updated successfully'
     });
   } catch (error) {
-    console.error('Update room error:', error);
+    console.error('Error in updateRoom:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update room',
+      message: 'Error updating room',
       error: error.message
     });
   }
 };
 
-// Delete room (Owner only)
+// Delete room
 const deleteRoom = async (req, res) => {
   try {
     const { id } = req.params;
-    const room = await Room.findById(id);
 
+    const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({
         success: false,
@@ -302,20 +310,12 @@ const deleteRoom = async (req, res) => {
       });
     }
 
-    // Check if user is the owner
+    // Check ownership
     if (room.owner.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this room'
       });
-    }
-
-    // Delete photos from cloudinary
-    if (room.photos && room.photos.length > 0) {
-      const deletePromises = room.photos.map(photo =>
-        cloudinary.uploader.destroy(photo.publicId)
-      );
-      await Promise.all(deletePromises);
     }
 
     await Room.findByIdAndDelete(id);
@@ -325,60 +325,10 @@ const deleteRoom = async (req, res) => {
       message: 'Room deleted successfully'
     });
   } catch (error) {
-    console.error('Delete room error:', error);
+    console.error('Error in deleteRoom:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete room',
-      error: error.message
-    });
-  }
-};
-
-// Get room statistics
-const getRoomStats = async (req, res) => {
-  try {
-    const totalRooms = await Room.countDocuments({ isAvailable: true });
-    const totalUsers = await User.countDocuments();
-    const totalBookings = await Room.aggregate([
-      { $match: { isAvailable: false } },
-      { $count: "bookings" }
-    ]);
-
-    const cityStats = await Room.aggregate([
-      { $match: { isAvailable: true } },
-      { $group: { _id: '$address.city', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
-
-    const priceStats = await Room.aggregate([
-      { $match: { isAvailable: true } },
-      {
-        $group: {
-          _id: null,
-          avgRent: { $avg: '$rentPerMonth' },
-          minRent: { $min: '$rentPerMonth' },
-          maxRent: { $max: '$rentPerMonth' }
-        }
-      }
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        totalRooms,
-        totalUsers,
-        totalBookings: totalBookings[0]?.bookings || 0,
-        successRate: 98, // Mock success rate
-        cityStats,
-        priceStats: priceStats[0] || { avgRent: 0, minRent: 0, maxRent: 0 }
-      }
-    });
-  } catch (error) {
-    console.error('Get room stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch statistics',
+      message: 'Error deleting room',
       error: error.message
     });
   }
@@ -388,8 +338,8 @@ const getRoomStats = async (req, res) => {
 const toggleAvailability = async (req, res) => {
   try {
     const { id } = req.params;
-    const room = await Room.findById(id);
 
+    const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({
         success: false,
@@ -397,7 +347,7 @@ const toggleAvailability = async (req, res) => {
       });
     }
 
-    // Check if user is the owner
+    // Check ownership
     if (room.owner.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -410,44 +360,159 @@ const toggleAvailability = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Room ${room.isAvailable ? 'made available' : 'marked as unavailable'}`,
-      data: { room }
+      data: room,
+      message: `Room ${room.isAvailable ? 'made available' : 'made unavailable'}`
     });
   } catch (error) {
-    console.error('Toggle availability error:', error);
+    console.error('Error in toggleAvailability:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update room availability',
+      message: 'Error updating room availability',
       error: error.message
     });
   }
 };
 
-// Get featured rooms
-const getFeaturedRooms = async (req, res) => {
+// Get room statistics
+const getRoomStats = async (req, res) => {
   try {
-    const { limit = 6 } = req.query;
+    const totalRooms = await Room.countDocuments();
+    const availableRooms = await Room.countDocuments({ isAvailable: true });
+    const featuredRooms = await Room.countDocuments({ featured: true });
 
-    const rooms = await Room.find({
-      featured: true,
-      isAvailable: true
-    })
-      .populate('owner', 'name phone email verified')
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .lean();
+    const avgRent = await Room.aggregate([
+      { $group: { _id: null, avgRent: { $avg: '$rentPerMonth' } } }
+    ]);
 
     res.status(200).json({
       success: true,
-      data: { rooms }
+      data: {
+        totalRooms,
+        availableRooms,
+        featuredRooms,
+        averageRent: avgRent[0]?.avgRent || 0
+      }
     });
   } catch (error) {
-    console.error('Get featured rooms error:', error);
+    console.error('Error in getRoomStats:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch featured rooms',
+      message: 'Error fetching room statistics',
       error: error.message
     });
+  }
+};
+
+// Seed sample rooms function
+const seedSampleRooms = async () => {
+  try {
+    console.log('🌱 Starting room seeding process...');
+
+    // Check if rooms already exist
+    const existingRooms = await Room.countDocuments();
+    if (existingRooms > 0) {
+      console.log(`📊 Database already has ${existingRooms} rooms. Skipping seeding.`);
+      return;
+    }
+
+    // Create a sample owner user if none exists
+    let sampleOwner = await User.findOne({ email: 'owner@messwallah.com' });
+    if (!sampleOwner) {
+      sampleOwner = new User({
+        name: 'Sample Owner',
+        email: 'owner@messwallah.com',
+        phone: '9876543210',
+        role: 'owner',
+        verified: true,
+        password: 'hashedpassword123' // In real app, this would be properly hashed
+      });
+      await sampleOwner.save();
+      console.log('✅ Sample owner created');
+    }
+
+    // Sample room data
+    const sampleRooms = [
+      {
+        title: 'Cozy Single Room in Koramangala',
+        description: 'A comfortable single room with all basic amenities in the heart of Koramangala.',
+        roomType: 'single',
+        rentPerMonth: 12000,
+        securityDeposit: 24000,
+        address: {
+          street: '123 Main Street',
+          area: 'Koramangala',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          pincode: '560034'
+        },
+        amenities: ['WiFi', 'AC', 'Parking', 'Security'],
+        photos: [{
+          url: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
+          filename: 'sample1.jpg'
+        }],
+        owner: sampleOwner._id,
+        featured: true,
+        isAvailable: true,
+        rating: 4.5,
+        totalReviews: 12
+      },
+      {
+        title: 'Shared Room Near IT Park',
+        description: 'Affordable shared accommodation perfect for working professionals.',
+        roomType: 'shared',
+        rentPerMonth: 8000,
+        securityDeposit: 16000,
+        address: {
+          street: '456 Tech Street',
+          area: 'Electronic City',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          pincode: '560100'
+        },
+        amenities: ['WiFi', 'Laundry', 'Kitchen', 'Security'],
+        photos: [{
+          url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+          filename: 'sample2.jpg'
+        }],
+        owner: sampleOwner._id,
+        featured: true,
+        isAvailable: true,
+        rating: 4.2,
+        totalReviews: 8
+      },
+      {
+        title: 'Studio Apartment in Indiranagar',
+        description: 'Modern studio apartment with kitchen and all amenities.',
+        roomType: 'studio',
+        rentPerMonth: 18000,
+        securityDeposit: 36000,
+        address: {
+          street: '789 Garden Road',
+          area: 'Indiranagar',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          pincode: '560038'
+        },
+        amenities: ['WiFi', 'AC', 'Kitchen', 'Parking', 'Gym'],
+        photos: [{
+          url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+          filename: 'sample3.jpg'
+        }],
+        owner: sampleOwner._id,
+        featured: true,
+        isAvailable: true,
+        rating: 4.7,
+        totalReviews: 15
+      }
+    ];
+
+    // Insert sample rooms
+    await Room.insertMany(sampleRooms);
+    console.log(`✅ Successfully seeded ${sampleRooms.length} sample rooms`);
+
+  } catch (error) {
+    console.error('❌ Error seeding rooms:', error);
+    throw error;
   }
 };
 
@@ -459,5 +524,6 @@ module.exports = {
   deleteRoom,
   getRoomStats,
   toggleAvailability,
-  getFeaturedRooms
+  getFeaturedRooms,
+  seedSampleRooms
 };

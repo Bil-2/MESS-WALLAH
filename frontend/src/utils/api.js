@@ -4,10 +4,11 @@ import toast from 'react-hot-toast';
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -17,9 +18,11 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
+    console.error('Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -27,167 +30,64 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
+    console.log('API Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
+    console.error('API Error:', error.response?.status, error.response?.data || error.message);
+
     const message = error.response?.data?.message || 'Something went wrong';
 
     // Handle specific error cases
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
       toast.error('Session expired. Please login again.');
     } else if (error.response?.status === 403) {
       toast.error('Access denied');
     } else if (error.response?.status === 404) {
-      toast.error('Resource not found');
+      console.log('404 Error for:', error.config?.url);
     } else if (error.response?.status >= 500) {
       toast.error('Server error. Please try again later.');
-    } else {
-      toast.error(message);
+    } else if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+      console.error('Connection refused - backend server may not be running');
     }
 
     return Promise.reject(error);
   }
 );
 
-// API endpoints
-export const endpoints = {
-  // Auth endpoints
-  auth: {
-    sendOtp: '/auth/send-otp',
-    verifyOtp: '/auth/verify-otp',
-    logout: '/auth/logout',
-    refreshToken: '/auth/refresh-token',
-  },
-
-  // User endpoints
-  users: {
-    profile: '/users/profile',
-    updateProfile: '/users/profile',
-    changePassword: '/users/change-password',
-    dashboard: '/users/dashboard',
-    activity: '/users/activity',
-    favourites: '/users/favourites',
-    toggleFavourite: (roomId) => `/users/favourites/${roomId}`,
-    deactivate: '/users/deactivate',
-    platformStats: '/users/platform-stats',
-  },
-
-  // Room endpoints
-  rooms: {
-    list: '/rooms',
-    create: '/rooms',
-    getById: (id) => `/rooms/${id}`,
-    update: (id) => `/rooms/${id}`,
-    delete: (id) => `/rooms/${id}`,
-    toggleAvailability: (id) => `/rooms/${id}/availability`,
-    stats: '/rooms/stats',
-    featured: '/rooms/featured',
-  },
-
-  // Booking endpoints
-  bookings: {
-    create: '/bookings',
-    myBookings: '/bookings/my-bookings',
-    getById: (id) => `/bookings/${id}`,
-    updateStatus: (id) => `/bookings/${id}/status`,
-    cancel: (id) => `/bookings/${id}/cancel`,
-    addMessage: (id) => `/bookings/${id}/messages`,
-    stats: '/bookings/stats/overview',
-  },
-
-  // Notification endpoints
-  notifications: {
-    list: '/notifications',
-    markRead: (id) => `/notifications/${id}/read`,
-    markAllRead: '/notifications/mark-all-read',
-    delete: (id) => `/notifications/${id}`,
-    preferences: '/notifications/preferences',
-  },
-
-  // Chat endpoints
-  chat: {
-    messages: (bookingId) => `/chat/${bookingId}/messages`,
-    send: (bookingId) => `/chat/${bookingId}/send`,
-  },
-
-  // Analytics endpoints
-  analytics: {
-    dashboard: '/analytics/dashboard',
-    property: (roomId) => `/analytics/property/${roomId}`,
-    reports: '/analytics/reports',
-  },
-
-  // Language endpoints
-  languages: {
-    list: '/languages',
-    translations: (lang) => `/languages/${lang}/translations`,
-    setPreference: '/languages/preference',
-  },
-};
-
 // API helper functions
 export const apiHelpers = {
   // Auth helpers
   async sendOtp(phone) {
-    const response = await api.post(endpoints.auth.sendOtp, { phone });
+    const response = await api.post('/auth/send-otp', { phone });
     return response.data;
   },
 
   async verifyOtp(phone, otp) {
-    const response = await api.post(endpoints.auth.verifyOtp, { phone, otp });
+    const response = await api.post('/auth/verify-otp', { phone, otp });
     return response.data;
   },
 
   async logout() {
-    const response = await api.post(endpoints.auth.logout);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    return response.data;
-  },
-
-  // User helpers
-  async getUserProfile() {
-    const response = await api.get(endpoints.users.profile);
-    return response.data;
-  },
-
-  async updateUserProfile(profileData) {
-    const response = await api.put(endpoints.users.updateProfile, profileData);
-    return response.data;
-  },
-
-  async getDashboardStats() {
-    const response = await api.get(endpoints.users.dashboard);
-    return response.data;
-  },
-
-  async toggleFavourite(roomId) {
-    const response = await api.post(endpoints.users.toggleFavourite(roomId));
-    return response.data;
-  },
-
-  async getFavourites(params = {}) {
-    const response = await api.get(endpoints.users.favourites, { params });
+    const response = await api.post('/auth/logout');
     return response.data;
   },
 
   // Room helpers
   async getRooms(params = {}) {
-    const response = await api.get(endpoints.rooms.list, { params });
+    const response = await api.get('/rooms', { params });
     return response.data;
   },
 
   async getRoomById(id) {
-    const response = await api.get(endpoints.rooms.getById(id));
+    const response = await api.get(`/rooms/${id}`);
     return response.data;
   },
 
   async createRoom(roomData) {
-    const response = await api.post(endpoints.rooms.create, roomData, {
+    const response = await api.post('/rooms', roomData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -196,7 +96,7 @@ export const apiHelpers = {
   },
 
   async updateRoom(id, roomData) {
-    const response = await api.put(endpoints.rooms.update(id), roomData, {
+    const response = await api.put(`/rooms/${id}`, roomData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -205,79 +105,73 @@ export const apiHelpers = {
   },
 
   async deleteRoom(id) {
-    const response = await api.delete(endpoints.rooms.delete(id));
+    const response = await api.delete(`/rooms/${id}`);
     return response.data;
   },
 
   async getFeaturedRooms() {
-    const response = await api.get(endpoints.rooms.featured);
+    const response = await api.get('/rooms/featured');
     return response.data;
   },
 
   async getRoomStats() {
-    const response = await api.get(endpoints.rooms.stats);
+    const response = await api.get('/rooms/stats');
     return response.data;
   },
 
   // Booking helpers
   async createBooking(bookingData) {
-    const response = await api.post(endpoints.bookings.create, bookingData);
+    const response = await api.post('/bookings', bookingData);
     return response.data;
   },
 
   async getMyBookings(params = {}) {
-    const response = await api.get(endpoints.bookings.myBookings, { params });
+    const response = await api.get('/bookings/my-bookings', { params });
     return response.data;
   },
 
   async getBookingById(id) {
-    const response = await api.get(endpoints.bookings.getById(id));
+    const response = await api.get(`/bookings/${id}`);
     return response.data;
   },
 
   async updateBookingStatus(id, status, reason) {
-    const response = await api.patch(endpoints.bookings.updateStatus(id), { status, reason });
+    const response = await api.patch(`/bookings/${id}/status`, { status, reason });
     return response.data;
   },
 
   async cancelBooking(id, reason) {
-    const response = await api.patch(endpoints.bookings.cancel(id), { reason });
+    const response = await api.patch(`/bookings/${id}/cancel`, { reason });
     return response.data;
   },
 
-  async addBookingMessage(id, message) {
-    const response = await api.post(endpoints.bookings.addMessage(id), { message });
+  // User helpers
+  async getProfile() {
+    const response = await api.get('/users/profile');
     return response.data;
   },
 
-  async getBookingStats() {
-    const response = await api.get(endpoints.bookings.stats);
+  async updateProfile(profileData) {
+    const response = await api.put('/users/profile', profileData);
     return response.data;
   },
 
-  // Notification helpers
-  async getNotifications(params = {}) {
-    const response = await api.get(endpoints.notifications.list, { params });
+  async changePassword(passwordData) {
+    const response = await api.put('/users/change-password', passwordData);
     return response.data;
   },
 
-  async markNotificationRead(id) {
-    const response = await api.patch(endpoints.notifications.markRead(id));
+  async getDashboard() {
+    const response = await api.get('/users/dashboard');
     return response.data;
   },
 
-  async markAllNotificationsRead() {
-    const response = await api.patch(endpoints.notifications.markAllRead);
+  // Health check
+  async healthCheck() {
+    const response = await api.get('/test');
     return response.data;
-  },
-
-  async deleteNotification(id) {
-    const response = await api.delete(endpoints.notifications.delete(id));
-    return response.data;
-  },
+  }
 };
-
-export default api;
 
 // Named exports for backward compatibility
 export const roomsAPI = {
@@ -290,20 +184,28 @@ export const roomsAPI = {
   getRoomStats: apiHelpers.getRoomStats,
 };
 
+export const authAPI = {
+  sendOtp: apiHelpers.sendOtp,
+  verifyOtp: apiHelpers.verifyOtp,
+  logout: apiHelpers.logout,
+};
+
 export const bookingsAPI = {
   createBooking: apiHelpers.createBooking,
   getMyBookings: apiHelpers.getMyBookings,
   getBookingById: apiHelpers.getBookingById,
   updateBookingStatus: apiHelpers.updateBookingStatus,
   cancelBooking: apiHelpers.cancelBooking,
-  addBookingMessage: apiHelpers.addBookingMessage,
-  getBookingStats: apiHelpers.getBookingStats,
 };
 
-export const usersAPI = {
-  getUserProfile: apiHelpers.getUserProfile,
-  updateUserProfile: apiHelpers.updateUserProfile,
-  getDashboardStats: apiHelpers.getDashboardStats,
-  toggleFavourite: apiHelpers.toggleFavourite,
-  getFavourites: apiHelpers.getFavourites,
+export const userAPI = {
+  getProfile: apiHelpers.getProfile,
+  updateProfile: apiHelpers.updateProfile,
+  changePassword: apiHelpers.changePassword,
+  getDashboard: apiHelpers.getDashboard,
 };
+
+// Backward compatibility export
+export const usersAPI = userAPI;
+
+export default api;
