@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Star, Wifi, Car, Utensils, Calendar, Users, Heart, Share2, ArrowLeft, Phone, Mail } from 'lucide-react';
-import { useAuthContext } from '../context/AuthContext.jsx';
+import { motion } from 'framer-motion';
+import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail } from 'react-icons/fi';
+import { useAuth } from '../hooks/useAuth';
 import { apiHelpers } from '../utils/api';
+import { getRoomById, mockRooms } from '../data/mockRooms';
 import LoadingSpinner from '../components/LoadingSpinner';
-import SubscriptionBooking from '../components/SubscriptionBooking';
 import toast from 'react-hot-toast';
+import SubscriptionBooking from '../components/SubscriptionBooking';
 
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { user } = useAuth();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -24,17 +26,24 @@ const RoomDetails = () => {
   const fetchRoomDetails = async () => {
     try {
       setLoading(true);
-      const response = await apiHelpers.rooms.getById(id);
-      setRoom(response.data.data);
-
-      // Check if room is in user's favorites
-      if (user && user.favourites && user.favourites.includes(id)) {
-        setIsLiked(true);
+      
+      // Try to get room from mock data first
+      const mockResponse = getRoomById(id);
+      if (mockResponse.success && mockResponse.data) {
+        setRoom(mockResponse.data);
+        toast.success('Room details loaded successfully');
+        return;
       }
+      
+      // Fallback to API call
+      const response = await apiHelpers.getRoomById(id);
+      setRoom(response.data || response);
+      toast.success('Room details loaded successfully');
     } catch (error) {
       console.error('Error fetching room details:', error);
-      // Fallback to mock data for demo
-      setRoom(getMockRoomData());
+      // Final fallback to any available mock room
+      const fallbackRoom = mockRooms[0] || getMockRoomData();
+      setRoom(fallbackRoom);
       toast.error('Failed to load room details. Showing demo data.');
     } finally {
       setLoading(false);
@@ -56,10 +65,10 @@ const RoomDetails = () => {
     rating: 4.5,
     reviewCount: 23,
     photos: [
-      { url: 'https://via.placeholder.com/800x600', caption: 'Main room view' },
-      { url: 'https://via.placeholder.com/800x600', caption: 'Bathroom' },
-      { url: 'https://via.placeholder.com/800x600', caption: 'Common area' },
-      { url: 'https://via.placeholder.com/800x600', caption: 'Kitchen' }
+      { url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', caption: 'Main room view' },
+      { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&h=600&fit=crop', caption: 'Bathroom' },
+      { url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop', caption: 'Common area' },
+      { url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop', caption: 'Kitchen' }
     ],
     amenities: ['wifi', 'parking', 'mess', 'laundry', 'security'],
     roomType: 'single',
@@ -129,11 +138,11 @@ const RoomDetails = () => {
   };
 
   const amenityIcons = {
-    wifi: <Wifi className="w-5 h-5" />,
-    parking: <Car className="w-5 h-5" />,
-    mess: <Utensils className="w-5 h-5" />,
-    laundry: <Users className="w-5 h-5" />,
-    security: <Users className="w-5 h-5" />
+    wifi: <FiWifi className="w-5 h-5" />,
+    parking: <FiTruck className="w-5 h-5" />,
+    mess: <FiUsers className="w-5 h-5" />,
+    laundry: <FiUsers className="w-5 h-5" />,
+    security: <FiShield className="w-5 h-5" />
   };
 
   if (loading) {
@@ -164,8 +173,11 @@ const RoomDetails = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <button className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors">
-          <ArrowLeft className="w-5 h-5 mr-2" />
+        <button 
+          onClick={() => navigate('/rooms')}
+          className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
+        >
+          <FiArrowLeft className="w-5 h-5 mr-2" />
           Back to Rooms
         </button>
 
@@ -176,7 +188,7 @@ const RoomDetails = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-8 transition-colors duration-200">
               <div className="aspect-w-16 aspect-h-9">
                 <img
-                  src={room.photos?.[selectedImage]?.url || room.photos?.[selectedImage] || 'https://via.placeholder.com/800x600'}
+                  src={room.photos?.[selectedImage]?.url || room.photos?.[selectedImage] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop'}
                   alt={room.photos?.[selectedImage]?.caption || room.title}
                   className="w-full h-96 object-cover"
                 />
@@ -193,7 +205,7 @@ const RoomDetails = () => {
                         }`}
                     >
                       <img
-                        src={photo.url || photo || 'https://via.placeholder.com/150x120'}
+                        src={photo.url || photo || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=150&h=120&fit=crop'}
                         alt={photo.caption || `View ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -211,11 +223,11 @@ const RoomDetails = () => {
                     {room.title}
                   </h1>
                   <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2">
-                    <MapPin className="w-4 h-4 mr-1" />
+                    <FiMapPin className="w-4 h-4 mr-1" />
                     <span>{room.address?.area}, {room.address?.city}</span>
                   </div>
                   <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                    <FiStar className="w-4 h-4 text-yellow-400 mr-1" />
                     <span className="text-gray-900 dark:text-white font-medium mr-1">
                       {room.rating || 4.5}
                     </span>
@@ -232,7 +244,7 @@ const RoomDetails = () => {
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                       }`}
                   >
-                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                    <FiHeart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
                   </button>
                   <button
                     onClick={() => {
@@ -247,7 +259,7 @@ const RoomDetails = () => {
                     }}
                     className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <FiShare2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -274,7 +286,7 @@ const RoomDetails = () => {
                     className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200"
                   >
                     <div className="text-purple-600 dark:text-purple-400 mr-3">
-                      {amenityIcons[amenity] || <Users className="w-5 h-5" />}
+                      {amenityIcons[amenity] || <FiUsers className="w-5 h-5" />}
                     </div>
                     <span className="text-gray-900 dark:text-white capitalize">
                       {amenity}
@@ -409,7 +421,7 @@ const RoomDetails = () => {
                   </h4>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center mr-3">
-                      <Users className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                      <FiUsers className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-gray-900 dark:text-white">
@@ -423,13 +435,13 @@ const RoomDetails = () => {
                       <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                         {room.owner.phone && (
                           <div className="flex items-center">
-                            <Phone className="w-3 h-3 mr-1" />
+                            <FiPhone className="w-3 h-3 mr-1" />
                             {room.owner.phone}
                           </div>
                         )}
                         {room.owner.email && (
                           <div className="flex items-center">
-                            <Mail className="w-3 h-3 mr-1" />
+                            <FiMail className="w-3 h-3 mr-1" />
                             {room.owner.email}
                           </div>
                         )}

@@ -219,7 +219,18 @@ const Login = () => {
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                👩‍🍳
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-8 h-8 text-gray-800"
+                    fill="currentColor"
+                  >
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4H5V5h14v2zm0 2H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H5v-8h14v8z" />
+                    <rect x="7" y="11" width="2" height="2" />
+                    <rect x="11" y="11" width="2" height="2" />
+                    <rect x="15" y="11" width="2" height="2" />
+                  </svg>
+                </div>
               </motion.div>
               <motion.div
                 className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2"
@@ -251,8 +262,8 @@ const Login = () => {
           <motion.div
             className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-bold shadow-lg border border-green-200 dark:border-green-800"
             variants={itemVariants}
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ type: "spring", stiffness: 400 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
             100% Girls Safety Guaranteed
@@ -328,9 +339,11 @@ const Login = () => {
                         id="phone"
                         name="phone"
                         type="tel"
+                        autoComplete="tel"
                         required
                         value={formData.phone}
                         onChange={handleChange}
+                        maxLength="10"
                         className={`w-full px-3 sm:px-4 py-3 sm:py-4 pl-10 sm:pl-12 border-2 ${errors.phone
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                           : 'border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'

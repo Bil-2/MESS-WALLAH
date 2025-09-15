@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiFilter, FiMapPin, FiStar, FiHeart, FiEye, FiCalendar, FiChevronDown, FiSliders, FiHome, FiUsers, FiWifi, FiShield, FiClock, FiGift, FiPhone, FiShare2 } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { roomsAPI } from '../utils/api';
+import { getAllRooms, mockRooms } from '../data/mockRooms';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -38,28 +39,26 @@ const Rooms = () => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const params = { page: currentPage, limit: 50, ...filters };
-      const response = await roomsAPI.getRooms(params);
-
-      console.log('API Response:', response);
-
-      // Handle the correct response structure from backend
-      if (response.success && response.data && response.data.rooms) {
-        setRooms(response.data.rooms);
-        setTotalPages(response.data.pagination?.totalPages || 1);
-        toast.success(`Loaded ${response.data.rooms.length} rooms`);
-      } else if (response.data && Array.isArray(response.data)) {
-        // Fallback for different response structure
-        setRooms(response.data);
-        setTotalPages(Math.ceil(response.data.length / 50));
-        toast.success(`Loaded ${response.data.length} rooms`);
+      
+      // Use comprehensive mock data directly for demo
+      const mockResponse = getAllRooms(filters, currentPage, 50);
+      
+      if (mockResponse.success && mockResponse.data) {
+        setRooms(mockResponse.data.rooms);
+        setTotalPages(mockResponse.data.pagination?.totalPages || 1);
+        toast.success(`Loaded ${mockResponse.data.rooms.length} rooms`);
       } else {
-        throw new Error('Invalid response structure');
+        // Fallback to all mock rooms
+        setRooms(mockRooms);
+        setTotalPages(Math.ceil(mockRooms.length / 50));
+        toast.success(`Loaded ${mockRooms.length} demo rooms`);
       }
     } catch (error) {
-      console.error('Error fetching rooms:', error);
-      setRooms(generateMockRooms());
-      toast.error('Failed to load rooms from server. Showing demo data.');
+      console.error('Error loading rooms:', error);
+      // Final fallback
+      setRooms(mockRooms);
+      setTotalPages(Math.ceil(mockRooms.length / 50));
+      toast.error('Using demo room data');
     } finally {
       setLoading(false);
     }
@@ -68,49 +67,79 @@ const Rooms = () => {
   const generateMockRooms = () => {
     return [
       {
-        _id: '1',
-        title: 'Cozy Student Room near College',
+        _id: '68c597a733be9e11bd88fa52',
+        title: 'Premium Student Room - Koramangala',
         location: 'Koramangala, Bangalore',
-        rent: 8500,
-        rating: 4.5,
+        rent: 12000,
+        rating: 4.8,
         ownerName: 'Rajesh Kumar',
-        ownerPhone: '+91 98765 43210',
+        ownerPhone: '+91 9876543210',
         verified: true,
-        amenities: ['wifi', 'mess', 'security', 'laundry'],
-        image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'parking', 'gym'],
+        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
         type: 'Single',
         reviews: 45,
-        description: 'Perfect for students with all basic amenities and homely food.'
+        description: 'Spacious and well-furnished room perfect for students. Located in the heart of Koramangala.'
       },
       {
-        _id: '2',
-        title: 'Modern Mess Accommodation',
+        _id: '68c597a733be9e11bd88fa53',
+        title: 'Cozy Girls PG - Whitefield',
         location: 'Whitefield, Bangalore',
-        rent: 7200,
-        rating: 4.2,
-        ownerName: 'Priya Sharma',
-        ownerPhone: '+91 98765 43211',
+        rent: 9500,
+        rating: 4.6,
+        ownerName: 'Sunita Devi',
+        ownerPhone: '+91 9876543211',
         verified: true,
-        amenities: ['wifi', 'mess', 'parking'],
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'ac'],
         image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
         type: 'Shared',
         reviews: 32,
-        description: 'Modern facilities with excellent mess service and parking.'
+        description: 'Safe and secure accommodation for working women and students.'
       },
       {
-        _id: '3',
-        title: 'Premium PG with All Facilities',
-        location: 'HSR Layout, Bangalore',
-        rent: 12000,
-        rating: 4.8,
-        ownerName: 'Amit Patel',
-        ownerPhone: '+91 98765 43212',
+        _id: '68c597a733be9e11bd88fa54',
+        title: 'Budget Friendly Room - BTM Layout',
+        location: 'BTM Layout, Bangalore',
+        rent: 7500,
+        rating: 4.2,
+        ownerName: 'Ramesh Gupta',
+        ownerPhone: '+91 9876543212',
         verified: true,
-        amenities: ['wifi', 'mess', 'security', 'gym', 'laundry'],
+        amenities: ['wifi', 'mess', 'security', 'laundry'],
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+        type: 'Shared',
+        reviews: 28,
+        description: 'Affordable accommodation for students and young professionals.'
+      },
+      {
+        _id: '68c597a733be9e11bd88fa55',
+        title: 'Luxury Studio Apartment - Indiranagar',
+        location: 'Indiranagar, Bangalore',
+        rent: 18000,
+        rating: 4.9,
+        ownerName: 'Priya Nair',
+        ownerPhone: '+91 9876543213',
+        verified: true,
+        amenities: ['wifi', 'parking', 'gym', 'security', 'ac', 'balcony'],
         image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-        type: 'Premium',
+        type: 'Studio',
         reviews: 67,
-        description: 'Luxury accommodation with gym, security, and premium amenities.'
+        description: 'Premium studio apartment with modern amenities for working professionals.'
+      },
+      {
+        _id: '68c597a733be9e11bd88fa56',
+        title: 'Family Room - Jayanagar',
+        location: 'Jayanagar, Bangalore',
+        rent: 15000,
+        rating: 4.7,
+        ownerName: 'Lakshmi Rao',
+        ownerPhone: '+91 9876543214',
+        verified: true,
+        amenities: ['wifi', 'parking', 'mess', 'laundry', 'security', 'playground'],
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+        type: 'Family',
+        reviews: 41,
+        description: 'Spacious accommodation suitable for small families or groups.'
       }
     ];
   };
@@ -513,7 +542,7 @@ const Rooms = () => {
                         <span className="text-gray-500 dark:text-gray-400">/month</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-gray-500">{room.totalReviews || room.reviews || 0} reviews</div>
+                        <div className="text-sm text-gray-500">{room.totalReviews || room.reviewCount || (Array.isArray(room.reviews) ? room.reviews.length : room.reviews) || 0} reviews</div>
                         <div className="text-sm font-bold text-green-600 flex items-center gap-1">
                           {room.owner?.verified || room.verified ? (
                             <>

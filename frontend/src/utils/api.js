@@ -166,6 +166,21 @@ export const apiHelpers = {
     return response.data;
   },
 
+  async addFavorite(roomId) {
+    const response = await api.post('/users/favorites', { roomId });
+    return response.data;
+  },
+
+  async removeFavorite(roomId) {
+    const response = await api.delete(`/users/favorites/${roomId}`);
+    return response.data;
+  },
+
+  async getFavorites() {
+    const response = await api.get('/users/favorites');
+    return response.data;
+  },
+
   // Health check
   async healthCheck() {
     const response = await api.get('/test');
@@ -203,6 +218,9 @@ export const userAPI = {
   updateProfile: apiHelpers.updateProfile,
   changePassword: apiHelpers.changePassword,
   getDashboard: apiHelpers.getDashboard,
+  addFavorite: apiHelpers.addFavorite,
+  removeFavorite: apiHelpers.removeFavorite,
+  getFavorites: apiHelpers.getFavorites,
 };
 
 // Backward compatibility export

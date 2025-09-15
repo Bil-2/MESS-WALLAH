@@ -19,7 +19,7 @@ const Bookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await apiHelpers.bookings.getMyBookings();
+      const response = await apiHelpers.getMyBookings();
       setBookings(response.data.data.bookings || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -38,7 +38,7 @@ const Bookings = () => {
         _id: 'room1',
         title: 'Cozy Student Room',
         address: { area: 'Koramangala', city: 'Bangalore' },
-        photos: [{ url: 'https://via.placeholder.com/300x200' }]
+        photos: [{ url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300&h=200&fit=crop' }]
       },
       checkInDate: '2024-01-15',
       checkOutDate: '2024-06-15',
@@ -54,7 +54,7 @@ const Bookings = () => {
         _id: 'room2',
         title: 'Modern Mess Accommodation',
         address: { area: 'Whitefield', city: 'Bangalore' },
-        photos: [{ url: 'https://via.placeholder.com/300x200' }]
+        photos: [{ url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300&h=200&fit=crop' }]
       },
       checkInDate: '2024-02-01',
       checkOutDate: '2024-07-01',
@@ -70,7 +70,7 @@ const Bookings = () => {
         _id: 'room3',
         title: 'Budget Friendly Room',
         address: { area: 'BTM Layout', city: 'Bangalore' },
-        photos: [{ url: 'https://via.placeholder.com/300x200' }]
+        photos: [{ url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300&h=200&fit=crop' }]
       },
       checkInDate: '2023-08-01',
       checkOutDate: '2023-12-31',
@@ -223,7 +223,7 @@ const Bookings = () => {
                   {/* Property Image */}
                   <div className="lg:w-64 h-48 lg:h-auto">
                     <img
-                      src={booking.room?.photos?.[0]?.url || 'https://via.placeholder.com/300x200'}
+                      src={booking.room?.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300&h=200&fit=crop'}
                       alt={booking.room?.title || 'Room'}
                       className="w-full h-full object-cover"
                     />

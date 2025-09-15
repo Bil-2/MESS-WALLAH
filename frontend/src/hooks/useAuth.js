@@ -86,7 +86,7 @@ const useAuth = () => {
   const updateProfile = async (profileData) => {
     setLoading(true);
     try {
-      const response = await apiHelpers.updateUserProfile(profileData);
+      const response = await apiHelpers.updateProfile(profileData);
 
       if (response.success) {
         const updatedUser = response.data.user;
@@ -113,7 +113,7 @@ const useAuth = () => {
   // Get fresh user profile
   const refreshProfile = async () => {
     try {
-      const response = await apiHelpers.getUserProfile();
+      const response = await apiHelpers.getProfile();
 
       if (response.success) {
         const userData = response.data.user;

@@ -24,7 +24,9 @@ import {
   Wifi,
   Coffee,
   Mail,
-  UserPlus
+  UserPlus,
+  Eye,
+  Home as HomeIcon
 } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import { roomsAPI } from '../utils/api';
@@ -338,62 +340,152 @@ const Home = () => {
               </motion.div>
             </motion.div>
 
-            {/* Search Bar */}
-            <motion.form
-              onSubmit={handleSearch}
-              className="max-w-3xl mx-auto mb-12"
+            {/* Trust Indicators & Statistics */}
+            <motion.div
+              className="max-w-5xl mx-auto mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
             >
-              <div className="relative group">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {/* Views Counter */}
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="flex items-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3 hover:shadow-3xl transition-all duration-300"
+                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Search className="w-6 h-6 text-gray-400 ml-6" />
-                  <input
-                    type="text"
-                    placeholder="Search by location, mess name, or amenities..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 px-6 py-4 focus:outline-none text-lg"
-                  />
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white px-8 py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
-                  >
-                    <span>Search</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </motion.button>
+                  <div className="text-center">
+                    <motion.div
+                      className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center"
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Eye className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <motion.div
+                      className="text-2xl font-bold text-gray-800 dark:text-white"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.2 }}
+                    >
+                      5,000+
+                    </motion.div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">People Viewed</div>
+                  </div>
+                </motion.div>
+
+                {/* Bookings Counter */}
+                <motion.div
+                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="text-center">
+                    <motion.div
+                      className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <HomeIcon className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <motion.div
+                      className="text-2xl font-bold text-gray-800 dark:text-white"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.4 }}
+                    >
+                      500+
+                    </motion.div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Rooms Booked</div>
+                  </div>
+                </motion.div>
+
+                {/* Verified Badge */}
+                <motion.div
+                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="text-center">
+                    <motion.div
+                      className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center"
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Shield className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <motion.div
+                      className="text-2xl font-bold text-gray-800 dark:text-white"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.6 }}
+                    >
+                      100%
+                    </motion.div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Verified Safe</div>
+                  </div>
+                </motion.div>
+
+                {/* Happy Customers */}
+                <motion.div
+                  className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="text-center">
+                    <motion.div
+                      className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Star className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <motion.div
+                      className="text-2xl font-bold text-gray-800 dark:text-white"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 1.8 }}
+                    >
+                      4.9★
+                    </motion.div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Rating</div>
+                  </div>
                 </motion.div>
               </div>
-            </motion.form>
 
-            {/* CTA Buttons */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6"
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link
-                  to="/rooms"
-                  className="px-10 py-5 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center gap-3 text-lg"
+              {/* Trust Badges */}
+              <motion.div
+                className="flex flex-wrap justify-center gap-4 mt-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2 }}
+              >
+                <motion.div
+                  className="flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 px-4 py-2 rounded-full"
+                  whileHover={{ scale: 1.05 }}
                 >
-                  <Utensils className="w-6 h-6" />
-                  <span>Find Safe Mess</span>
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-              </motion.div>
-
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link
-                  to="/safety-features"
-                  className="px-10 py-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-2 border-pink-300 dark:border-pink-600 text-pink-600 dark:text-pink-400 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-300">Government Verified</span>
+                </motion.div>
+                
+                <motion.div
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 px-4 py-2 rounded-full"
+                  whileHover={{ scale: 1.05 }}
                 >
-                  <Shield className="w-6 h-6" />
-                  <span>Safety Features</span>
-                </Link>
+                  <Shield className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">24/7 Security</span>
+                </motion.div>
+                
+                <motion.div
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 px-4 py-2 rounded-full"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <Award className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Premium Quality</span>
+                </motion.div>
               </motion.div>
             </motion.div>
+
           </div>
         </motion.div>
       </section>
@@ -448,6 +540,7 @@ const Home = () => {
       <section className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100 dark:from-pink-900/20 dark:via-purple-900/20 dark:to-blue-900/20" />
+
         <motion.div
           animate={{
             background: [
@@ -617,7 +710,7 @@ const Home = () => {
                 name: "Ananya Patel",
                 role: "Medical Student",
                 category: "girl",
-                image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+                image: "https://images.unsplash.com/photo-1438761681033-4f4e44671d66?w=150&h=150&fit=crop&crop=face",
                 rating: 5,
                 text: "As a medical student, I needed a quiet and secure place to study. The PG I found through MessWallah has excellent WiFi, study rooms, and a supportive community of girls."
               },
@@ -772,7 +865,6 @@ const Home = () => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            viewport={{ once: true }}
           >
             <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl p-6 rounded-2xl">
               <motion.div
@@ -961,58 +1053,91 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Footer Section */}
+      {/* Footer */}
       <motion.footer
-        className="bg-gray-900 dark:bg-gray-950 text-white py-16 mt-20"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.5 }}
+        className="relative bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 text-white py-20 overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-            {/* Brand Section */}
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            className="absolute -top-20 -left-20 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, -50, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className="absolute -bottom-20 -right-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl"
+            animate={{
+              x: [0, -80, 0],
+              y: [0, 60, 0],
+              scale: [1, 0.8, 1]
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+            
+            {/* Company Info */}
             <motion.div
-              className="lg:col-span-2"
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
+              className="space-y-8"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
             >
-              <div className="flex items-center gap-4 mb-6">
-                <motion.div
-                  className="relative"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity }}
+              <motion.div 
+                className="flex items-center gap-4"
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <motion.div 
+                  className="w-16 h-16 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-2xl"
+                  animate={{
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
                 >
-                  {/* Tiffin Box Logo */}
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="w-10 h-10 text-gray-800"
-                      fill="currentColor"
-                    >
-                      <path d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4H5V5h14v2zm0 2H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H5v-8h14v8z" />
-                      <rect x="7" y="11" width="2" height="2" />
-                      <rect x="11" y="11" width="2" height="2" />
-                      <rect x="15" y="11" width="2" height="2" />
-                    </svg>
-                  </div>
+                  <span className="text-3xl">🏠</span>
                 </motion.div>
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-600 bg-clip-text text-transparent">
-                    MESS
-                  </span>
-                  <span className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-600 bg-clip-text text-transparent -mt-2">
-                    WALLAH
-                  </span>
+                <div>
+                  <motion.h2 
+                    className="text-3xl font-bold bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent"
+                    animate={{
+                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  >
+                    MESS WALLAH
+                  </motion.h2>
+                  <p className="text-lg text-gray-300 font-medium">Find your Perfect Home</p>
                 </div>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Find your{' '}
-                <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Perfect Home
-                </span>
-              </h2>
-              <div className="space-y-4">
+              </motion.div>
+
+              <div className="space-y-6">
                 <motion.div
                   className="flex items-center gap-3"
                   whileHover={{ scale: 1.02, x: 5 }}
@@ -1032,6 +1157,99 @@ const Home = () => {
                     <Phone className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-lg">+91 9946 66 0012</span>
+                </motion.div>
+
+                {/* Social Media Links */}
+                <motion.div
+                  className="flex items-center gap-4 pt-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                >
+                  <span className="text-gray-300 font-medium">Follow us:</span>
+                  <div className="flex gap-4">
+                    <motion.a
+                      href="https://facebook.com/messwallah"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg"
+                      whileHover={{ 
+                        scale: 1.15,
+                        rotate: 5,
+                        boxShadow: "0 10px 25px rgba(59, 130, 246, 0.5)"
+                      }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      href="https://instagram.com/messwallah"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg"
+                      whileHover={{ 
+                        scale: 1.15,
+                        rotate: -5,
+                        boxShadow: "0 10px 25px rgba(236, 72, 153, 0.5)"
+                      }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      href="https://twitter.com/messwallah"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-gradient-to-r from-gray-800 to-black rounded-xl flex items-center justify-center shadow-lg"
+                      whileHover={{ 
+                        scale: 1.15,
+                        rotate: 5,
+                        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)"
+                      }}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                    </motion.a>
+                  </div>
+                </motion.div>
+
+                {/* Google Maps Address */}
+                <motion.div
+                  className="flex items-start gap-4 pt-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9, duration: 0.6 }}
+                  whileHover={{ scale: 1.02, x: 5 }}
+                >
+                  <motion.div 
+                    className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mt-1 shadow-lg"
+                    animate={{ pulse: [1, 1.1, 1] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <MapPin className="w-5 h-5 text-white" />
+                  </motion.div>
+                  <div>
+                    <p className="text-gray-300 font-medium mb-2">Our Office:</p>
+                    <motion.a
+                      href="https://maps.google.com/?q=Koramangala,+Bangalore,+Karnataka,+India"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white hover:text-orange-400 transition-colors cursor-pointer text-lg leading-relaxed"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      Koramangala, Bangalore<br />
+                      Karnataka, India 560034
+                    </motion.a>
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
@@ -1104,14 +1322,62 @@ const Home = () => {
                 ))}
               </ul>
             </motion.div>
+
+            {/* Girls Safety Disclaimer */}
+            <motion.div
+              className="lg:col-span-1"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.8 }}
+            >
+              <motion.h3 
+                className="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+                whileHover={{ scale: 1.02 }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🛡️
+                </motion.div>
+                Safety First
+              </motion.h3>
+              <motion.div 
+                className="bg-gradient-to-br from-red-900/40 to-pink-900/40 backdrop-blur-sm border border-red-500/30 rounded-2xl p-6 shadow-2xl"
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0 25px 50px -12px rgba(239, 68, 68, 0.25)"
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="flex items-start gap-4">
+                  <motion.div
+                    animate={{ pulse: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Shield className="w-6 h-6 text-red-400 mt-1 flex-shrink-0" />
+                  </motion.div>
+                  <div className="space-y-3">
+                    <p className="text-red-300 font-semibold text-sm">
+                      🚨 Important Safety Notice
+                    </p>
+                    <p className="text-red-100 text-sm leading-relaxed">
+                      While we strive to provide safe accommodations, we encourage all users to verify property details,
+                      meet landlords in person, and trust their instincts. Your safety is paramount - always inform
+                      family/friends of your location and arrangements.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
           </div>
 
           {/* Bottom Section */}
           <motion.div
-            className="border-t border-gray-800 mt-12 pt-8"
+            className="border-t border-gray-700 pt-4 mt-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
+            transition={{ delay: 0.8 }}
           >
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-400 text-center md:text-left">
@@ -1119,23 +1385,6 @@ const Home = () => {
               </p>
 
               <div className="flex items-center gap-6">
-                <motion.div
-                  className="flex items-center gap-2 bg-green-600 px-4 py-2 rounded-full"
-                  whileHover={{ scale: 1.05 }}
-                  animate={{ pulse: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Shield className="w-4 h-4" />
-                  <span className="text-sm font-bold">Girls Safe</span>
-                </motion.div>
-
-                <motion.div
-                  className="flex items-center gap-2 bg-orange-600 px-4 py-2 rounded-full"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Heart className="w-4 h-4" />
-                  <span className="text-sm font-bold">Made with Love</span>
-                </motion.div>
               </div>
             </div>
           </motion.div>

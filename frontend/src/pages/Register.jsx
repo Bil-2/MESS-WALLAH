@@ -92,10 +92,21 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+
+    // Special handling for phone input to prevent duplicates and ensure only numbers
+    if (name === 'phone') {
+      const cleanedValue = value.replace(/\D/g, '').slice(0, 10);
+      setFormData({
+        ...formData,
+        [name]: cleanedValue
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
@@ -236,7 +247,18 @@ const Register = () => {
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                👩‍🍳
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-8 h-8 text-gray-800"
+                    fill="currentColor"
+                  >
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4H5V5h14v2zm0 2H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H5v-8h14v8z" />
+                    <rect x="7" y="11" width="2" height="2" />
+                    <rect x="11" y="11" width="2" height="2" />
+                    <rect x="15" y="11" width="2" height="2" />
+                  </svg>
+                </div>
               </motion.div>
               <motion.div
                 className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2"
@@ -352,9 +374,11 @@ const Register = () => {
                   id="phone"
                   name="phone"
                   type="tel"
+                  autoComplete="tel"
                   required
                   value={formData.phone}
                   onChange={handleChange}
+                  maxLength="10"
                   disabled={phoneVerification.isVerified}
                   className={`w-full px-4 py-4 pl-12 border-2 ${errors.phone
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
