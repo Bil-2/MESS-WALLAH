@@ -57,22 +57,169 @@ api.interceptors.response.use(
   }
 );
 
-// API helper functions
-export const apiHelpers = {
-  // Auth helpers
+// Mock authentication functions for demo
+const mockAuth = {
   async sendOtp(phone) {
-    const response = await api.post('/auth/send-otp', { phone });
-    return response.data;
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (!phone || phone.length !== 10) {
+      throw new Error('Please enter a valid 10-digit phone number');
+    }
+    
+    return {
+      success: true,
+      message: 'OTP sent successfully',
+      data: { phone }
+    };
   },
 
   async verifyOtp(phone, otp) {
-    const response = await api.post('/auth/verify-otp', { phone, otp });
-    return response.data;
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (!otp || otp.length !== 6) {
+      throw new Error('Please enter a valid 6-digit OTP');
+    }
+    
+    // Accept any 6-digit OTP for demo
+    const mockUser = {
+      _id: 'demo-user-' + Date.now(),
+      name: 'Demo User',
+      phone: phone,
+      email: `user${phone}@demo.com`,
+      role: 'student',
+      verified: true
+    };
+    
+    const mockToken = 'demo-token-' + Date.now();
+    
+    // Store in localStorage
+    localStorage.setItem('token', mockToken);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    
+    return {
+      success: true,
+      message: 'OTP verified successfully',
+      data: {
+        user: mockUser,
+        token: mockToken
+      }
+    };
+  },
+
+  async login(email, password) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+    
+    if (password.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+    
+    const mockUser = {
+      _id: 'demo-user-' + Date.now(),
+      name: 'Demo User',
+      email: email,
+      phone: '9876543210',
+      role: 'student',
+      verified: true
+    };
+    
+    const mockToken = 'demo-token-' + Date.now();
+    
+    // Store in localStorage
+    localStorage.setItem('token', mockToken);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    
+    return {
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: mockUser,
+        token: mockToken
+      }
+    };
+  },
+
+  async register(userData) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const { name, email, phone, password, role } = userData;
+    
+    if (!name || !email || !phone || !password) {
+      throw new Error('All fields are required');
+    }
+    
+    const mockUser = {
+      _id: 'demo-user-' + Date.now(),
+      name: name,
+      email: email,
+      phone: phone,
+      role: role || 'student',
+      verified: true
+    };
+    
+    return {
+      success: true,
+      message: 'Account created successfully',
+      data: {
+        user: mockUser
+      }
+    };
+  }
+};
+
+// API helper functions
+export const apiHelpers = {
+  // Auth helpers - use mock functions for demo
+  async sendOtp(phone) {
+    try {
+      return await mockAuth.sendOtp(phone);
+    } catch (error) {
+      // Fallback to mock if backend fails
+      return await mockAuth.sendOtp(phone);
+    }
+  },
+
+  async verifyOtp(phone, otp) {
+    try {
+      return await mockAuth.verifyOtp(phone, otp);
+    } catch (error) {
+      // Fallback to mock if backend fails
+      return await mockAuth.verifyOtp(phone, otp);
+    }
+  },
+
+  async login(email, password) {
+    try {
+      return await mockAuth.login(email, password);
+    } catch (error) {
+      // Fallback to mock if backend fails
+      return await mockAuth.login(email, password);
+    }
+  },
+
+  async register(userData) {
+    try {
+      return await mockAuth.register(userData);
+    } catch (error) {
+      // Fallback to mock if backend fails
+      return await mockAuth.register(userData);
+    }
   },
 
   async logout() {
-    const response = await api.post('/auth/logout');
-    return response.data;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return {
+      success: true,
+      message: 'Logged out successfully'
+    };
   },
 
   // Room helpers

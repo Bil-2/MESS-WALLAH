@@ -73,7 +73,7 @@ const Login = () => {
       setVerifyingOtp(true);
       await verifyOtp(formData.phone, otp);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       console.error('Error verifying OTP:', error);
       toast.error(error.message || 'Invalid OTP');
@@ -111,7 +111,7 @@ const Login = () => {
       setLoading(true);
       await login(formData.email, formData.password);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       console.error('Error logging in:', error);
       toast.error(error.message || 'Login failed');

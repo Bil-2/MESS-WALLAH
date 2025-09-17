@@ -31,12 +31,18 @@ export const ThemeProvider = ({ children }) => {
   // Apply theme immediately on mount and when theme changes
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
 
     // Remove both classes first to avoid conflicts
     root.classList.remove('light', 'dark');
+    body.classList.remove('light', 'dark');
 
-    // Add the current theme class
+    // Add the current theme class to both html and body
     root.classList.add(theme);
+    body.classList.add(theme);
+
+    // Set data attribute for CSS targeting
+    root.setAttribute('data-theme', theme);
 
     // Save theme preference to localStorage
     if (typeof window !== 'undefined') {
@@ -47,6 +53,8 @@ export const ThemeProvider = ({ children }) => {
     if (!isInitialized) {
       setIsInitialized(true);
     }
+    
+    console.log('Theme applied:', theme, 'Classes:', root.classList.toString());
   }, [theme, isInitialized]);
 
   // Listen for system theme changes

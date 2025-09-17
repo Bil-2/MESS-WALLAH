@@ -40,25 +40,58 @@ const Rooms = () => {
     try {
       setLoading(true);
       
-      // Use comprehensive mock data directly for demo
-      const mockResponse = getAllRooms(filters, currentPage, 50);
+      // Get URL parameters for initial search
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlSearch = urlParams.get('search');
       
-      if (mockResponse.success && mockResponse.data) {
+      // Use URL search parameter if available, otherwise use filters
+      const searchFilters = { ...filters };
+      if (urlSearch && !searchFilters.search) {
+        searchFilters.search = urlSearch;
+        setFilters(prev => ({ ...prev, search: urlSearch }));
+      }
+      
+      // Fix common typos
+      if (searchFilters.search) {
+        const searchTerm = searchFilters.search.toLowerCase();
+        if (searchTerm.includes('west bangal')) {
+          searchFilters.search = searchTerm.replace('west bangal', 'west bengal');
+        }
+        if (searchTerm.includes('vizag')) {
+          searchFilters.search = searchTerm.replace('vizag', 'visakhapatnam');
+        }
+      }
+      
+      // Use optimized mock data with performance improvements
+      const mockResponse = getAllRooms(searchFilters, currentPage, 24); // Reduced page size for better performance
+      
+      if (mockResponse.success && mockResponse.data && mockResponse.data.rooms.length > 0) {
         setRooms(mockResponse.data.rooms);
         setTotalPages(mockResponse.data.pagination?.totalPages || 1);
-        toast.success(`Loaded ${mockResponse.data.rooms.length} rooms`);
+        
+        // Show success message with location if searching
+        if (searchFilters.search) {
+          toast.success(`Found ${mockResponse.data.rooms.length} rooms in ${searchFilters.search}`);
+        } else {
+          toast.success(`Found ${mockResponse.data.rooms.length} rooms`);
+        }
       } else {
-        // Fallback to all mock rooms
-        setRooms(mockRooms);
-        setTotalPages(Math.ceil(mockRooms.length / 50));
-        toast.success(`Loaded ${mockRooms.length} demo rooms`);
+        // If no results, show all available rooms
+        const allRoomsResponse = getAllRooms({}, currentPage, 24);
+        setRooms(allRoomsResponse.data.rooms);
+        setTotalPages(allRoomsResponse.data.pagination?.totalPages || 1);
+        toast(`No rooms found for "${searchFilters.search || 'your search'}". Showing all available rooms (${allRoomsResponse.data.rooms.length} found)`, {
+          icon: 'ℹ️',
+          duration: 4000,
+        });
       }
     } catch (error) {
       console.error('Error loading rooms:', error);
-      // Final fallback
-      setRooms(mockRooms);
-      setTotalPages(Math.ceil(mockRooms.length / 50));
-      toast.error('Using demo room data');
+      // Final fallback - show all rooms
+      const allRoomsResponse = getAllRooms({}, currentPage, 24);
+      setRooms(allRoomsResponse.data.rooms);
+      setTotalPages(allRoomsResponse.data.pagination?.totalPages || 1);
+      toast.error('Error loading rooms, showing all available');
     } finally {
       setLoading(false);
     }

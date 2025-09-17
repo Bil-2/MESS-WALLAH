@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { apiHelpers } from '../utils/api';
 import { getRoomById, mockRooms } from '../data/mockRooms';
@@ -18,6 +18,8 @@ const RoomDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(0);
 
   useEffect(() => {
     fetchRoomDetails();
@@ -170,150 +172,254 @@ const RoomDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <button 
+        <motion.button 
           onClick={() => navigate('/rooms')}
-          className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
+          className="flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 mb-8 transition-colors group"
+          whileHover={{ x: -5 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <FiArrowLeft className="w-5 h-5 mr-2" />
+          <FiArrowLeft className="w-5 h-5 mr-2 group-hover:animate-pulse" />
           Back to Rooms
-        </button>
+        </motion.button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Images and Details */}
           <div className="lg:col-span-2">
-            {/* Image Gallery */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-8 transition-colors duration-200">
-              <div className="aspect-w-16 aspect-h-9">
-                <img
+            {/* Enhanced Image Gallery */}
+            <motion.div 
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden mb-8 border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="relative group">
+                <motion.img
+                  key={selectedImage}
                   src={room.photos?.[selectedImage]?.url || room.photos?.[selectedImage] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop'}
                   alt={room.photos?.[selectedImage]?.caption || room.title}
-                  className="w-full h-96 object-cover"
+                  className="w-full h-96 object-cover cursor-pointer"
+                  onClick={() => {
+                    setLightboxImage(selectedImage);
+                    setShowLightbox(true);
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
                 />
-              </div>
-              <div className="p-4">
-                <div className="flex space-x-2 overflow-x-auto">
-                  {(room.photos || []).map((photo, index) => (
+                
+                {/* Image Navigation Arrows */}
+                {room.photos && room.photos.length > 1 && (
+                  <>
                     <button
+                      onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : room.photos.length - 1)}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                    >
+                      <FiChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedImage(selectedImage < room.photos.length - 1 ? selectedImage + 1 : 0)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                    >
+                      <FiChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+                
+                {/* Expand Button */}
+                <button
+                  onClick={() => {
+                    setLightboxImage(selectedImage);
+                    setShowLightbox(true);
+                  }}
+                  className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                >
+                  <FiMaximize2 className="w-4 h-4" />
+                </button>
+                
+                {/* Image Counter */}
+                {room.photos && room.photos.length > 1 && (
+                  <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                    {selectedImage + 1} / {room.photos.length}
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-6">
+                <div className="flex space-x-3 overflow-x-auto pb-2">
+                  {(room.photos || []).map((photo, index) => (
+                    <motion.button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-20 h-16 rounded-md overflow-hidden border-2 transition-colors ${selectedImage === index
-                        ? 'border-purple-500'
-                        : 'border-gray-200 dark:border-gray-700'
-                        }`}
+                      className={`flex-shrink-0 w-24 h-20 rounded-xl overflow-hidden border-3 transition-all duration-300 ${
+                        selectedImage === index
+                          ? 'border-orange-500 shadow-lg scale-105'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-orange-300'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       <img
                         src={photo.url || photo || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=150&h=120&fit=crop'}
                         alt={photo.caption || `View ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Room Details */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-200">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <motion.div 
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex-1">
+                  <motion.h1 
+                    className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-3"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                  >
                     {room.title}
-                  </h1>
-                  <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2">
-                    <FiMapPin className="w-4 h-4 mr-1" />
+                  </motion.h1>
+                  <motion.div 
+                    className="flex items-center text-gray-600 dark:text-gray-400 mb-3 text-lg"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                  >
+                    <FiMapPin className="w-5 h-5 mr-2 text-orange-500" />
                     <span>{room.address?.area}, {room.address?.city}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FiStar className="w-4 h-4 text-yellow-400 mr-1" />
-                    <span className="text-gray-900 dark:text-white font-medium mr-1">
-                      {room.rating || 4.5}
-                    </span>
-                    <span className="text-gray-600 dark:text-gray-400">
-                      ({room.reviewCount || 0} reviews)
-                    </span>
-                  </div>
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                  >
+                    <div className="flex items-center bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full">
+                      <FiStar className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                      <span className="text-gray-900 dark:text-white font-semibold mr-1">
+                        {room.rating || 4.5}
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-400 text-sm">
+                        ({room.reviewCount || 0} reviews)
+                      </span>
+                    </div>
+                  </motion.div>
                 </div>
-                <div className="flex space-x-2">
-                  <button
+                <motion.div 
+                  className="flex space-x-3"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  <motion.button
                     onClick={handleToggleFavorite}
-                    className={`p-2 rounded-full transition-colors ${isLiked
-                      ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                    className={`p-3 rounded-full transition-all duration-300 ${isLiked
+                      ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400 scale-110'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-red-50 hover:text-red-500'
                       }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <FiHeart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                  </button>
-                  <button
+                    <FiHeart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+                  </motion.button>
+                  <motion.button
                     onClick={() => {
-                      navigator.share?.({
-                        title: room.title,
-                        text: `Check out this room: ${room.title}`,
-                        url: window.location.href
-                      }).catch(() => {
-                        navigator.clipboard.writeText(window.location.href);
-                        toast.success('Link copied to clipboard!');
-                      });
+                      navigator.share?.({title: room.title, text: `Check out this room: ${room.title}`, url: window.location.href}).catch(() => {navigator.clipboard.writeText(window.location.href); toast.success('Link copied to clipboard!');});
                     }}
-                    className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full hover:bg-orange-50 hover:text-orange-500 dark:hover:bg-orange-900/20 transition-all duration-300"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <FiShare2 className="w-5 h-5" />
-                  </button>
-                </div>
+                    <FiShare2 className="w-6 h-6" />
+                  </motion.button>
+                </motion.div>
               </div>
 
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              <motion.div 
+                className="border-t border-gray-200 dark:border-gray-700 pt-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Description
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
                   {room.description}
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            {/* Amenities */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-200">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {/* Enhanced Amenities */}
+            <motion.div 
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
                 Amenities
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {(room.amenities || []).map((amenity) => (
-                  <div
+                {(room.amenities || []).map((amenity, index) => (
+                  <motion.div
                     key={amenity}
-                    className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-200"
+                    className="flex items-center p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl hover:shadow-lg transition-all duration-300 border border-orange-100 dark:border-gray-600"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                   >
-                    <div className="text-purple-600 dark:text-purple-400 mr-3">
+                    <div className="text-orange-500 dark:text-orange-400 mr-3">
                       {amenityIcons[amenity] || <FiUsers className="w-5 h-5" />}
                     </div>
-                    <span className="text-gray-900 dark:text-white capitalize">
+                    <span className="text-gray-900 dark:text-white capitalize font-medium">
                       {amenity}
                     </span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Features */}
+            {/* Enhanced Features */}
             {room.features && room.features.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-200">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <motion.div 
+                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-700"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
                   Room Features
                 </h3>
-                <ul className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {room.features.map((feature, index) => (
-                    <li
+                    <motion.div
                       key={index}
-                      className="flex items-center text-gray-600 dark:text-gray-400"
+                      className="flex items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600 rounded-lg border border-green-100 dark:border-gray-600"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      whileHover={{ x: 5 }}
                     >
-                      <div className="w-2 h-2 bg-purple-600 dark:bg-purple-400 rounded-full mr-3"></div>
-                      {feature}
-                    </li>
+                      <div className="w-3 h-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mr-4 flex-shrink-0"></div>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">{feature}</span>
+                    </motion.div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </motion.div>
             )}
 
             {/* Rules & Preferences */}
@@ -360,18 +466,33 @@ const RoomDetails = () => {
             )}
           </div>
 
-          {/* Right Column - Booking Card */}
+          {/* Right Column - Enhanced Booking Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 sticky top-8 transition-colors duration-200">
-              <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+            <motion.div 
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 sticky top-8 border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="text-center mb-8">
+                <motion.div 
+                  className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-2"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
                   ₹{room.rentPerMonth?.toLocaleString() || '8,500'}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">per month</div>
+                </motion.div>
+                <div className="text-gray-600 dark:text-gray-400 text-lg font-medium">per month</div>
                 {room.securityDeposit && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <motion.div 
+                    className="text-sm text-gray-500 dark:text-gray-400 mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                  >
                     + ₹{room.securityDeposit.toLocaleString()} security deposit
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
@@ -398,20 +519,30 @@ const RoomDetails = () => {
                 </div>
               </div>
 
-              <button
+              <motion.button
                 onClick={handleBooking}
                 disabled={!room.isAvailable}
-                className="w-full bg-purple-600 text-white py-3 rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium mb-4"
+                className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 rounded-xl hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 font-semibold text-lg mb-4"
+                whileHover={{ scale: room.isAvailable ? 1.02 : 1, y: room.isAvailable ? -2 : 0 }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
               >
                 {room.isAvailable ? 'Book Now' : 'Not Available'}
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 onClick={handleContactOwner}
-                className="w-full border border-purple-600 text-purple-600 dark:text-purple-400 py-3 rounded-md hover:bg-purple-50 dark:hover:bg-purple-900 transition-colors font-medium"
+                className="w-full border-2 border-orange-500 text-orange-500 dark:text-orange-400 py-4 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-300 font-semibold text-lg"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
               >
                 Contact Owner
-              </button>
+              </motion.button>
 
               {/* Owner Info */}
               {room.owner && (
@@ -450,9 +581,73 @@ const RoomDetails = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         </div>
+
+        {/* Image Lightbox */}
+        <AnimatePresence>
+          {showLightbox && (
+            <motion.div
+              className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLightbox(false)}
+            >
+              <div className="relative max-w-4xl max-h-full">
+                <motion.img
+                  src={room.photos?.[lightboxImage]?.url || room.photos?.[lightboxImage] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&h=800&fit=crop'}
+                  alt={room.photos?.[lightboxImage]?.caption || room.title}
+                  className="max-w-full max-h-full object-contain rounded-lg"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.8 }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowLightbox(false)}
+                  className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+                
+                {/* Navigation */}
+                {room.photos && room.photos.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxImage(lightboxImage > 0 ? lightboxImage - 1 : room.photos.length - 1);
+                      }}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      <FiChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxImage(lightboxImage < room.photos.length - 1 ? lightboxImage + 1 : 0);
+                      }}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      <FiChevronRight className="w-6 h-6" />
+                    </button>
+                  </>
+                )}
+                
+                {/* Image Counter */}
+                {room.photos && room.photos.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
+                    {lightboxImage + 1} / {room.photos.length}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Subscription Booking Modal */}
         {showBookingModal && (
