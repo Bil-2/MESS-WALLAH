@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, Phone, Sparkles, Shield, Heart, UserCheck, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { User, Mail, Lock, Eye, EyeOff, Phone, Shield, UserCheck, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import toast from 'react-hot-toast';
 
@@ -169,173 +168,78 @@ const Register = () => {
     setPhoneVerification(prev => ({ ...prev, otp: value }));
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 }
-    }
-  };
-
-  const InputField = ({ icon: Icon, error, children, ...props }) => (
-    <div className="space-y-2">
-      <div className="relative">
-        {children}
-        <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-      </div>
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-2 text-red-500 text-sm"
-          >
-            <AlertCircle className="w-4 h-4" />
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-
-      {/* Enhanced Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-r from-orange-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 sm:w-64 h-48 sm:h-64 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
-      </div>
-
-      <motion.div
-        className="w-full max-w-md relative z-10"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-6 px-4 fade-in">
+      <div className="w-full max-w-md slide-in-up">
         {/* Header */}
-        <motion.div className="text-center mb-6 sm:mb-8" variants={itemVariants}>
-          <motion.div
-            className="flex justify-center mb-4 sm:mb-6"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="relative">
-              <motion.div
-                className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl sm:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl shadow-2xl"
-                animate={{
-                  boxShadow: [
-                    "0 20px 40px rgba(251, 146, 60, 0.3)",
-                    "0 25px 50px rgba(236, 72, 153, 0.4)",
-                    "0 20px 40px rgba(251, 146, 60, 0.3)"
-                  ]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-8 h-8 text-gray-800"
-                    fill="currentColor"
-                  >
-                    <path d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4H5V5h14v2zm0 2H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H5v-8h14v8z" />
-                    <rect x="7" y="11" width="2" height="2" />
-                    <rect x="11" y="11" width="2" height="2" />
-                    <rect x="15" y="11" width="2" height="2" />
-                  </svg>
-                </div>
-              </motion.div>
-              <motion.div
-                className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
-              </motion.div>
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-8 h-8 text-gray-800" fill="currentColor">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 4H5V5h14v2zm0 2H5c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm0 10H5v-8h14v8z" />
+                  <rect x="7" y="11" width="2" height="2" />
+                  <rect x="11" y="11" width="2" height="2" />
+                  <rect x="15" y="11" width="2" height="2" />
+                </svg>
+              </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.h1
-            className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-3 sm:mb-4"
-            variants={itemVariants}
-          >
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Join MessWallah
-          </motion.h1>
-          <motion.p
-            className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 px-2"
-            variants={itemVariants}
-          >
-            Create your account for <span className="font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">safe accommodation</span>
-          </motion.p>
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
+            Create your account for <span className="font-semibold text-orange-600">safe accommodation</span>
+          </p>
 
-          {/* Enhanced Safety Badge */}
-          <motion.div
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-bold shadow-lg border border-green-200 dark:border-green-800"
-            variants={itemVariants}
-            whileHover={{ scale: 1.05, y: -2 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+          {/* Safety Badge */}
+          <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-2 rounded-full text-sm font-medium">
+            <Shield className="w-4 h-4" />
             100% Girls Safety Guaranteed
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Main Form Container */}
-        <motion.div
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/30 p-6 sm:p-8"
-          variants={itemVariants}
-          whileHover={{ y: -5 }}
-          transition={{ type: "spring", stiffness: 300 }}
-        >
-          <motion.form className="space-y-6" onSubmit={handleSubmit} variants={containerVariants}>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Name Field */}
-            <motion.div variants={itemVariants}>
-              <label htmlFor="name" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Full Name
               </label>
-              <InputField icon={User} error={errors.name}>
-                <motion.input
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
                   id="name"
                   name="name"
                   type="text"
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-4 py-4 pl-12 border-2 ${errors.name
+                  className={`w-full px-4 py-3 pl-10 border ${errors.name
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                    } rounded-2xl placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-lg backdrop-blur-sm`}
+                    : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
+                    } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white input-focus`}
                   placeholder="Enter your full name"
-                  whileFocus={{ scale: 1.02 }}
                 />
-              </InputField>
-            </motion.div>
+              </div>
+              {errors.name && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.name}
+                </div>
+              )}
+            </div>
 
             {/* Email Field */}
-            <motion.div variants={itemVariants}>
-              <label htmlFor="email" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email address
               </label>
-              <InputField icon={Mail} error={errors.email}>
-                <motion.input
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
                   id="email"
                   name="email"
                   type="email"
@@ -343,34 +247,35 @@ const Register = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-4 py-4 pl-12 border-2 ${errors.email
+                  className={`w-full px-4 py-3 pl-10 border ${errors.email
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                    } rounded-2xl placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-lg backdrop-blur-sm`}
+                    : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
+                    } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white`}
                   placeholder="Enter your email"
-                  whileFocus={{ scale: 1.02 }}
                 />
-              </InputField>
-            </motion.div>
+              </div>
+              {errors.email && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.email}
+                </div>
+              )}
+            </div>
 
             {/* Phone Field */}
-            <motion.div variants={itemVariants}>
-              <label htmlFor="phone" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Phone Number
                 {phoneVerification.isVerified && (
-                  <motion.span
-                    className="ml-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500 }}
-                  >
+                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                     <CheckCircle className="w-3 h-3 mr-1" />
                     Verified
-                  </motion.span>
+                  </span>
                 )}
               </label>
-              <InputField icon={Phone} error={errors.phone}>
-                <motion.input
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
                   id="phone"
                   name="phone"
                   type="tel"
@@ -380,44 +285,49 @@ const Register = () => {
                   onChange={handleChange}
                   maxLength="10"
                   disabled={phoneVerification.isVerified}
-                  className={`w-full px-4 py-4 pl-12 border-2 ${errors.phone
+                  className={`w-full px-4 py-3 pl-10 border ${errors.phone
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                    } rounded-2xl placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-300 disabled:bg-gray-100 disabled:cursor-not-allowed dark:disabled:bg-gray-600 text-lg backdrop-blur-sm`}
+                    : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
+                    } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed dark:disabled:bg-gray-600`}
                   placeholder="Enter 10-digit phone number"
-                  whileFocus={{ scale: phoneVerification.isVerified ? 1 : 1.02 }}
                 />
-              </InputField>
-            </motion.div>
+              </div>
+              {errors.phone && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.phone}
+                </div>
+              )}
+            </div>
 
             {/* Role Selection */}
-            <motion.div variants={itemVariants}>
-              <label htmlFor="role" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 I am a
               </label>
               <div className="relative">
-                <motion.select
+                <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <select
                   id="role"
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 pl-12 border-2 border-gray-200 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-lg backdrop-blur-sm"
-                  whileFocus={{ scale: 1.02 }}
+                  className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="student">Student</option>
                   <option value="owner">Property Owner</option>
-                </motion.select>
-                <UserCheck className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                </select>
               </div>
-            </motion.div>
+            </div>
 
             {/* Password Fields */}
-            <motion.div variants={itemVariants}>
-              <label htmlFor="password" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
-              <InputField icon={Lock} error={errors.password}>
-                <motion.input
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
@@ -425,31 +335,35 @@ const Register = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full px-4 py-4 pl-12 pr-12 border-2 ${errors.password
+                  className={`w-full px-4 py-3 pl-10 pr-10 border ${errors.password
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                    } rounded-2xl placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-lg backdrop-blur-sm`}
+                    : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
+                    } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white`}
                   placeholder="Create a password"
-                  whileFocus={{ scale: 1.02 }}
                 />
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </motion.button>
-              </InputField>
-            </motion.div>
+                </button>
+              </div>
+              {errors.password && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.password}
+                </div>
+              )}
+            </div>
 
-            <motion.div variants={itemVariants}>
-              <label htmlFor="confirmPassword" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm Password
               </label>
-              <InputField icon={Lock} error={errors.confirmPassword}>
-                <motion.input
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -457,162 +371,128 @@ const Register = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full px-4 py-4 pl-12 pr-12 border-2 ${errors.confirmPassword
+                  className={`w-full px-4 py-3 pl-10 pr-10 border ${errors.confirmPassword
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-200 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                    } rounded-2xl placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-lg backdrop-blur-sm`}
+                    : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
+                    } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white`}
                   placeholder="Confirm your password"
-                  whileFocus={{ scale: 1.02 }}
                 />
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </motion.button>
-              </InputField>
-            </motion.div>
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.confirmPassword}
+                </div>
+              )}
+            </div>
 
             {/* OTP Verification */}
             {!phoneVerification.isVerified && (
-              <motion.div variants={itemVariants}>
-                <motion.button
-                  type="button"
-                  onClick={sendOTP}
-                  disabled={phoneVerification.sendingOtp || phoneVerification.otpSent}
-                  className="w-full flex justify-center items-center py-4 px-6 border border-transparent text-lg font-bold rounded-2xl text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {phoneVerification.sendingOtp ? (
-                    <motion.div
-                      className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
-                  ) : phoneVerification.otpSent ? (
-                    <>
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      OTP Sent
-                    </>
-                  ) : (
-                    <>
-                      <Phone className="w-5 h-5 mr-2" />
-                      Send OTP
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </motion.button>
-              </motion.div>
+              <button
+                type="button"
+                onClick={sendOTP}
+                disabled={phoneVerification.sendingOtp || phoneVerification.otpSent}
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed btn-hover"
+              >
+                {phoneVerification.sendingOtp ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                ) : phoneVerification.otpSent ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    OTP Sent
+                  </>
+                ) : (
+                  <>
+                    <Phone className="w-5 h-5 mr-2" />
+                    Send OTP
+                  </>
+                )}
+              </button>
             )}
 
             {/* OTP Input */}
-            <AnimatePresence>
-              {phoneVerification.showOtpInput && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
+            {phoneVerification.showOtpInput && (
+              <div className="space-y-3">
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Enter OTP
+                </label>
+                <input
+                  id="otp"
+                  type="text"
+                  required
+                  value={phoneVerification.otp}
+                  onChange={handleOtpChange}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white text-center text-lg tracking-widest font-medium"
+                  placeholder="000000"
+                  maxLength="6"
+                />
+                <button
+                  type="button"
+                  onClick={verifyOTP}
+                  disabled={phoneVerification.verifying}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed btn-hover"
                 >
-                  <motion.div variants={itemVariants} className="space-y-4">
-                    <label htmlFor="otp" className="block text-sm font-bold text-gray-700 dark:text-gray-300">
-                      Enter OTP
-                    </label>
-                    <div className="relative">
-                      <motion.input
-                        id="otp"
-                        type="text"
-                        required
-                        value={phoneVerification.otp}
-                        onChange={handleOtpChange}
-                        className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-center text-2xl tracking-widest font-bold backdrop-blur-sm"
-                        placeholder="000000"
-                        maxLength="6"
-                        whileFocus={{ scale: 1.02 }}
-                      />
-                    </div>
-                    <motion.button
-                      type="button"
-                      onClick={verifyOTP}
-                      disabled={phoneVerification.verifying}
-                      className="w-full flex justify-center items-center py-4 px-6 border border-transparent text-lg font-bold rounded-2xl text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-green-500/25"
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {phoneVerification.verifying ? (
-                        <motion.div
-                          className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        />
-                      ) : (
-                        <>
-                          <Shield className="w-5 h-5 mr-2" />
-                          Verify OTP
-                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </>
-                      )}
-                    </motion.button>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  {phoneVerification.verifying ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  ) : (
+                    <>
+                      <Shield className="w-5 h-5 mr-2" />
+                      Verify OTP
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Submit Button */}
-            <motion.div variants={itemVariants}>
-              <motion.button
-                type="submit"
-                disabled={loading || !phoneVerification.isVerified}
-                className="group w-full flex justify-center items-center py-4 px-6 border border-transparent text-lg font-bold rounded-2xl text-white bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-orange-500/25"
-                whileHover={{ scale: loading || !phoneVerification.isVerified ? 1 : 1.02, y: loading || !phoneVerification.isVerified ? 0 : -2 }}
-                whileTap={{ scale: loading || !phoneVerification.isVerified ? 1 : 0.98 }}
-              >
-                {loading ? (
-                  <motion.div
-                    className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                ) : (
-                  <>
-                    <UserCheck className="w-5 h-5 mr-2" />
-                    Create Account
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </motion.button>
-            </motion.div>
-          </motion.form>
+            <button
+              type="submit"
+              disabled={loading || !phoneVerification.isVerified}
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed btn-hover"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+              ) : (
+                <>
+                  <UserCheck className="w-5 h-5 mr-2" />
+                  Create Account
+                </>
+              )}
+            </button>
+          </form>
 
-          {/* Enhanced Footer */}
-          <motion.div className="mt-8" variants={itemVariants}>
+          {/* Footer */}
+          <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 font-medium backdrop-blur-sm">
+                <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                   Already have an account?
                 </span>
               </div>
             </div>
 
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
               <Link
                 to="/login"
-                className="group inline-flex items-center font-bold text-lg bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
+                className="inline-flex items-center font-medium text-base text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
               >
                 Sign in to MessWallah
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

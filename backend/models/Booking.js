@@ -101,12 +101,13 @@ const BookingSchema = new mongoose.Schema({
   paymentDetails: {
     paymentMethod: {
       type: String,
-      enum: ['cash', 'online', 'bank_transfer', 'upi']
+      enum: ['cash', 'online', 'bank_transfer', 'upi', 'razorpay'],
+      default: 'razorpay'
     },
     transactionId: String,
     paymentStatus: {
       type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
+      enum: ['pending', 'initiated', 'completed', 'failed', 'refunded'],
       default: 'pending'
     },
     paidAmount: {
@@ -115,6 +116,39 @@ const BookingSchema = new mongoose.Schema({
     },
     paymentDate: Date
   },
+
+  // Razorpay specific fields
+  paymentOrderId: {
+    type: String,
+    index: true
+  },
+  paymentId: {
+    type: String,
+    index: true
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'initiated', 'completed', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paidAt: {
+    type: Date
+  },
+  
+  // Refund fields
+  refundId: String,
+  refundAmount: {
+    type: Number,
+    default: 0
+  },
+  refundStatus: {
+    type: String,
+    enum: ['none', 'initiated', 'processed', 'completed', 'failed'],
+    default: 'none'
+  },
+  refundReason: String,
+  refundedAt: Date,
+  paymentFailureReason: String,
   createdAt: {
     type: Date,
     default: Date.now

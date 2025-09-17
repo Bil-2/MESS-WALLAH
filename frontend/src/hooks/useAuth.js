@@ -37,14 +37,50 @@ const useAuth = () => {
       const response = await apiHelpers.sendOtp(phone);
 
       if (response.success) {
-        toast.success('OTP sent successfully!');
-        return { success: true, message: response.message };
+        toast.success(`OTP sent to +91${phone}`, {
+          icon: '📱',
+          duration: 4000
+        });
+        return { 
+          success: true, 
+          message: response.message,
+          data: response.data 
+        };
       } else {
         toast.error(response.message || 'Failed to send OTP');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to send OTP';
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const resendOtp = async (phone) => {
+    setOtpLoading(true);
+    try {
+      const response = await apiHelpers.resendOtp(phone);
+
+      if (response.success) {
+        toast.success('OTP resent successfully!', {
+          icon: '🔄',
+          duration: 4000
+        });
+        return { 
+          success: true, 
+          message: response.message,
+          data: response.data 
+        };
+      } else {
+        toast.error(response.message || 'Failed to resend OTP');
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to resend OTP';
       toast.error(message);
       return { success: false, message };
     } finally {
@@ -157,12 +193,93 @@ const useAuth = () => {
     return user?.verified === true || user?.isVerified === true;
   };
 
+  // Forgot password
+  const forgotPassword = async (email) => {
+    setLoading(true);
+    try {
+      const response = await apiHelpers.forgotPassword(email);
+
+      if (response.success) {
+        toast.success('Password reset link sent to your email!', {
+          icon: '📧',
+          duration: 5000
+        });
+        return { success: true, message: response.message };
+      } else {
+        toast.error(response.message || 'Failed to send reset email');
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Failed to send reset email';
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Register function
+  const register = async (userData) => {
+    setLoading(true);
+    try {
+      const response = await apiHelpers.register(userData);
+
+      if (response.success) {
+        toast.success('Account created successfully!');
+        return { success: true, message: response.message };
+      } else {
+        toast.error(response.message || 'Registration failed');
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Registration failed';
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Login function
+  const login = async (email, password) => {
+    setLoading(true);
+    try {
+      const response = await apiHelpers.login(email, password);
+
+      if (response.success) {
+        const { token, user: userData } = response.data;
+
+        // Store auth data
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        setUser(userData);
+        toast.success('Login successful!');
+
+        return { success: true, user: userData };
+      } else {
+        toast.error(response.message || 'Login failed');
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Login failed';
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     user,
     loading,
     otpLoading,
     sendOtp,
+    resendOtp,
     verifyOtp,
+    login,
+    register,
+    forgotPassword,
     updateProfile,
     refreshProfile,
     logout,

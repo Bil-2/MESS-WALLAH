@@ -70,7 +70,32 @@ const mockAuth = {
     return {
       success: true,
       message: 'OTP sent successfully',
-      data: { phone }
+      data: { 
+        phone,
+        expiresIn: 5,
+        method: 'SMS',
+        canResendAfter: 60
+      }
+    };
+  },
+
+  async resendOtp(phone) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (!phone || phone.length !== 10) {
+      throw new Error('Please enter a valid 10-digit phone number');
+    }
+    
+    return {
+      success: true,
+      message: 'OTP resent successfully',
+      data: { 
+        phone,
+        expiresIn: 5,
+        method: 'SMS',
+        canResendAfter: 60
+      }
     };
   },
 
@@ -171,6 +196,38 @@ const mockAuth = {
         user: mockUser
       }
     };
+  },
+
+  async forgotPassword(email) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    if (!email) {
+      throw new Error('Email is required');
+    }
+    
+    // Simulate email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Please enter a valid email address');
+    }
+    
+    // 🚨 DEMO MODE: This is a simulation
+    // To send real emails, replace this with actual backend API call:
+    // const response = await api.post('/auth/forgot-password', { email });
+    // return response.data;
+    
+    console.log(`📧 DEMO: Would send password reset email to: ${email}`);
+    
+    return {
+      success: true,
+      message: 'Password reset link sent to your email (Demo Mode)',
+      data: {
+        email: email,
+        resetToken: 'demo-reset-token-' + Date.now(),
+        expiresIn: 15 // minutes
+      }
+    };
   }
 };
 
@@ -210,6 +267,15 @@ export const apiHelpers = {
     } catch (error) {
       // Fallback to mock if backend fails
       return await mockAuth.register(userData);
+    }
+  },
+
+  async forgotPassword(email) {
+    try {
+      return await mockAuth.forgotPassword(email);
+    } catch (error) {
+      // Fallback to mock if backend fails
+      return await mockAuth.forgotPassword(email);
     }
   },
 
@@ -320,6 +386,46 @@ export const apiHelpers = {
 
   async removeFavorite(roomId) {
     const response = await api.delete(`/users/favorites/${roomId}`);
+    return response.data;
+  },
+
+  // Search helpers
+  async advancedSearch(params = {}) {
+    const response = await api.get('/search/advanced', { params });
+    return response.data;
+  },
+
+  async getSearchSuggestions(query, limit = 10) {
+    const response = await api.get('/search/suggestions', { 
+      params: { query, limit } 
+    });
+    return response.data;
+  },
+
+  async getNearbyProperties(latitude, longitude, radius = 5, limit = 20) {
+    const response = await api.get('/search/nearby', { 
+      params: { latitude, longitude, radius, limit } 
+    });
+    return response.data;
+  },
+
+  async getFilterOptions() {
+    const response = await api.get('/search/filters');
+    return response.data;
+  },
+
+  async saveSearch(name, searchParams) {
+    const response = await api.post('/search/save', { name, searchParams });
+    return response.data;
+  },
+
+  async getSavedSearches() {
+    const response = await api.get('/search/saved');
+    return response.data;
+  },
+
+  async deleteSavedSearch(searchId) {
+    const response = await api.delete(`/search/saved/${searchId}`);
     return response.data;
   },
 

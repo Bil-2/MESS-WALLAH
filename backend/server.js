@@ -1,15 +1,15 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const compression = require('compression');
 const cookieParser = require('cookie-parser');
-
-// Load environment variables
-dotenv.config();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const app = express();
 
@@ -186,6 +186,20 @@ const startServer = async () => {
       console.log('   ✓ /api/bookings routes registered');
     } catch (error) {
       console.error('   ❌ Failed to register /api/bookings routes:', error.message);
+    }
+
+    try {
+      app.use('/api/search', require('./routes/searchRoutes'));
+      console.log('   ✓ /api/search routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/search routes:', error.message);
+    }
+
+    try {
+      app.use('/api/payments', require('./routes/paymentRoutes'));
+      console.log('   ✓ /api/payments routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/payments routes:', error.message);
     }
 
     // Global error handling middleware

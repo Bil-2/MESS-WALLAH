@@ -34,7 +34,7 @@ const Rooms = () => {
     if (savedFavorites) {
       setFavorites(new Set(JSON.parse(savedFavorites)));
     }
-  }, [currentPage, filters]);
+  }, [currentPage]);
 
   const fetchRooms = async () => {
     try {
@@ -51,39 +51,17 @@ const Rooms = () => {
         setFilters(prev => ({ ...prev, search: urlSearch }));
       }
       
-      // Fix common typos
-      if (searchFilters.search) {
-        const searchTerm = searchFilters.search.toLowerCase();
-        if (searchTerm.includes('west bangal')) {
-          searchFilters.search = searchTerm.replace('west bangal', 'west bengal');
-        }
-        if (searchTerm.includes('vizag')) {
-          searchFilters.search = searchTerm.replace('vizag', 'visakhapatnam');
-        }
-      }
-      
       // Use optimized mock data with performance improvements
-      const mockResponse = getAllRooms(searchFilters, currentPage, 24); // Reduced page size for better performance
+      const mockResponse = getAllRooms(searchFilters, currentPage, 24);
       
       if (mockResponse.success && mockResponse.data && mockResponse.data.rooms.length > 0) {
         setRooms(mockResponse.data.rooms);
         setTotalPages(mockResponse.data.pagination?.totalPages || 1);
-        
-        // Show success message with location if searching
-        if (searchFilters.search) {
-          toast.success(`Found ${mockResponse.data.rooms.length} rooms in ${searchFilters.search}`);
-        } else {
-          toast.success(`Found ${mockResponse.data.rooms.length} rooms`);
-        }
       } else {
         // If no results, show all available rooms
         const allRoomsResponse = getAllRooms({}, currentPage, 24);
         setRooms(allRoomsResponse.data.rooms);
         setTotalPages(allRoomsResponse.data.pagination?.totalPages || 1);
-        toast(`No rooms found for "${searchFilters.search || 'your search'}". Showing all available rooms (${allRoomsResponse.data.rooms.length} found)`, {
-          icon: 'ℹ️',
-          duration: 4000,
-        });
       }
     } catch (error) {
       console.error('Error loading rooms:', error);
@@ -91,7 +69,6 @@ const Rooms = () => {
       const allRoomsResponse = getAllRooms({}, currentPage, 24);
       setRooms(allRoomsResponse.data.rooms);
       setTotalPages(allRoomsResponse.data.pagination?.totalPages || 1);
-      toast.error('Error loading rooms, showing all available');
     } finally {
       setLoading(false);
     }
@@ -244,7 +221,6 @@ const Rooms = () => {
     e.preventDefault();
     setCurrentPage(1);
     fetchRooms();
-    toast.success('Searching for rooms...');
   };
 
   const containerVariants = {
@@ -252,20 +228,19 @@ const Rooms = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
+        staggerChildren: 0.05,
+        delayChildren: 0.1
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
-        duration: 0.6,
+        duration: 0.3,
         ease: "easeOut"
       }
     }
@@ -283,178 +258,210 @@ const Rooms = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute top-20 left-10 text-4xl opacity-10"
-          variants={floatingVariants}
-          animate="animate"
-        >
-          🏠
-        </motion.div>
-        <motion.div
-          className="absolute top-60 right-20 text-3xl opacity-10"
-          variants={floatingVariants}
-          animate="animate"
-          style={{ animationDelay: '1s' }}
-        >
-          🛏️
-        </motion.div>
-        <motion.div
-          className="absolute bottom-40 left-20 text-5xl opacity-10"
-          variants={floatingVariants}
-          animate="animate"
-          style={{ animationDelay: '2s' }}
-        >
-          🔑
-        </motion.div>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Header */}
-        <motion.div
-          className="text-center mb-12 pt-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.h1
-            className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 bg-clip-text text-transparent mb-6"
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          >
+        <div className="text-center mb-8 pt-8">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 bg-clip-text text-transparent mb-4">
             Find Your Perfect Room
-          </motion.h1>
-          <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-6">
+          </h1>
+          <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-4">
             Discover comfortable, affordable rooms with verified owners and homely atmosphere
           </p>
 
           {/* Safety Banner */}
-          <motion.div
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 px-6 py-3 rounded-full text-lg font-bold shadow-lg"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 500 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              🛡️
-            </motion.div>
+          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 px-6 py-3 rounded-full text-base font-bold shadow-lg">
+            <span>🛡️</span>
             <span>BE TENSION FREE! - Complete Girls Safety Guaranteed</span>
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              ✨
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            <span>✨</span>
+          </div>
+        </div>
 
-        {/* Search Section */}
-        <motion.div
-          className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 mb-12 border border-white/20 dark:border-gray-700/30"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-        >
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 relative">
-              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by location, college, or area..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300 text-lg backdrop-blur-sm"
-              />
+        {/* Enhanced Search Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">
+          {/* Quick Search Bar */}
+          <form onSubmit={handleSearch} className="mb-4">
+            <div className="flex flex-col lg:flex-row gap-3">
+              <div className="flex-1 relative">
+                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search by city, area, college..."
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  className="w-full pl-12 pr-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white text-base"
+                />
+                {filters.search && (
+                  <button
+                    type="button"
+                    onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold"
+              >
+                <FiSearch className="w-5 h-5" />
+                Search
+              </button>
             </div>
-            <motion.button
-              type="submit"
-              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-green-500/25 transition-all duration-300"
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <FiSearch className="w-5 h-5" />
-              Search
-            </motion.button>
-            <motion.button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-orange-500/25 transition-all duration-300"
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <FiSliders className="w-5 h-5" />
-              Filters
-              <FiChevronDown className={`w-5 h-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </motion.button>
           </form>
 
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border-t border-gray-200 dark:border-gray-700 pt-6"
+          {/* Quick Filter Pills */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-2">Quick:</span>
+            {[
+              { label: 'Under ₹10K', filter: { maxRent: '10000' } },
+              { label: '₹10K-₹15K', filter: { minRent: '10000', maxRent: '15000' } },
+              { label: 'Girls Only', filter: { roomType: 'girls' } },
+              { label: 'WiFi', filter: { amenities: ['wifi'] } },
+              { label: 'Mess', filter: { amenities: ['mess'] } }
+            ].map((quickFilter, index) => (
+              <button
+                key={index}
+                onClick={() => setFilters(prev => ({ ...prev, ...quickFilter.filter }))}
+                className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-medium hover:bg-orange-200 dark:hover:bg-orange-900/50"
               >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {quickFilter.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Advanced Filters Toggle */}
+          <div className="flex justify-between items-center">
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium"
+            >
+              <FiSliders className="w-4 h-4" />
+              Filters
+              <FiChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Active Filters Count */}
+            {(filters.location || filters.minRent || filters.maxRent || filters.roomType || filters.amenities.length > 0) && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-bold">
+                  {[filters.location, filters.minRent, filters.maxRent, filters.roomType, ...filters.amenities].filter(Boolean).length}
+                </span>
+                <button
+                  onClick={() => setFilters({ search: filters.search, location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
+                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+          </div>
+
+          {showFilters && (
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Location Filter */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Location
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                      <FiMapPin className="inline w-4 h-4 mr-2" />
+                      Specific Location
                     </label>
                     <input
                       type="text"
-                      placeholder="Enter location"
+                      placeholder="e.g., Koramangala, Whitefield"
                       value={filters.location}
                       onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
                       className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
                     />
                   </div>
+
+                  {/* Room Type Filter */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Min Rent
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                      <FiHome className="inline w-4 h-4 mr-2" />
+                      Room Type
                     </label>
-                    <input
-                      type="number"
-                      placeholder="₹0"
-                      value={filters.minRent}
-                      onChange={(e) => setFilters(prev => ({ ...prev, minRent: e.target.value }))}
+                    <select
+                      value={filters.roomType}
+                      onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
                       className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Max Rent
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="₹50000"
-                      value={filters.maxRent}
-                      onChange={(e) => setFilters(prev => ({ ...prev, maxRent: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <motion.button
-                      type="button"
-                      onClick={() => setFilters({ search: '', location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
-                      className="w-full px-6 py-3 text-orange-600 border-2 border-orange-500 rounded-xl hover:bg-orange-500 hover:text-white transition-all duration-300 font-bold"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
                     >
-                      Clear Filters
-                    </motion.button>
+                      <option value="">All Types</option>
+                      <option value="single">Single Room</option>
+                      <option value="shared">Shared Room</option>
+                      <option value="studio">Studio Apartment</option>
+                      <option value="family">Family Room</option>
+                      <option value="girls">Girls Only</option>
+                    </select>
+                  </div>
+
+                  {/* Price Range */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                      💰 Price Range
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Min ₹"
+                        value={filters.minRent}
+                        onChange={(e) => setFilters(prev => ({ ...prev, minRent: e.target.value }))}
+                        className="w-1/2 px-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Max ₹"
+                        value={filters.maxRent}
+                        onChange={(e) => setFilters(prev => ({ ...prev, maxRent: e.target.value }))}
+                        className="w-1/2 px-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Amenities Filter */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                      ⭐ Must-Have Amenities
+                    </label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {['wifi', 'mess', 'laundry', 'security', 'parking', 'gym', 'ac', 'balcony'].map((amenity) => (
+                        <label key={amenity} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={filters.amenities.includes(amenity)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFilters(prev => ({ ...prev, amenities: [...prev.amenities, amenity] }));
+                              } else {
+                                setFilters(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }));
+                              }
+                            }}
+                            className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{amenity}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+
+              {/* Apply Filters Button */}
+              <div className="flex justify-center mt-6">
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
+                >
+                  Apply Filters & Search
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {loading && (
           <div className="flex justify-center py-12">
@@ -464,123 +471,86 @@ const Rooms = () => {
 
         {!loading && (
           <>
-            <motion.div
-              className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-            >
-              <p className="text-xl font-bold text-gray-700 dark:text-gray-300">
-                {rooms.length} amazing rooms found
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                {rooms.length} rooms found
               </p>
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <motion.div
-                  className="flex items-center gap-2 text-orange-600"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <FiGift className="w-5 h-5" />
-                  <span className="font-bold">Free site visits available!</span>
-                </motion.div>
-                <motion.div
-                  className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-4 py-2 rounded-full text-sm font-bold"
-                  whileHover={{ scale: 1.05 }}
-                >
+              <div className="flex flex-col md:flex-row gap-3 items-center">
+                <div className="flex items-center gap-2 text-orange-600">
+                  <FiGift className="w-4 h-4" />
+                  <span className="font-medium text-sm">Free site visits!</span>
+                </div>
+                <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-3 py-1 rounded-full text-sm font-medium">
                   <FiShield className="w-4 h-4" />
-                  <span>Girls Safety Verified</span>
-                </motion.div>
+                  <span>Safety Verified</span>
+                </div>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {rooms.map((room, index) => (
-                <motion.div
+                <div
                   key={room._id}
-                  className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden cursor-pointer transform transition-all duration-500 border border-white/20 dark:border-gray-700/30"
-                  variants={itemVariants}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  onHoverStart={() => setHoveredCard(room._id)}
-                  onHoverEnd={() => setHoveredCard(null)}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow border border-gray-200 dark:border-gray-700"
                   onClick={() => handleViewDetails(room, { stopPropagation: () => { } })}
                 >
-                  <div className="relative h-64 overflow-hidden">
+                  <div className="relative h-48">
                     <img
                       src={room.photos?.[0]?.url || room.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop'}
                       alt={room.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop';
                       }}
                     />
-                    <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                    <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
                       {room.roomType || room.type || 'Available'}
                     </div>
-
-                    {/* Safety Badge */}
-                    <div className="absolute top-4 left-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                      🛡️ Girls Safe
+                    <div className="absolute top-2 left-2 bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium">
+                      🛡️ Safe
                     </div>
-
-                    <motion.button
-                      className="absolute top-16 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all duration-300"
-                      animate={{ scale: hoveredCard === room._id ? [1, 1.2, 1] : 1 }}
-                      transition={{ duration: 0.3 }}
+                    <button
+                      className="absolute top-10 left-2 bg-white p-1 rounded-full hover:bg-gray-100"
                       onClick={(e) => handleFavorite(room._id, e)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
                     >
-                      <FiHeart className={`w-5 h-5 transition-colors duration-300 ${favorites.has(room._id) ? 'text-red-500 fill-current' : 'text-gray-400'
-                        }`} />
-                    </motion.button>
-                    <motion.button
-                      className="absolute top-16 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all duration-300"
-                      onClick={(e) => handleShare(room, e)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <FiShare2 className="w-4 h-4 text-gray-600" />
-                    </motion.button>
+                      <FiHeart className={`w-4 h-4 ${favorites.has(room._id) ? 'text-red-500 fill-current' : 'text-gray-400'}`} />
+                    </button>
                   </div>
 
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 line-clamp-1">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 truncate">
                         {room.title}
                       </h3>
                       <div className="flex items-center gap-1">
                         <FiStar className="w-4 h-4 text-yellow-500 fill-current" />
-                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {room.rating || 4.0}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-1 mb-3">
                       <FiMapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
                         {room.location || `${room.address?.area || ''}, ${room.address?.city || ''}`.trim().replace(/^,\s*/, '') || 'Location not specified'}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div>
-                        <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+                        <span className="text-xl font-bold text-orange-600">
                           ₹{(room.rentPerMonth || room.rent || 0).toLocaleString()}
                         </span>
-                        <span className="text-gray-500 dark:text-gray-400">/month</span>
+                        <span className="text-gray-500 text-sm">/month</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-gray-500">{room.totalReviews || room.reviewCount || (Array.isArray(room.reviews) ? room.reviews.length : room.reviews) || 0} reviews</div>
-                        <div className="text-sm font-bold text-green-600 flex items-center gap-1">
+                        <div className="text-xs text-gray-500">{room.totalReviews || room.reviewCount || (Array.isArray(room.reviews) ? room.reviews.length : room.reviews) || 0} reviews</div>
+                        <div className="text-xs font-medium text-green-600 flex items-center gap-1">
                           {room.owner?.verified || room.verified ? (
                             <>
                               <FiShield className="w-3 h-3" />
-                              Verified Owner
+                              Verified
                             </>
                           ) : (
                             'Pending'
@@ -589,70 +559,57 @@ const Rooms = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="flex flex-wrap gap-1 mb-4">
                       {(room.amenities || []).slice(0, 3).map((amenity, idx) => (
                         <span
                           key={idx}
-                          className="px-3 py-1 bg-gradient-to-r from-orange-100 to-pink-100 text-orange-700 rounded-full text-xs font-bold"
+                          className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium"
                         >
                           {amenity}
                         </span>
                       ))}
                       {(room.amenities || []).length > 3 && (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">
-                          +{room.amenities.length - 3} more
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+                          +{room.amenities.length - 3}
                         </span>
                       )}
                     </div>
 
                     <div className="flex gap-2">
-                      <motion.button
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                      <button
+                        className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded-lg font-medium text-sm"
                         onClick={(e) => handleBookNow(room, e)}
                       >
                         Book Now
-                      </motion.button>
-                      <motion.button
-                        className="px-4 py-3 border-2 border-orange-500 text-orange-600 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition-all duration-300"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                      </button>
+                      <button
+                        className="px-3 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-600 hover:text-white"
                         onClick={(e) => handleViewDetails(room, e)}
                       >
-                        <FiEye className="w-5 h-5" />
-                      </motion.button>
-                      <motion.button
-                        className="px-4 py-3 border-2 border-green-500 text-green-600 rounded-2xl font-bold hover:bg-green-500 hover:text-white transition-all duration-300"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        <FiEye className="w-4 h-4" />
+                      </button>
+                      <button
+                        className="px-3 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white"
                         onClick={(e) => handleCallOwner(room, e)}
                       >
-                        <FiPhone className="w-5 h-5" />
-                      </motion.button>
+                        <FiPhone className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <motion.div
-                className="flex justify-center items-center gap-4 mt-12"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
-              >
-                <motion.button
-                  className="px-6 py-3 bg-white dark:bg-gray-800 border-2 border-orange-500 text-orange-600 rounded-xl font-bold hover:bg-orange-500 hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={{ scale: currentPage > 1 ? 1.02 : 1 }}
-                  whileTap={{ scale: currentPage > 1 ? 0.98 : 1 }}
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <button
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-orange-500 text-orange-600 rounded-lg font-medium hover:bg-orange-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={currentPage <= 1}
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 >
                   Previous
-                </motion.button>
+                </button>
 
                 <div className="flex items-center gap-2">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -660,57 +617,46 @@ const Rooms = () => {
                     if (pageNum > totalPages) return null;
 
                     return (
-                      <motion.button
+                      <button
                         key={pageNum}
-                        className={`w-12 h-12 rounded-xl font-bold transition-all duration-300 ${pageNum === currentPage
-                          ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-                          : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-orange-500 hover:text-orange-600'
+                        className={`w-10 h-10 rounded-lg font-medium ${pageNum === currentPage
+                          ? 'bg-orange-600 text-white'
+                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-orange-500 hover:text-orange-600'
                           }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
                         onClick={() => setCurrentPage(pageNum)}
                       >
                         {pageNum}
-                      </motion.button>
+                      </button>
                     );
                   })}
                 </div>
 
-                <motion.button
-                  className="px-6 py-3 bg-white dark:bg-gray-800 border-2 border-orange-500 text-orange-600 rounded-xl font-bold hover:bg-orange-500 hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={{ scale: currentPage < totalPages ? 1.02 : 1 }}
-                  whileTap={{ scale: currentPage < totalPages ? 0.98 : 1 }}
+                <button
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-orange-500 text-orange-600 rounded-lg font-medium hover:bg-orange-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={currentPage >= totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 >
                   Next
-                </motion.button>
-              </motion.div>
+                </button>
+              </div>
             )}
 
             {rooms.length === 0 && (
-              <motion.div
-                className="text-center py-16"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-              >
-                <div className="text-8xl mb-6">🏠</div>
-                <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🏠</div>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                   No rooms found
                 </h3>
-                <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
                   Try adjusting your search criteria or filters
                 </p>
-                <motion.button
+                <button
                   onClick={() => setFilters({ search: '', location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
-                  className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-orange-500/25 transition-all duration-300"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium"
                 >
                   Clear All Filters
-                </motion.button>
-              </motion.div>
+                </button>
+              </div>
             )}
           </>
         )}

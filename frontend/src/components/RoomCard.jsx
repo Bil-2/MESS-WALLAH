@@ -56,7 +56,7 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 card-hover fade-in">
       <Link to={`/room/${room._id}`} className="block">
         {/* Image Section */}
         <div className="relative h-48 bg-gray-200">
@@ -74,7 +74,7 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
                 <>
                   <button
                     onClick={(e) => handleImageNavigation('prev', e)}
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-1 shadow-sm transition-all"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-1 shadow-sm transition-all scale-hover"
                   >
                     <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -82,7 +82,7 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
                   </button>
                   <button
                     onClick={(e) => handleImageNavigation('next', e)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-1 shadow-sm transition-all"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-1 shadow-sm transition-all scale-hover"
                   >
                     <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

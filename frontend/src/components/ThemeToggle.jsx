@@ -13,7 +13,7 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={handleToggle}
-      className="relative p-2 rounded-lg bg-white/10 dark:bg-gray-800/50 hover:bg-white/20 dark:hover:bg-gray-700/50 border border-gray-200/20 dark:border-gray-600/20 transition-colors duration-200"
+      className="relative p-2 rounded-lg bg-white/10 dark:bg-gray-800/50 hover:bg-white/20 dark:hover:bg-gray-700/50 border border-gray-200/20 dark:border-gray-600/20 transition-colors duration-200 scale-hover rotate-hover"
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   FiSearch, 
   FiMapPin, 
@@ -71,9 +70,9 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-orange-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse"></div>
@@ -83,40 +82,168 @@ const Home = () => {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full text-sm font-semibold mb-6 animate-bounce shadow-lg">
-              <FiShield className="w-4 h-4 animate-pulse" />
-              #1 SAFE MESS App for Students 
+            <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl text-base font-bold mb-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-white/20">
+              <div className="relative">
+                <FiShield className="w-5 h-5 text-white" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow- rounded-full flex items-center justify-center">
+                  
+                </div>
+              </div>
+              <span className="text-white font-extrabold tracking-wide">
+                 SAFE MESS Website For Students
+              </span>
+              <div className="px-2 py-1 bg-white/20 rounded-full">
+                <span className="text-xs font-bold text-white">TRUSTED</span>
+              </div>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 animate-fade-in-up">
-              <span className="bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
-                Safe & Secure
-              </span>
-              <br />
-              <span className="text-white animate-fade-in-up delay-300">Girls Accommodation</span>
-            </h1>
-            
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto animate-fade-in-up delay-500">
-              Find verified, safe, and comfortable rooms for girls with 24/7 security, modern amenities, and a supportive community environment.
-            </p>
-          </div>
+            {/* Awards & Recognition Section */}
+            <div className="max-w-4xl mx-auto mb-12">
+              {/* Section Header */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-4">
+                  <span className="text-yellow-400 text-lg">🏆</span>
+                  <span className="text-white font-semibold text-sm">Awards & Recognition</span>
+                </div>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in-up delay-700">
-            <button
-              onClick={() => navigate('/rooms')}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold text-lg hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-1 transform"
-            >
-              <FiSearch className="w-5 h-5 animate-pulse" />
-              Find Rooms
-            </button>
-            <button
-              onClick={() => navigate('/signup')}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gray-800/50 backdrop-blur-sm text-white border border-gray-600 rounded-xl font-semibold text-lg hover:bg-gray-700/50 transition-all duration-500 hover:scale-110 hover:-translate-y-1 transform"
-            >
-              <FiUsers className="w-5 h-5 animate-pulse" />
-              Join Now
-            </button>
+              {/* Awards Grid */}
+              <div className="space-y-4">
+                {/* Awards Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Most Searched */}
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 border border-yellow-300/30">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-2xl">🏆</span>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-black text-white">2024 MOST SEARCHED</h4>
+                          <p className="text-white/90 text-sm font-semibold">Global Search Index</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="px-2 py-1 bg-white/20 rounded-lg">
+                            <span className="text-xs font-bold text-white">GOLD</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top 10 Platforms */}
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-400 to-gray-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                    <div className="relative bg-gradient-to-r from-slate-500 to-gray-600 rounded-2xl p-6 border border-slate-300/30">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-2xl">🥈</span>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-black text-white">TOP 10 PLATFORMS</h4>
+                          <p className="text-white/90 text-sm font-semibold">Industry Insights India</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="px-2 py-1 bg-white/20 rounded-lg">
+                            <span className="text-xs font-bold text-white">SILVER</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Main Hero Content */}
+            <div className="text-center mb-12">
+              {/* Hero Headline */}
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-6 leading-tight">
+                <span className="block bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
+                  Find Your Perfect
+                </span>
+                <span className="block text-white relative">
+                  Safe Haven
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full"></div>
+                </span>
+              </h1>
+
+              {/* Value Proposition */}
+              <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto font-medium leading-relaxed">
+                Discover <span className="text-orange-400 font-bold">verified</span>, 
+                <span className="text-pink-400 font-bold"> secure</span>, and 
+                <span className="text-purple-400 font-bold"> comfortable</span> accommodations 
+                designed specifically for women's safety and comfort.
+              </p>
+
+              {/* Key Features Pills */}
+              <div className="flex flex-wrap justify-center gap-3 mb-10">
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
+                  <FiShield className="w-4 h-4 text-green-400" />
+                  <span className="text-green-300 font-semibold text-sm">24/7 Security</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
+                  <FiUsers className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-300 font-semibold text-sm">Verified Owners</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
+                  <FiHome className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-300 font-semibold text-sm">Premium Amenities</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 border border-orange-400/30 rounded-full backdrop-blur-sm">
+                  <FiMapPin className="w-4 h-4 text-orange-400" />
+                  <span className="text-orange-300 font-semibold text-sm">Prime Locations</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Enhanced Action Buttons */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
+              {/* Primary CTA */}
+              <button
+                onClick={() => navigate('/rooms')}
+                className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative flex items-center gap-3">
+                  <FiSearch className="w-6 h-6" />
+                  <span>Explore Rooms Now</span>
+                  <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                </div>
+              </button>
+
+              {/* Secondary CTA */}
+              <button
+                onClick={() => navigate('/register')}
+                className="group px-10 py-5 bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white rounded-2xl font-bold text-xl hover:bg-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+              >
+                <div className="flex items-center gap-3">
+                  <FiUsers className="w-6 h-6 text-blue-400" />
+                  <span>Register Now</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl font-black text-orange-400 mb-1">10K+</div>
+                <div className="text-sm text-gray-400 font-semibold">Happy Students</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-black text-pink-400 mb-1">970+</div>
+                <div className="text-sm text-gray-400 font-semibold">Verified Rooms</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-black text-purple-400 mb-1">300+</div>
+                <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-black text-green-400 mb-1">4.88★</div>
+                <div className="text-sm text-gray-400 font-semibold">Safety Rating</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -125,24 +252,12 @@ const Home = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-900/30 via-purple-900/30 to-pink-900/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-4xl md:text-5xl font-bold text-white mb-6"
-            >
-              🏙️ Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">All</span>
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
-            >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 fade-in">
+              Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">All</span>
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto slide-in-up">
               Discover premium accommodations in India's top student and professional destinations
-            </motion.p>
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
@@ -188,18 +303,19 @@ const Home = () => {
                 bgGradient: 'from-indigo-500/20 to-blue-500/20'
               }
             ].map((city, index) => (
-              <motion.div
+              <div
                 key={city.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                onClick={() => handleQuickSearch(city.name)}
-                className={`group relative bg-gradient-to-br ${city.bgGradient} backdrop-blur-xl rounded-3xl p-8 text-center cursor-pointer hover:scale-105 hover:-translate-y-2 transition-all duration-200 shadow-2xl border border-white/10 hover:border-white/30 overflow-hidden`}
+                className="group relative stagger-item"
+                style={{animationDelay: `${index * 0.1}s`}}
               >
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -translate-y-10 translate-x-10"></div>
+                <div
+                  onClick={() => handleQuickSearch(city.name)}
+                  className={`group relative bg-gradient-to-br ${city.bgGradient} backdrop-blur-xl rounded-3xl p-8 text-center cursor-pointer hover:scale-105 hover:-translate-y-2 transition-all duration-200 shadow-2xl border border-white/10 hover:border-white/30 overflow-hidden`}
+                >
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -translate-y-10 translate-x-10"></div>
+                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full translate-y-8 -translate-x-8"></div>
                   <div className="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full translate-y-8 -translate-x-8"></div>
                 </div>
 
@@ -233,18 +349,13 @@ const Home = () => {
 
                 {/* Hover Glow Effect */}
                 <div className={`absolute inset-0 bg-gradient-to-r ${city.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-3xl`}></div>
-              </motion.div>
+              </div>
+              </div>
             ))}
           </div>
 
           {/* Additional Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
+          <div className="text-center mt-12 fade-in">
             <p className="text-gray-600 dark:text-gray-400 text-lg">
               Click on any city to explore available rooms and accommodations
             </p>
@@ -259,38 +370,110 @@ const Home = () => {
                 <span className="text-sm font-medium">Premium Locations</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-12">
-            <span className="bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-              Trusted by Thousands
-            </span>
-          </h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Trust & Statistics Section */}
+      <section className="py-24 px-4 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full text-sm font-bold mb-6 shadow-lg">
+              <FiStar className="w-4 h-4" />
+              <span>Why Students Trust Us</span>
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black mb-4">
+              <span className="bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+                Trusted by Thousands
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+              Join thousands of students who have found their perfect, safe accommodation through our platform
+            </p>
+          </div>
+
+          {/* Enhanced Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: FiUsers, label: "People Viewed", value: "5,000+", color: "text-blue-500" },
-              { icon: FiHome, label: "Rooms Booked", value: "500+", color: "text-green-500" },
-              { icon: FiShield, label: "Verified Safe", value: "100%", color: "text-purple-500" },
-              { icon: FiStar, label: "Rating", value: "4.9★", color: "text-yellow-500" }
+              { 
+                icon: FiUsers, 
+                label: "Daily Visitors", 
+                value: "50,000+", 
+                color: "from-blue-500 to-cyan-500",
+                bgColor: "bg-blue-50 dark:bg-blue-900/20",
+                description: "Students explore daily"
+              },
+              { 
+                icon: FiHome, 
+                label: "Rooms Booked", 
+                value: "6,500+", 
+                color: "from-green-500 to-emerald-500",
+                bgColor: "bg-green-50 dark:bg-green-900/20",
+                description: "Successfully booked"
+              },
+              { 
+                icon: FiShield, 
+                label: "Safety Score", 
+                value: "100%", 
+                color: "from-purple-500 to-violet-500",
+                bgColor: "bg-purple-50 dark:bg-purple-900/20",
+                description: "Verified & secure"
+              },
+              { 
+                icon: FiShield, 
+                label: "Girls Safety", 
+                value: "Premium", 
+                color: "from-pink-500 to-rose-500",
+                bgColor: "bg-pink-50 dark:bg-pink-900/20",
+                description: "Trusted & verified"
+              }
             ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-2xl hover:scale-105 transition-transform duration-300">
-                  <stat.icon className={`w-12 h-12 mx-auto mb-4 ${stat.color}`} />
-                  <div className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                    {stat.value}
-                  </div>
-                  <div className="text-gray-600 dark:text-gray-400">
-                    {stat.label}
+              <div key={index} className="group">
+                <div className={`relative ${stat.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/50`}>
+                  {/* Gradient Background Effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-500`}></div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10 text-center">
+                    {/* Icon */}
+                    <div className={`w-16 h-16 mx-auto mb-6 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center shadow-lg`}>
+                      <stat.icon className="w-8 h-8 text-white" />
+                    </div>
+                    
+                    {/* Value */}
+                    <div className={`text-4xl font-black mb-2 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                      {stat.value}
+                    </div>
+                    
+                    {/* Label */}
+                    <div className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
+                      {stat.label}
+                    </div>
+                    
+                    {/* Description */}
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {stat.description}
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="text-center mt-16">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700 shadow-lg">
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full border-2 border-white"></div>
+                <div className="w-8 h-8 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full border-2 border-white"></div>
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full border-2 border-white"></div>
+              </div>
+              <span className="text-gray-700 dark:text-gray-300 font-semibold text-sm ml-2">
+                Join 10,000+ happy students
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -302,20 +485,14 @@ const Home = () => {
       {/* Women Safety Helpline Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 dark:from-red-900/10 dark:via-pink-900/10 dark:to-purple-900/10">
         <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Your Safety is Our Priority
+          <div className="text-center mb-8 fade-in">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              🛡️ Women's Safety First
             </h2>
             <p className="text-lg text-gray-700 dark:text-gray-400 max-w-2xl mx-auto">
               We're committed to providing a safe environment for all women. Access emergency helplines and safety resources anytime.
             </p>
-          </motion.div>
+          </div>
           
           <WomenSafetyHelpline isFixed={false} showMinimized={false} />
         </div>

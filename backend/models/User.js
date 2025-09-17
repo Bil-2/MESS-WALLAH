@@ -109,6 +109,23 @@ const UserSchema = new mongoose.Schema({
     amenities: [String]
   },
 
+  // Saved searches
+  savedSearches: [{
+    name: {
+      type: String,
+      required: true,
+      maxlength: 100
+    },
+    searchParams: {
+      type: Object,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   // Activity tracking
   lastLogin: {
     type: Date,

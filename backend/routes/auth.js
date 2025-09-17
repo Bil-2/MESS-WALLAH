@@ -12,6 +12,9 @@ const {
   csrfProtection
 } = require('../middleware/advancedSecurity');
 
+// Import enhanced OTP controller
+const { sendOtp, verifyOtp, resendOtp } = require('../controllers/otpController');
+
 const router = express.Router();
 
 // Apply rate limiting to all auth routes
@@ -25,57 +28,7 @@ router.post('/send-otp', [
   body('phone')
     .matches(/^[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const { phone } = req.body;
-
-    // Generate 6-digit OTP
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Hash the OTP code
-    const salt = await bcrypt.genSalt(10);
-    const codeHash = await bcrypt.hash(code, salt);
-
-    // Set expiration time
-    const expiresAt = new Date(Date.now() + (parseInt(process.env.OTP_EXPIRE_MINUTES || 5) * 60 * 1000));
-
-    // Store OTP in database (upsert)
-    await Otp.findOneAndUpdate(
-      { phone },
-      {
-        codeHash,
-        expiresAt,
-        attempts: 0
-      },
-      { upsert: true }
-    );
-
-    // Send SMS (or console log in dev)
-    const message = `Your MessWalla OTP is ${code}. Expires in ${process.env.OTP_EXPIRE_MINUTES || 5} minutes.`;
-    await sendSms(phone, message);
-
-    res.status(200).json({
-      success: true,
-      message: 'OTP sent successfully'
-    });
-
-  } catch (error) {
-    console.error('Send OTP error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to send OTP'
-    });
-  }
-});
+], sendOtp);
 
 // @desc    Verify OTP and authenticate user
 // @route   POST /api/auth/verify-otp
@@ -85,115 +38,20 @@ router.post('/verify-otp', [
   body('phone')
     .matches(/^[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number'),
-  body('code')
+  body('otp')
     .isLength({ min: 6, max: 6 })
     .withMessage('OTP must be 6 digits')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
+], verifyOtp);
 
-    const { phone, code } = req.body;
-
-    // Find OTP record
-    const otpRecord = await Otp.findOne({ phone });
-
-    if (!otpRecord) {
-      return res.status(400).json({
-        success: false,
-        message: 'No OTP requested for this phone number'
-      });
-    }
-
-    // Check if OTP has expired
-    if (otpRecord.expiresAt < new Date()) {
-      return res.status(400).json({
-        success: false,
-        message: 'OTP has expired'
-      });
-    }
-
-    // Check if too many attempts
-    if (otpRecord.attempts >= 3) {
-      return res.status(400).json({
-        success: false,
-        message: 'Too many failed attempts. Please request a new OTP'
-      });
-    }
-
-    // Verify OTP
-    const isValidOtp = await bcrypt.compare(code, otpRecord.codeHash);
-
-    if (!isValidOtp) {
-      // Increment attempts
-      otpRecord.attempts += 1;
-      await otpRecord.save();
-
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid OTP'
-      });
-    }
-
-    // Find or create user
-    let user = await User.findOne({ phone });
-
-    if (!user) {
-      user = await User.create({
-        phone,
-        isVerified: true
-      });
-    } else {
-      user.isVerified = true;
-      user.lastLogin = new Date();
-      await user.save();
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN
-      }
-    );
-
-    // Set HTTP-only cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    // Delete OTP record
-    await Otp.deleteOne({ phone });
-
-    res.status(200).json({
-      success: true,
-      message: 'Authentication successful',
-      data: {
-        user: user.getPublicProfile(),
-        token
-      }
-    });
-
-  } catch (error) {
-    console.error('Verify OTP error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'OTP verification failed'
-    });
-  }
-});
+// @desc    Resend OTP to phone number
+// @route   POST /api/auth/resend-otp
+// @access  Public
+router.post('/resend-otp', [
+  rateLimiters.general,
+  body('phone')
+    .matches(/^[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian phone number')
+], resendOtp);
 
 // @desc    Get current user profile
 // @route   GET /api/auth/me
