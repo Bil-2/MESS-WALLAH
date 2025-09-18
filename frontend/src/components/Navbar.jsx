@@ -38,9 +38,7 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Browse Rooms', href: '/rooms', icon: MapPin },
-    { name: 'Dashboard', href: '/dashboard', icon: Settings }
+    // Navigation links removed as requested
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -114,6 +112,16 @@ const Navbar = () => {
                   <User className="w-4 h-4" />
                   <span className="text-sm font-medium">{user.name}</span>
                 </Link>
+                
+                {/* Profile Button - Only show when logged in */}
+                <Link
+                  to="/dashboard"
+                  className="w-10 h-10 bg-orange-600 hover:bg-orange-700 text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+                  title="Go to Dashboard"
+                >
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </Link>
+                
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors btn-hover"

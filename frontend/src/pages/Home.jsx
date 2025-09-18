@@ -10,7 +10,6 @@ import {
   FiMail,
   FiPhone
 } from 'react-icons/fi';
-import WomenSafetyHelpline from '../components/WomenSafetyHelpline';
 import SuccessStories from '../components/SuccessStories';
 
 const Home = () => {
@@ -72,7 +71,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
+      <section className="relative pt-16 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-orange-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse"></div>
@@ -90,7 +89,7 @@ const Home = () => {
                 </div>
               </div>
               <span className="text-white font-extrabold tracking-wide">
-                 SAFE MESS Website For Students
+                 SAFE STUDENT HOUSING Platform
               </span>
               <div className="px-2 py-1 bg-white/20 rounded-full">
                 <span className="text-xs font-bold text-white">TRUSTED</span>
@@ -98,57 +97,48 @@ const Home = () => {
             </div>
             
             {/* Awards & Recognition Section */}
-            <div className="max-w-4xl mx-auto mb-12">
+            <div className="max-w-4xl mx-auto mb-8">
               {/* Section Header */}
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-4">
-                  <span className="text-yellow-400 text-lg">🏆</span>
-                  <span className="text-white font-semibold text-sm">Awards & Recognition</span>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-100/80 to-orange-100/80 dark:bg-white/10 backdrop-blur-sm rounded-full border border-yellow-200/50 dark:border-white/20 mb-3 shadow-lg">
+                  <span className="text-yellow-500 dark:text-yellow-400 text-lg">🏆</span>
+                  <span className="text-orange-700 dark:text-white font-bold text-sm">Awards & Recognition</span>
                 </div>
               </div>
 
-              {/* Awards Grid */}
-              <div className="space-y-4">
-                {/* Awards Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Most Searched */}
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
-                    <div className="relative bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 border border-yellow-300/30">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-2xl">🏆</span>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-black text-white">2024 MOST SEARCHED</h4>
-                          <p className="text-white/90 text-sm font-semibold">Global Search Index</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="px-2 py-1 bg-white/20 rounded-lg">
-                            <span className="text-xs font-bold text-white">GOLD</span>
-                          </div>
-                        </div>
+              {/* Awards Row - Horizontal Layout */}
+              <div className="flex flex-col md:flex-row gap-4 justify-center">
+                {/* Gold Award - Most Searched */}
+                <div className="relative group">
+                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-2xl">🏆</span>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-black text-white">2024 MOST SEARCHED</h4>
+                        <p className="text-white/90 text-sm font-semibold">Global Search Index</p>
+                      </div>
+                      <div className="px-3 py-1 bg-white/20 rounded-lg">
+                        <span className="text-xs font-bold text-white">GOLD</span>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Top 10 Platforms */}
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-400 to-gray-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
-                    <div className="relative bg-gradient-to-r from-slate-500 to-gray-600 rounded-2xl p-6 border border-slate-300/30">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-2xl">🥈</span>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-black text-white">TOP 10 PLATFORMS</h4>
-                          <p className="text-white/90 text-sm font-semibold">Industry Insights India</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="px-2 py-1 bg-white/20 rounded-lg">
-                            <span className="text-xs font-bold text-white">SILVER</span>
-                          </div>
-                        </div>
+                {/* Silver Award - Top 10 Platforms */}
+                <div className="relative group">
+                  <div className="bg-gradient-to-r from-slate-500 to-gray-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-2xl">🥈</span>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-black text-white">TOP 10 PLATFORMS</h4>
+                        <p className="text-white/90 text-sm font-semibold">Industry Insights India</p>
+                      </div>
+                      <div className="px-3 py-1 bg-white/20 rounded-lg">
+                        <span className="text-xs font-bold text-white">SILVER</span>
                       </div>
                     </div>
                   </div>
@@ -157,28 +147,28 @@ const Home = () => {
             </div>
             
             {/* Main Hero Content */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-8">
               {/* Hero Headline */}
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-6 leading-tight">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-4 leading-tight">
                 <span className="block bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
                   Find Your Perfect
                 </span>
                 <span className="block text-white relative">
-                  Safe Haven
+                  Student Accommodation
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full"></div>
                 </span>
               </h1>
 
               {/* Value Proposition */}
-              <p className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto font-medium leading-relaxed">
+              <p className="text-xl sm:text-2xl text-gray-300 mb-6 max-w-4xl mx-auto font-medium leading-relaxed">
                 Discover <span className="text-orange-400 font-bold">verified</span>, 
                 <span className="text-pink-400 font-bold"> secure</span>, and 
-                <span className="text-purple-400 font-bold"> comfortable</span> accommodations 
-                designed specifically for women's safety and comfort.
+                <span className="text-purple-400 font-bold"> affordable</span> student housing 
+                with premium amenities and 24/7 safety for your peace of mind.
               </p>
 
               {/* Key Features Pills */}
-              <div className="flex flex-wrap justify-center gap-3 mb-10">
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
                 <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
                   <FiShield className="w-4 h-4 text-green-400" />
                   <span className="text-green-300 font-semibold text-sm">24/7 Security</span>
@@ -199,7 +189,7 @@ const Home = () => {
             </div>
 
             {/* Enhanced Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               {/* Primary CTA */}
               <button
                 onClick={() => navigate('/rooms')}
@@ -208,7 +198,7 @@ const Home = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center gap-3">
                   <FiSearch className="w-6 h-6" />
-                  <span>Explore Rooms Now</span>
+                  <span>Find Student Housing</span>
                   <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                 </div>
               </button>
@@ -216,10 +206,10 @@ const Home = () => {
               {/* Secondary CTA */}
               <button
                 onClick={() => navigate('/register')}
-                className="group px-10 py-5 bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white rounded-2xl font-bold text-xl hover:bg-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                className="group px-10 py-5 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:bg-white/10 backdrop-blur-sm border-2 border-blue-200/60 dark:border-white/20 text-blue-700 dark:text-white rounded-2xl font-bold text-xl hover:from-blue-100/90 hover:to-purple-100/90 dark:hover:bg-white/20 hover:border-blue-300/80 dark:hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg"
               >
                 <div className="flex items-center gap-3">
-                  <FiUsers className="w-6 h-6 text-blue-400" />
+                  <FiUsers className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   <span>Register Now</span>
                 </div>
               </button>
@@ -253,10 +243,10 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 fade-in">
-              Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">All</span>
+              Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Student Housing</span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto slide-in-up">
-              Discover premium accommodations in India's top student and professional destinations
+              Discover premium student accommodations in India's top educational and professional hubs
             </p>
           </div>
 
@@ -357,7 +347,7 @@ const Home = () => {
           {/* Additional Info */}
           <div className="text-center mt-12 fade-in">
             <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Click on any city to explore available rooms and accommodations
+              Click on any city to explore available student housing and PG accommodations
             </p>
             <div className="flex justify-center items-center mt-4 space-x-4">
               <div className="flex items-center space-x-2 text-green-400">
@@ -411,7 +401,7 @@ const Home = () => {
                 value: "6,500+", 
                 color: "from-green-500 to-emerald-500",
                 bgColor: "bg-green-50 dark:bg-green-900/20",
-                description: "Successfully booked"
+                description: "Successfully booked daily"
               },
               { 
                 icon: FiShield, 
@@ -482,21 +472,6 @@ const Home = () => {
       {/* Success Stories - Auto-rotating Reviews */}
       <SuccessStories />
 
-      {/* Women Safety Helpline Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 dark:from-red-900/10 dark:via-pink-900/10 dark:to-purple-900/10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8 fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              🛡️ Women's Safety First
-            </h2>
-            <p className="text-lg text-gray-700 dark:text-gray-400 max-w-2xl mx-auto">
-              We're committed to providing a safe environment for all women. Access emergency helplines and safety resources anytime.
-            </p>
-          </div>
-          
-          <WomenSafetyHelpline isFixed={false} showMinimized={false} />
-        </div>
-      </section>
 
     </div>
   );

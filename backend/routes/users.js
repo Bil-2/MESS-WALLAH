@@ -160,6 +160,16 @@ router.get('/dashboard/activity', protect, [
   query('limit').optional().isInt({ min: 1, max: 20 }).withMessage('Limit must be between 1-20')
 ], getActivityFeed);
 
+// @desc    Get user favorites
+// @route   GET /api/users/favorites
+// @access  Private
+router.get('/favorites', protect, getFavourites);
+
+// @desc    Toggle favorite room
+// @route   POST /api/users/favorites/:roomId
+// @access  Private
+router.post('/favorites/:roomId', protect, toggleFavourite);
+
 // @desc    Get platform statistics (public)
 // @route   GET /api/users/stats/platform
 // @access  Public

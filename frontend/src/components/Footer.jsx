@@ -262,94 +262,90 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Support */}
-          <div className="stagger-item">
-            <h3 className="font-semibold text-lg mb-4">Support</h3>
-            <ul className="space-y-2 text-gray-400">
-              <li>
-                <button 
-                  onClick={handleEmailClick}
-                  className="hover:text-orange-400 transition-colors text-left hover-lift"
-                >
-                  Help Center
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => handleNavigation('/contact')}
-                  className="hover:text-orange-400 transition-colors text-left hover-lift"
-                >
-                  Contact Support
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={handleReportIssue}
-                  className="hover:text-orange-400 transition-colors text-left hover-lift flex items-center gap-2"
-                >
-                  <FiAlertTriangle className="w-4 h-4 text-red-400" />
-                  Report Issue
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => handleNavigation('/safety')}
-                  className="hover:text-orange-400 transition-colors text-left hover-lift"
-                >
-                  Safety Guidelines
-                </button>
-              </li>
-            </ul>
+        </div>
 
-            {/* Emergency Contact */}
-            <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <FiShield className="w-4 h-4 text-red-400" />
-                <span className="text-red-400 font-medium text-sm">Emergency</span>
+        {/* Critical Safety Warning for Girls */}
+        <div className="mt-12 mb-8">
+          <div className="bg-gradient-to-r from-red-600 via-red-500 to-pink-600 rounded-2xl p-6 shadow-2xl border-2 border-red-400/50 animate-pulse">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-bounce">
+                  <FiAlertTriangle className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <button 
-                onClick={() => window.location.href = 'tel:100'}
-                className="text-red-300 hover:text-red-200 transition-colors text-sm btn-hover"
-              >
-                Police: 100
-              </button>
+              <div className="flex-1">
+                <h3 className="text-white font-black text-xl mb-3 flex items-center gap-2">
+                  <FiShield className="w-5 h-5 animate-pulse" />
+                  🚨 CRITICAL SAFETY WARNING FOR GIRLS 🚨
+                </h3>
+                <div className="space-y-2 text-white/95 font-semibold">
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping"></span>
+                    <strong>NEVER visit properties alone</strong> - Always bring a trusted friend or family member
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-100"></span>
+                    <strong>Meet only in daylight hours</strong> - Avoid evening or night property visits
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-200"></span>
+                    <strong>Verify owner identity</strong> - Check government ID and property documents
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-300"></span>
+                    <strong>Share location with family</strong> - Always inform someone about your whereabouts
+                  </p>
+                </div>
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <button 
+                    onClick={() => window.location.href = 'tel:1091'}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                  >
+                    <FiPhone className="w-4 h-4" />
+                    Women Helpline: 1091
+                  </button>
+                  <button 
+                    onClick={() => window.location.href = 'tel:100'}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                  >
+                    <FiPhone className="w-4 h-4" />
+                    Police: 100
+                  </button>
+                  <button 
+                    onClick={() => window.location.href = 'tel:1098'}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                  >
+                    <FiPhone className="w-4 h-4" />
+                    Child Helpline: 1098
+                  </button>
+                  <button 
+                    onClick={() => window.location.href = 'tel:181'}
+                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                  >
+                    <FiPhone className="w-4 h-4" />
+                    Domestic Violence: 181
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-12 pt-8 border-t border-gray-300/20 dark:border-gray-600/20">
+        <div className="mt-8 pt-8 border-t border-gray-300/20 dark:border-gray-600/20">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-center md:text-left">
               <p className="text-gray-500 dark:text-gray-400 text-sm">
                 © 2024 MESS WALLAH. All rights reserved.
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                Made with ❤️ for safe accommodation
+                Made with ❤️ for safe student housing
               </p>
             </div>
             
             <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-              <button 
-                onClick={() => handleNavigation('/privacy')}
-                className="hover:text-orange-400 transition-colors hover-lift"
-              >
-                Privacy
-              </button>
-              <span>•</span>
-              <button 
-                onClick={() => handleNavigation('/terms')}
-                className="hover:text-orange-400 transition-colors hover-lift"
-              >
-                Terms
-              </button>
-              <span>•</span>
-              <button 
-                onClick={() => handleNavigation('/support')}
-                className="hover:text-orange-400 transition-colors hover-lift"
-              >
-                Support
-              </button>
+             
+              
             </div>
           </div>
         </div>

@@ -59,6 +59,11 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
     } finally {
       setLoading(false);
     }

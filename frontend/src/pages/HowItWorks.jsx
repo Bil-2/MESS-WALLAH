@@ -6,7 +6,7 @@ const HowItWorks = () => {
     {
       icon: <Search className="w-8 h-8" />,
       title: "Search & Browse",
-      description: "Browse through hundreds of verified mess accommodations in your preferred location with detailed photos and amenities.",
+      description: "Browse through hundreds of verified student accommodations and PG rooms in your preferred location with detailed photos and amenities.",
       details: ["Filter by location, price, and amenities", "View detailed photos and descriptions", "Read reviews from previous tenants"]
     },
     {
@@ -30,7 +30,7 @@ const HowItWorks = () => {
     {
       icon: <CheckCircle className="w-8 h-8" />,
       title: "Move In",
-      description: "Complete the documentation, get your keys, and start enjoying your new mess accommodation.",
+      description: "Complete the documentation, get your keys, and start enjoying your new student accommodation.",
       details: ["Quick documentation process", "Key handover ceremony", "24/7 customer support"]
     }
   ];

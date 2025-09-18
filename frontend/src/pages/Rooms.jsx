@@ -264,10 +264,10 @@ const Rooms = () => {
         {/* Hero Header */}
         <div className="text-center mb-8 pt-8">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 bg-clip-text text-transparent mb-4">
-            Find Your Perfect Room
+            Find Your Perfect Student Housing
           </h1>
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-4">
-            Discover comfortable, affordable rooms with verified owners and homely atmosphere
+            Discover comfortable, affordable student accommodations with verified owners and safe environment
           </p>
 
           {/* Safety Banner */}
