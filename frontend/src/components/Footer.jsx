@@ -266,33 +266,33 @@ const Footer = () => {
 
         {/* Critical Safety Warning for Girls */}
         <div className="mt-12 mb-8">
-          <div className="bg-gradient-to-r from-red-600 via-red-500 to-pink-600 rounded-2xl p-6 shadow-2xl border-2 border-red-400/50 animate-pulse">
+          <div className="bg-gradient-to-r from-red-600 via-red-500 to-pink-600 rounded-2xl p-6 shadow-2xl border-2 border-red-400/50 shadow-red-500/25">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-bounce">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                   <FiAlertTriangle className="w-6 h-6 text-white" />
                 </div>
               </div>
               <div className="flex-1">
                 <h3 className="text-white font-black text-xl mb-3 flex items-center gap-2">
-                  <FiShield className="w-5 h-5 animate-pulse" />
+                  <FiShield className="w-5 h-5 text-white" />
                   🚨 CRITICAL SAFETY WARNING FOR GIRLS 🚨
                 </h3>
                 <div className="space-y-2 text-white/95 font-semibold">
                   <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping"></span>
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full"></span>
                     <strong>NEVER visit properties alone</strong> - Always bring a trusted friend or family member
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-100"></span>
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full"></span>
                     <strong>Meet only in daylight hours</strong> - Avoid evening or night property visits
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-200"></span>
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full"></span>
                     <strong>Verify owner identity</strong> - Check government ID and property documents
                   </p>
                   <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-yellow-300 rounded-full animate-ping delay-300"></span>
+                    <span className="w-2 h-2 bg-yellow-300 rounded-full"></span>
                     <strong>Share location with family</strong> - Always inform someone about your whereabouts
                   </p>
                 </div>

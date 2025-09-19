@@ -13,8 +13,32 @@ require('dotenv').config();
 
 const app = express();
 
+// Performance optimizations
+app.use(compression({
+  level: 6,
+  threshold: 1024,
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  }
+}));
+
 // Trust proxy for production deployment
 app.set('trust proxy', 1);
+
+// Import security middleware
+const {
+  securityHeaders,
+  rateLimits,
+  csrfProtection,
+  generateCSRFToken,
+  sanitizeInput,
+  requestSizeLimit,
+  securityLogger,
+  checkBruteForce
+} = require('./middleware/securityHeaders');
 
 // CORS configuration
 const corsOptions = {
@@ -53,32 +77,17 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Security middleware
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
+// Enhanced security middleware
+app.use(securityHeaders);
+app.use(securityLogger);
+app.use(requestSizeLimit);
+app.use(sanitizeInput);
 
 // Compression middleware
 app.use(compression());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  }
-});
-app.use(limiter);
+// Apply general rate limiting
+app.use(rateLimits.general);
 
 // Logging middleware
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -196,7 +205,7 @@ const startServer = async () => {
     }
 
     try {
-      app.use('/api/payments', require('./routes/paymentRoutes'));
+      app.use('/api/payments', require('./routes/securePaymentRoutes'));
       console.log('   ✓ /api/payments routes registered');
     } catch (error) {
       console.error('   ❌ Failed to register /api/payments routes:', error.message);

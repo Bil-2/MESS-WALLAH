@@ -1,42 +1,96 @@
-/* Normal CSS Animations for MessWallah */
+/* Performance-Optimized CSS Animations for MESS WALLAH */
 
-/* Button Animations */
+/* Hardware acceleration for all animations */
+* {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* Optimized Button Animations */
 .btn-hover {
-  transition: all 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, box-shadow;
 }
 
 .btn-hover:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(0);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-hover:active {
-  transform: translateY(0);
+  transform: translateY(0) translateZ(0);
+  transition-duration: 0.1s;
 }
 
-/* Card Animations */
+/* Touch-optimized buttons for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .btn-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .btn-hover:active {
+    transform: scale(0.95) translateZ(0);
+    transition-duration: 0.1s;
+  }
+}
+
+/* Optimized Card Animations */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, box-shadow;
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) translateZ(0);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Fade In Animation */
+/* Mobile-optimized card interactions */
+@media (hover: none) and (pointer: coarse) {
+  .card-hover:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .card-hover:active {
+    transform: scale(0.98) translateZ(0);
+    transition-duration: 0.15s;
+  }
+}
+
+/* Performance-Optimized Fade In Animation */
 .fade-in {
-  animation: fadeIn 0.6s ease-in-out;
+  animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(20px) translateZ(0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: fadeInReduced 0.3s ease-out;
+  }
+  
+  @keyframes fadeInReduced {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }
 

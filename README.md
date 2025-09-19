@@ -220,7 +220,7 @@ curl -X POST http://localhost:5000/api/rooms \
   }'
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Backend (Railway/Render)
 1. Connect your GitHub repository
@@ -237,7 +237,7 @@ curl -X POST http://localhost:5000/api/rooms \
 2. Update `MONGODB_URI` in production environment
 3. Whitelist deployment platform IPs
 
-## 🔒 Security Features
+## Security Features
 
 - **Rate Limiting**: 100 requests per 15 minutes per IP
 - **CORS**: Configured for frontend domain
@@ -246,7 +246,7 @@ curl -X POST http://localhost:5000/api/rooms \
 - **OTP Expiry**: 5-minute expiration with attempt limits
 - **Input Validation**: Express-validator for all endpoints
 
-## 📝 Interview Notes
+## Interview Notes
 
 This project demonstrates:
 - **Authentication**: OTP-based phone verification
@@ -264,7 +264,7 @@ This project demonstrates:
 - Mobile app (React Native)
 - Admin dashboard with analytics
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
@@ -272,22 +272,26 @@ This project demonstrates:
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Mess Walla** - Making room hunting simple for students and families across India! 🏠✨
+**Mess Walla** - Making room hunting simple for students and families across India! 
 
-# MessWallah 🏠
+# MessWallah 
 
 A high-performance, mobile-first MERN stack accommodation marketplace designed for Indian students and families. Features modern UI/UX, OTP-based authentication, comprehensive room management, and lightning-fast performance across all devices.
 
-## ⚡ Performance & Compatibility
+## Performance & Compatibility
 
-- **🚀 Rocket-Fast Performance** - Optimized for speed with lazy loading, code splitting, and efficient state management
-- **📱 Mobile-First Design** - Fully responsive across all screen sizes (320px to 4K+)
+- **Rocket-Fast Performance** - Optimized for speed with lazy loading, code splitting, and efficient state management
+- **Mobile-First Design** - Fully responsive across all screen sizes (320px to 4K+)
+- **Cross-Platform Compatible** - Seamless experience on mobile, tablet, and desktop
+- **Modern UI/UX** - Enhanced with Framer Motion animations, glassmorphism effects, and intuitive design
+- **Lightning Load Times** - Optimized bundle sizes and efficient rendering
+- **Dark Mode Support** - Complete dark/light theme implementation
 - **💻 Cross-Platform Compatible** - Seamless experience on mobile, tablet, and desktop
 - **🎨 Modern UI/UX** - Enhanced with Framer Motion animations, glassmorphism effects, and intuitive design
 - **⚡ Lightning Load Times** - Optimized bundle sizes and efficient rendering
@@ -496,4 +500,4 @@ MIT License - Built with ❤️ for students and families across India
 
 ---
 
-**MESS WALLAH** - Modern accommodation marketplace with enhanced U
+**MESS WALLAH** - Modern accommodation marketplace with enhanced 
