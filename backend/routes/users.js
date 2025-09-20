@@ -118,6 +118,47 @@ router.get('/my-favorites', protect, (req, res) => {
   });
 });
 
+// @desc    Get user profile
+// @route   GET /api/users/profile
+// @access  Private
+router.get('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password -securityInfo');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          isVerified: user.isVerified,
+          profile: user.profile || {},
+          preferences: user.preferences || {},
+          favourites: user.favourites || [],
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user profile'
+    });
+  }
+});
+
 // @desc    Update user profile
 // @route   PUT /api/users/profile
 // @access  Private
@@ -223,9 +264,55 @@ router.post('/favorites/:roomId', protect, async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Toggle favorite error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to toggle favorite'
+    });
+  }
+});
+
+// @desc    Remove room from favorites
+// @route   DELETE /api/users/favorites/:roomId
+// @access  Private
+router.delete('/favorites/:roomId', protect, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const favoriteIndex = user.favourites.indexOf(roomId);
+    if (favoriteIndex > -1) {
+      // Remove from favorites
+      user.favourites.splice(favoriteIndex, 1);
+      await user.save();
+      
+      res.json({
+        success: true,
+        message: 'Removed from favorites successfully',
+        data: {
+          isFavorite: false,
+          totalFavorites: user.favourites.length
+        }
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Room not found in favorites'
+      });
+    }
+  } catch (error) {
+    console.error('Remove favorite error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove from favorites'
     });
   }
 });
@@ -235,7 +322,7 @@ router.post('/favorites/:roomId', protect, async (req, res) => {
 // @access  Public
 router.get('/stats/platform', getPlatformStats);
 
-// @desc    Deactivate user account
+// ...
 // @route   PATCH /api/users/deactivate
 // @access  Private
 router.patch('/deactivate', protect, deactivateAccount);

@@ -69,7 +69,7 @@ router.post('/session', protect, (req, res) => {
         paymentMethod,
         status: 'created',
         expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
-        redirectUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/confirm`
+        redirectUrl: `${process.env.FRONTEND_URL}/payment/confirm`
       }
     });
   } catch (error) {
@@ -113,6 +113,30 @@ router.post('/process', protect, (req, res) => {
       message: 'Payment processing failed'
     });
   }
+});
+
+// @desc    Get payment configuration
+// @route   GET /api/payments/config
+// @access  Private
+router.get('/config', protect, (req, res) => {
+  const isConfigured = !!(
+    process.env.RAZORPAY_KEY_ID && 
+    process.env.RAZORPAY_KEY_SECRET
+  );
+
+  res.json({
+    success: true,
+    message: 'Payment configuration retrieved',
+    data: {
+      configured: isConfigured,
+      provider: 'Razorpay',
+      keyId: process.env.RAZORPAY_KEY_ID ? 'Set' : 'Not set',
+      keySecret: process.env.RAZORPAY_KEY_SECRET ? 'Set' : 'Not set',
+      status: isConfigured ? 'Ready for payments' : 'Configuration incomplete',
+      supportedMethods: ['card', 'netbanking', 'upi', 'wallet'],
+      currency: 'INR'
+    }
+  });
 });
 
 module.exports = router;

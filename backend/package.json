@@ -12,7 +12,13 @@
     "mongo:restart": "npm run mongo:stop && npm run mongo:start",
     "mongo:status": "brew services list | grep mongodb",
     "dev:mongo": "npm run mongo:start && npm run dev",
-    "start:mongo": "npm run mongo:start && npm start"
+    "start:mongo": "npm run mongo:start && npm start",
+    "production:check": "node productionStartup.js",
+    "production:start": "npm run production:check && npm run mongo:start && npm start",
+    "production:full": "npm run production:check && npm run mongo:start && npm run seed && npm start",
+    "api:test": "node final100PercentTest.js",
+    "health:check": "curl -f http://localhost:5001/health || exit 1",
+    "startup:complete": "npm run production:check && npm run mongo:start && npm run seed && npm start && npm run api:test"
   },
   "keywords": [
     "room-booking",

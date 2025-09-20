@@ -332,7 +332,7 @@ const login = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     // Input validation
     if (!currentPassword || !newPassword) {
@@ -413,7 +413,7 @@ const changePassword = async (req, res) => {
 // Get user profile with security info
 const getProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user._id;
 
     const user = await User.findById(userId).select('-password');
     if (!user) {

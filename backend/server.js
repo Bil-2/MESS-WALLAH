@@ -198,7 +198,7 @@ const startServer = async () => {
     }
 
     try {
-      app.use('/api/search', require('./routes/searchRoutes'));
+      app.use('/api/search', require('./routes/search'));
       console.log('   ✓ /api/search routes registered');
     } catch (error) {
       console.error('   ❌ Failed to register /api/search routes:', error.message);
@@ -218,30 +218,60 @@ const startServer = async () => {
       console.error('   ❌ Failed to register /api/test-sms routes:', error.message);
     }
 
-    // Global error handling middleware
+    try {
+      app.use('/api/analytics', require('./routes/analytics'));
+      console.log('   ✓ /api/analytics routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/analytics routes:', error.message);
+    }
+
+    // Global error handling middleware - Production Ready
     app.use((err, req, res, next) => {
-      console.error('Global Error Handler:', {
+      console.error('🚨 Global Error Handler:', {
         message: err.message,
-        stack: err.stack,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
         url: req.url,
-        method: req.method
+        method: req.method,
+        timestamp: new Date().toISOString(),
+        userAgent: req.get('User-Agent'),
+        ip: req.ip
       });
 
       // Mongoose validation error
       if (err.name === 'ValidationError') {
-        const errors = Object.values(err.errors).map(e => e.message);
+        const errors = Object.values(err.errors).map(e => ({
+          field: e.path,
+          message: e.message,
+          value: e.value
+        }));
         return res.status(400).json({
           success: false,
           message: 'Validation Error',
-          errors
+          errors,
+          type: 'ValidationError'
         });
       }
 
-      // Mongoose cast error
+      // Mongoose duplicate key error
+      if (err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+        const value = err.keyValue[field];
+        return res.status(400).json({
+          success: false,
+          message: `${field} '${value}' already exists`,
+          error: 'Duplicate field value',
+          type: 'DuplicateError',
+          field
+        });
+      }
+
+      // Mongoose cast error (invalid ObjectId)
       if (err.name === 'CastError') {
         return res.status(400).json({
           success: false,
-          message: 'Invalid ID format'
+          message: `Invalid ${err.path}: ${err.value}`,
+          error: 'Invalid ID format',
+          type: 'CastError'
         });
       }
 
@@ -249,25 +279,53 @@ const startServer = async () => {
       if (err.name === 'JsonWebTokenError') {
         return res.status(401).json({
           success: false,
-          message: 'Invalid token'
+          message: 'Invalid authentication token',
+          error: 'Authentication failed',
+          type: 'AuthenticationError'
         });
       }
 
       if (err.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,
-          message: 'Token expired'
+          message: 'Authentication token has expired',
+          error: 'Token expired - please login again',
+          type: 'TokenExpiredError'
         });
       }
 
-      // Default error
-      const statusCode = err.statusCode || 500;
+      // Rate limiting error
+      if (err.status === 429) {
+        return res.status(429).json({
+          success: false,
+          message: 'Too many requests, please try again later',
+          error: 'Rate limit exceeded',
+          type: 'RateLimitError',
+          retryAfter: err.retryAfter
+        });
+      }
+
+      // File upload errors
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          success: false,
+          message: 'File size too large',
+          error: 'Maximum file size exceeded',
+          type: 'FileUploadError'
+        });
+      }
+
+      // Default error response
+      const statusCode = err.statusCode || err.status || 500;
+      const message = err.message || 'Internal Server Error';
+      
       res.status(statusCode).json({
         success: false,
-        message: err.message || 'Internal Server Error',
-        ...(process.env.NODE_ENV === 'development' && {
-          stack: err.stack
-        })
+        message: statusCode === 500 ? 'Internal Server Error' : message,
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+        type: err.name || 'ServerError',
+        timestamp: new Date().toISOString(),
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
       });
     });
 
@@ -284,10 +342,10 @@ const startServer = async () => {
 
     const server = app.listen(PORT, () => {
       console.log(`🚀 MESS WALLAH Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
       console.log(`📅 Started at: ${new Date().toISOString()}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-      console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+      console.log(`🔗 Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
+      console.log(`🧪 Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
     });
 
     // Graceful shutdown

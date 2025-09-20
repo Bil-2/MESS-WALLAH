@@ -93,10 +93,217 @@ router.post('/resend-otp', [
     .withMessage('Please provide a valid Indian phone number')
 ], resendOtp);
 
+// @desc    Send OTP to email address
+// @route   POST /api/auth/send-otp-email
+// @access  Public
+router.post('/send-otp-email', [
+  rateLimiters.general,
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email } = req.body;
+    
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Save OTP to database
+    const otpRecord = new Otp({
+      email: email.toLowerCase(),
+      codeHash: await bcrypt.hash(otp, 10),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      attempts: 0,
+      method: 'email'
+    });
+    await otpRecord.save();
+
+    // Send OTP email using notify service
+    const { sendOTPEmail } = require('../services/notify');
+    await sendOTPEmail(email, otp);
+
+    console.log(`✅ OTP email sent to: ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent to your email address. Please check your inbox.',
+      data: {
+        email: email,
+        expiresIn: 10, // minutes
+        method: 'email',
+        canResendAfter: 60 // seconds
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Send OTP Email Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP email. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// @desc    Verify OTP from email
+// @route   POST /api/auth/verify-otp-email
+// @access  Public
+router.post('/verify-otp-email', [
+  rateLimiters.general,
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, otp } = req.body;
+    const normalizedEmail = email.toLowerCase();
+
+    // Find OTP record
+    const otpRecord = await Otp.findOne({ 
+      email: normalizedEmail,
+      method: 'email',
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired OTP. Please request a new one.',
+        error: 'OTP not found or expired'
+      });
+    }
+
+    // Verify OTP
+    const isValidOTP = await bcrypt.compare(otp, otpRecord.codeHash);
+    
+    if (!isValidOTP) {
+      // Increment attempts
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+
+      if (otpRecord.attempts >= 3) {
+        await Otp.deleteOne({ _id: otpRecord._id });
+        return res.status(400).json({
+          success: false,
+          message: 'Too many failed attempts. Please request a new OTP.',
+          error: 'Max attempts exceeded'
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please try again.',
+        error: 'OTP verification failed',
+        attemptsLeft: 3 - otpRecord.attempts
+      });
+    }
+
+    // OTP verified successfully - clean up
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    // Find or create user
+    let user = await User.findOne({ email: normalizedEmail });
+    
+    if (!user) {
+      // Create new user with email
+      user = new User({
+        email: normalizedEmail,
+        name: `User${Date.now()}`, // Default name
+        role: 'user',
+        isEmailVerified: true,
+        registrationMethod: 'email-otp',
+        isActive: true
+      });
+      await user.save();
+      console.log(`✅ NEW USER CREATED via Email OTP: ${normalizedEmail}`);
+    } else {
+      // Update existing user
+      user.isEmailVerified = true;
+      user.lastLogin = new Date();
+      await user.save();
+      console.log(`✅ EXISTING USER VERIFIED via Email OTP: ${normalizedEmail}`);
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Email OTP verified successfully! Welcome to MESS WALLAH!',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+          isNewUser: !user.phone // If no phone, likely new user
+        },
+        token,
+        loginMethod: 'Email OTP',
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Verify Email OTP Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify email OTP. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // @desc    Get current user profile
 // @route   GET /api/auth/me
 // @access  Private
 router.get('/me', protect, getProfile);
+
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+// @access  Private
+router.put('/change-password', [
+  protect,
+  rateLimiters.general,
+  body('currentPassword')
+    .notEmpty()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 8 })
+    .withMessage('New password must be at least 8 characters long')
+], changePassword);
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile

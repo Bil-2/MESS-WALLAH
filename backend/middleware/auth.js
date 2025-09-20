@@ -30,7 +30,6 @@ const protect = async (req, res, next) => {
     const userId = decoded.userId || decoded.id || decoded.user;
     
     if (!userId) {
-      console.error('No userId found in token payload:', decoded);
       return res.status(401).json({
         success: false,
         message: 'Invalid token payload'

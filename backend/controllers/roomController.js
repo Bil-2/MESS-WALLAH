@@ -2,6 +2,8 @@ const Room = require('../models/Room');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
+const { createSafeSearchQuery } = require('../utils/regexSecurity');
+const logger = require('../utils/productionLogger');
 
 // Get all rooms with filtering and pagination
 const getRooms = async (req, res) => {
@@ -32,20 +34,22 @@ const getRooms = async (req, res) => {
     // If not specified, show all rooms
 
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { 'address.city': { $regex: search, $options: 'i' } },
-        { 'address.area': { $regex: search, $options: 'i' } }
-      ];
+      const searchQuery = createSafeSearchQuery(search, [
+        'title',
+        'description', 
+        'address.city',
+        'address.area'
+      ]);
+      Object.assign(filter, searchQuery);
     }
 
     if (location) {
-      filter.$or = [
-        { 'address.city': { $regex: location, $options: 'i' } },
-        { 'address.area': { $regex: location, $options: 'i' } },
-        { 'address.state': { $regex: location, $options: 'i' } }
-      ];
+      const locationQuery = createSafeSearchQuery(location, [
+        'address.city',
+        'address.area',
+        'address.state'
+      ]);
+      Object.assign(filter, locationQuery);
     }
 
     if (minRent || maxRent) {

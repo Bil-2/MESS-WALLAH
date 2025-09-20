@@ -6,7 +6,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // SendGrid email configuration
 const emailConfig = {
-  from: process.env.FROM_EMAIL || 'biltubag29@gmail.com',
+  from: process.env.FROM_EMAIL,
   fromName: 'MESS WALLAH'
 };
 

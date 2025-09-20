@@ -129,4 +129,29 @@ router.get('/twilio-status', (req, res) => {
   });
 });
 
+// @desc    Get SMS service configuration
+// @route   GET /api/test-sms/config
+// @access  Public
+router.get('/config', (req, res) => {
+  const isConfigured = !!(
+    process.env.TWILIO_ACCOUNT_SID && 
+    process.env.TWILIO_AUTH_TOKEN && 
+    process.env.TWILIO_PHONE_NUMBER
+  );
+
+  res.json({
+    success: true,
+    message: 'SMS configuration retrieved',
+    data: {
+      configured: isConfigured,
+      provider: 'Twilio',
+      accountSid: process.env.TWILIO_ACCOUNT_SID ? 'Set' : 'Not set',
+      authToken: process.env.TWILIO_AUTH_TOKEN ? 'Set' : 'Not set',
+      phoneNumber: process.env.TWILIO_PHONE_NUMBER ? 'Set' : 'Not set',
+      verifyService: process.env.TWILIO_VERIFY_SERVICE_SID ? 'Set' : 'Not set',
+      status: isConfigured ? 'Ready' : 'Configuration incomplete'
+    }
+  });
+});
+
 module.exports = router;

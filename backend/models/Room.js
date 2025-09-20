@@ -213,19 +213,25 @@ RoomSchema.methods.incrementViews = function () {
   return this.save();
 };
 
-// Indexes for better query performance
-RoomSchema.index({ owner: 1 });
-RoomSchema.index({ 'address.city': 1 });
-RoomSchema.index({ 'address.state': 1 });
-RoomSchema.index({ roomType: 1 });
-RoomSchema.index({ rentPerMonth: 1 });
-RoomSchema.index({ isActive: 1, isAvailable: 1 });
+// Create indexes for better query performance - Production Optimized
+RoomSchema.index({ location: 1, city: 1 }); // Location-based searches
+RoomSchema.index({ price: 1 }); // Price filtering
+RoomSchema.index({ roomType: 1 }); // Room type filtering
+RoomSchema.index({ isAvailable: 1 }); // Availability filtering
+RoomSchema.index({ owner: 1 }); // Owner-based queries
+RoomSchema.index({ createdAt: -1 }); // Sorting by creation date
+
+// Compound indexes for common query patterns
+RoomSchema.index({ isAvailable: 1, city: 1, price: 1 }); // Search with availability, location, and price
+RoomSchema.index({ roomType: 1, isAvailable: 1 }); // Room type with availability
+RoomSchema.index({ location: 'text', city: 'text', title: 'text', description: 'text' }); // Text search
+RoomSchema.index({ 'amenities': 1 }); // Amenities filtering
+RoomSchema.index({ maxOccupancy: 1 }); // Occupancy filtering
 RoomSchema.index({ featured: 1 });
 RoomSchema.index({ createdAt: -1 });
 RoomSchema.index({ rating: -1 });
 RoomSchema.index({ views: -1 });
 
-// Compound indexes for common queries
 RoomSchema.index({ 'address.city': 1, roomType: 1, isActive: 1 });
 RoomSchema.index({ rentPerMonth: 1, 'address.city': 1, isActive: 1 });
 RoomSchema.index({ isActive: 1, isAvailable: 1, featured: 1 });
