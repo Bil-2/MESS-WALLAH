@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { apiHelpers } from '../utils/api';
-import toast from 'react-hot-toast';
 
 const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -37,22 +36,19 @@ const useAuth = () => {
       const response = await apiHelpers.sendOtp(phone);
 
       if (response.success) {
-        toast.success(`OTP sent to +91${phone}`, {
-          icon: '📱',
-          duration: 4000
-        });
+        console.log(`OTP sent to +91${phone}`);
         return { 
           success: true, 
           message: response.message,
           data: response.data 
         };
       } else {
-        toast.error(response.message || 'Failed to send OTP');
+        console.error(response.message || 'Failed to send OTP');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to send OTP';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setOtpLoading(false);
@@ -66,22 +62,19 @@ const useAuth = () => {
       const response = await apiHelpers.resendOtp(phone);
 
       if (response.success) {
-        toast.success('OTP resent successfully!', {
-          icon: '🔄',
-          duration: 4000
-        });
+        console.log('OTP resent successfully!');
         return { 
           success: true, 
           message: response.message,
           data: response.data 
         };
       } else {
-        toast.error(response.message || 'Failed to resend OTP');
+        console.error(response.message || 'Failed to resend OTP');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to resend OTP';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setOtpLoading(false);
@@ -102,16 +95,16 @@ const useAuth = () => {
         localStorage.setItem('user', JSON.stringify(userData));
 
         setUser(userData);
-        toast.success('Login successful!');
+        console.log('Login successful!');
 
         return { success: true, user: userData };
       } else {
-        toast.error(response.message || 'Invalid OTP');
+        console.error(response.message || 'Invalid OTP');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Invalid OTP';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setLoading(false);
@@ -131,15 +124,15 @@ const useAuth = () => {
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
 
-        toast.success('Profile updated successfully!');
+        console.log('Profile updated successfully!');
         return { success: true, user: updatedUser };
       } else {
-        toast.error(response.message || 'Failed to update profile');
+        console.error(response.message || 'Failed to update profile');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to update profile';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setLoading(false);
@@ -174,7 +167,7 @@ const useAuth = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
-      toast.success('Logged out successfully');
+      console.log('Logged out successfully');
     }
   };
 
@@ -200,18 +193,15 @@ const useAuth = () => {
       const response = await apiHelpers.forgotPassword(email);
 
       if (response.success) {
-        toast.success('Password reset link sent to your email!', {
-          icon: '📧',
-          duration: 5000
-        });
+        console.log('Password reset link sent to your email!');
         return { success: true, message: response.message };
       } else {
-        toast.error(response.message || 'Failed to send reset email');
+        console.error(response.message || 'Failed to send reset email');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Failed to send reset email';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setLoading(false);
@@ -225,15 +215,15 @@ const useAuth = () => {
       const response = await apiHelpers.register(userData);
 
       if (response.success) {
-        toast.success('Account created successfully!');
+        console.log('Account created successfully!');
         return { success: true, message: response.message };
       } else {
-        toast.error(response.message || 'Registration failed');
+        console.error(response.message || 'Registration failed');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Registration failed';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setLoading(false);
@@ -254,16 +244,16 @@ const useAuth = () => {
         localStorage.setItem('user', JSON.stringify(userData));
 
         setUser(userData);
-        toast.success('Login successful!');
+        console.log('Login successful!');
 
         return { success: true, user: userData };
       } else {
-        toast.error(response.message || 'Login failed');
+        console.error(response.message || 'Login failed');
         return { success: false, message: response.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Login failed';
-      toast.error(message);
+      console.error(message);
       return { success: false, message };
     } finally {
       setLoading(false);

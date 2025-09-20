@@ -1,4 +1,4 @@
-// Simple notification service for MESS WALLAH
+// Comprehensive notification service for MESS WALLAH
 const nodemailer = require('nodemailer');
 
 // Create email transporter (using Gmail for development)
@@ -82,6 +82,9 @@ const sendOTPEmail = async (userEmail, otp) => {
     console.log('Email sending failed (development mode):', error.message);
   }
 };
+
+// Note: SMS functionality moved to twilioVerifyService.js
+// This service now focuses on email notifications only
 
 module.exports = {
   sendWelcomeEmail,

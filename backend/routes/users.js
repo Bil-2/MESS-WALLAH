@@ -97,7 +97,46 @@ router.get('/', protect, authorize('admin'), [
   }
 });
 
-// @desc    Get user by ID
+// @desc    Get user favorites (MUST BE BEFORE /:id route)
+// @route   GET /api/users/my-favorites
+// @access  Private
+router.get('/my-favorites', protect, (req, res) => {
+  console.log('🔍 My-Favorites route hit with user:', req.user?._id);
+  res.json({
+    success: true,
+    message: 'My favorites endpoint working',
+    data: {
+      rooms: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalFavourites: 0,
+        hasNextPage: false,
+        hasPrevPage: false
+      }
+    }
+  });
+});
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+router.put('/profile', protect, updateUserProfile);
+
+// @desc    Get user dashboard stats
+// @route   GET /api/users/dashboard/stats
+// @access  Private
+router.get('/dashboard/stats', protect, getDashboardStats);
+
+// @desc    Get user activity feed
+// @route   GET /api/users/dashboard/activity
+// @access  Private
+router.get('/dashboard/activity', protect, [
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 20 }).withMessage('Limit must be between 1-20')
+], getActivityFeed);
+
+// @desc    Get user by ID (MUST BE AFTER specific routes)
 // @route   GET /api/users/:id
 // @access  Private
 router.get('/:id', protect, async (req, res) => {
@@ -147,28 +186,11 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @desc    Get user dashboard stats
-// @route   GET /api/users/dashboard/stats
-// @access  Private
-router.get('/dashboard/stats', protect, getDashboardStats);
-
-// @desc    Get user activity feed
-// @route   GET /api/users/dashboard/activity
-// @access  Private
-router.get('/dashboard/activity', protect, [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 20 }).withMessage('Limit must be between 1-20')
-], getActivityFeed);
-
-// @desc    Get user favorites
-// @route   GET /api/users/favorites
-// @access  Private
-router.get('/favorites', protect, getFavourites);
-
 // @desc    Toggle favorite room
 // @route   POST /api/users/favorites/:roomId
 // @access  Private
-router.post('/favorites/:roomId', protect, toggleFavourite);
+// TEMPORARILY DISABLED TO FIX ROUTE CONFLICT
+// router.post('/favorites/:roomId', protect, toggleFavourite);
 
 // @desc    Get platform statistics (public)
 // @route   GET /api/users/stats/platform

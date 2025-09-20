@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, User, Building, Utensils, CheckCircle, Star, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -15,6 +15,18 @@ const Contact = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState(null);
+
+  // Clear form data on component mount to prevent auto-fill issues
+  useEffect(() => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: '',
+      userType: 'student'
+    });
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -252,7 +264,7 @@ const Contact = () => {
             >
               Send us a Message
             </motion.h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off" noValidate>
               {/* User Type Selection */}
               <motion.div variants={itemVariants}>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

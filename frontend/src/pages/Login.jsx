@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
@@ -20,6 +20,18 @@ const Login = () => {
 
   const navigate = useNavigate();
   const { sendOtp, verifyOtp, login } = useAuthContext();
+
+  // Clear form data on component mount to prevent auto-fill issues
+  useEffect(() => {
+    setFormData({
+      email: '',
+      password: '',
+      phone: ''
+    });
+    setErrors({});
+    setOtpSent(false);
+    setOtp('');
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,7 +101,7 @@ const Login = () => {
       
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/dashboard');
+        navigate('/profile');
       } else {
         setErrors({ otp: result.message || 'Invalid OTP' });
       }
@@ -121,7 +133,7 @@ const Login = () => {
       
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/dashboard');
+        navigate('/profile');
       } else {
         setErrors({ email: result.message || 'Invalid credentials' });
       }
@@ -228,7 +240,7 @@ const Login = () => {
 
           {loginMethod === 'otp' ? (
             /* OTP Login Form */
-            <form className="space-y-4" onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}>
+            <form className="space-y-4" onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} autoComplete="off" noValidate>
               {!otpSent ? (
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -240,7 +252,10 @@ const Login = () => {
                       id="phone"
                       name="phone"
                       type="tel"
-                      autoComplete="tel"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
                       required
                       value={formData.phone}
                       onChange={handleChange}
@@ -269,6 +284,10 @@ const Login = () => {
                     <input
                       id="otp"
                       type="text"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
                       required
                       value={otp}
                       onChange={handleOtpChange}
@@ -327,7 +346,7 @@ const Login = () => {
             </form>
           ) : (
             /* Password Login Form */
-            <form className="space-y-4" onSubmit={handlePasswordLogin}>
+            <form className="space-y-4" onSubmit={handlePasswordLogin} autoComplete="off" noValidate>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email address
@@ -338,7 +357,10 @@ const Login = () => {
                     id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                     required
                     value={formData.email}
                     onChange={handleChange}
@@ -367,7 +389,10 @@ const Login = () => {
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                     required
                     value={formData.password}
                     onChange={handleChange}

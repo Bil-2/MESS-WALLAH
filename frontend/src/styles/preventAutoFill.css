@@ -1,0 +1,66 @@
+/* Aggressive auto-fill prevention styles */
+
+/* Hide browser auto-fill suggestions */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #000 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Dark mode auto-fill prevention */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #374151 inset !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Prevent auto-fill detection */
+input[data-form-type="other"] {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Hide auto-fill icons */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+  height: 0;
+  width: 0;
+  margin: 0;
+}
+
+/* Prevent form recognition */
+form[data-form-type="other"] {
+  opacity: 0.99; /* Slight opacity change to confuse browsers */
+}
+
+/* Animation to clear auto-filled values */
+@keyframes clearAutoFill {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(255, 255, 255, 0.1); }
+  100% { background-color: transparent; }
+}
+
+input.clear-autofill {
+  animation: clearAutoFill 0.1s ease-in-out;
+}
+
+/* Fake input styles (hidden) */
+.fake-input {
+  position: absolute !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

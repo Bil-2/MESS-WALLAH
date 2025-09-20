@@ -75,17 +75,17 @@ const createRateLimit = (windowMs, max, message, skipSuccessfulRequests = false)
 
 // Different rate limits for different operations
 const rateLimits = {
-  // General API rate limit
+  // General API rate limit (increased for development)
   general: createRateLimit(
     15 * 60 * 1000, // 15 minutes
-    100, // 100 requests per 15 minutes
+    1000, // 1000 requests per 15 minutes
     'Too many requests from this IP'
   ),
 
-  // Authentication rate limit
+  // Authentication rate limit (increased for development)
   auth: createRateLimit(
     15 * 60 * 1000, // 15 minutes
-    5, // 5 attempts per 15 minutes
+    50, // 50 attempts per 15 minutes
     'Too many authentication attempts'
   ),
 

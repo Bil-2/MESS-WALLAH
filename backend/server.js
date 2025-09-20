@@ -211,6 +211,13 @@ const startServer = async () => {
       console.error('   ❌ Failed to register /api/payments routes:', error.message);
     }
 
+    try {
+      app.use('/api/test-sms', require('./routes/testSMS'));
+      console.log('   ✓ /api/test-sms routes registered');
+    } catch (error) {
+      console.error('   ❌ Failed to register /api/test-sms routes:', error.message);
+    }
+
     // Global error handling middleware
     app.use((err, req, res, next) => {
       console.error('Global Error Handler:', {

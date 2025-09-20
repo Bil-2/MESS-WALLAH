@@ -2,35 +2,7 @@ const User = require('../models/User');
 const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
-// SMS Service Integration
-const sendSMS = async (phone, message) => {
-  try {
-    // Check if Twilio is configured
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-      const twilio = require('twilio');
-      const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-      
-      await client.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE,
-        to: `+91${phone}`
-      });
-      
-      console.log(`✅ SMS sent to +91${phone}`);
-      return { success: true, method: 'SMS' };
-    } else {
-      // Development mode - log to console
-      console.log(`📱 DEV MODE - OTP for +91${phone}: ${message}`);
-      return { success: true, method: 'CONSOLE' };
-    }
-  } catch (error) {
-    console.error('❌ SMS sending failed:', error.message);
-    // Fallback to console in case of SMS failure
-    console.log(`📱 FALLBACK - OTP for +91${phone}: ${message}`);
-    return { success: true, method: 'FALLBACK' };
-  }
-};
+const { sendMessWallahOTP, verifyMessWallahOTP, formatPhoneNumber } = require('../services/twilioVerifyService');
 
 // Generate 6-digit OTP
 const generateOTP = () => {
@@ -50,14 +22,8 @@ const sendOtp = async (req, res) => {
       });
     }
 
-    // Validate Indian phone number format
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please enter a valid 10-digit Indian phone number'
-      });
-    }
+    // Format phone number
+    const formattedPhone = formatPhoneNumber(phone);
 
     // Check rate limiting - max 3 OTPs per phone per hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -74,36 +40,36 @@ const sendOtp = async (req, res) => {
       });
     }
 
-    // Generate OTP
-    const otpCode = generateOTP();
-    const expiresAt = new Date(Date.now() + (parseInt(process.env.OTP_EXPIRE_MINUTES) || 5) * 60 * 1000);
+    // Use Twilio Verify service (more reliable)
+    const verifyResult = await sendMessWallahOTP(formattedPhone);
 
-    // Delete any existing OTPs for this phone
-    await Otp.deleteMany({ phone });
+    if (!verifyResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP. Please try again.',
+        error: verifyResult.error
+      });
+    }
 
-    // Hash the OTP for security
-    const codeHash = crypto.createHash('sha256').update(otpCode).digest('hex');
-
-    // Save OTP to database
+    // Save verification attempt to database for tracking
     const otpRecord = new Otp({
-      phone,
-      codeHash,
-      expiresAt,
-      attempts: 0
+      phone: formattedPhone,
+      codeHash: 'twilio_verify', // Using Twilio Verify, no need to store hash
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      attempts: 0,
+      verificationSid: verifyResult.sid
     });
     await otpRecord.save();
 
-    // Send SMS
-    const smsMessage = `Your MESS WALLAH login OTP is: ${otpCode}. Valid for ${process.env.OTP_EXPIRE_MINUTES || 5} minutes. Do not share with anyone.`;
-    const smsResult = await sendSMS(phone, smsMessage);
-
     res.status(200).json({
       success: true,
-      message: 'OTP sent successfully',
+      message: 'OTP sent successfully via Twilio Verify',
       data: {
-        phone,
-        expiresIn: parseInt(process.env.OTP_EXPIRE_MINUTES) || 5,
-        method: smsResult.method,
+        phone: formattedPhone,
+        expiresIn: 10, // minutes
+        method: 'SMS',
+        status: verifyResult.status,
+        sid: verifyResult.sid,
         canResendAfter: 60 // seconds
       }
     });
@@ -131,64 +97,40 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    // Find OTP record
-    const otpRecord = await Otp.findOne({ phone });
-    
-    if (!otpRecord) {
+    // Format phone number
+    const formattedPhone = formatPhoneNumber(phone);
+
+    // Verify OTP using Twilio Verify service
+    const verifyResult = await verifyMessWallahOTP(formattedPhone, otp);
+
+    if (!verifyResult.success) {
       return res.status(400).json({
         success: false,
-        message: 'No OTP found for this phone number. Please request a new OTP.'
+        message: verifyResult.message || 'Invalid or expired OTP',
+        error: verifyResult.error
       });
     }
 
-    // Check if OTP is expired
-    if (new Date() > otpRecord.expiresAt) {
-      await Otp.deleteOne({ _id: otpRecord._id });
-      return res.status(400).json({
-        success: false,
-        message: 'OTP has expired. Please request a new OTP.',
-        expired: true
-      });
+    // Find and clean up OTP record
+    const existingOtp = await Otp.findOne({ phone: formattedPhone });
+    if (existingOtp) {
+      await Otp.deleteOne({ _id: existingOtp._id });
     }
 
-    // Check attempt limit (max 3 attempts)
-    if (otpRecord.attempts >= 3) {
-      await Otp.deleteOne({ _id: otpRecord._id });
-      return res.status(400).json({
-        success: false,
-        message: 'Too many incorrect attempts. Please request a new OTP.',
-        maxAttemptsReached: true
-      });
-    }
-
-    // Verify OTP by comparing hashes
-    const inputOtpHash = crypto.createHash('sha256').update(otp).digest('hex');
-    if (otpRecord.codeHash !== inputOtpHash) {
-      // Increment attempts
-      otpRecord.attempts += 1;
-      await otpRecord.save();
-
-      return res.status(400).json({
-        success: false,
-        message: `Incorrect OTP. ${3 - otpRecord.attempts} attempts remaining.`,
-        attemptsRemaining: 3 - otpRecord.attempts
-      });
-    }
-
-    // OTP is correct - find or create user
-    let user = await User.findOne({ phone });
+    // OTP verification successful - find or create user
+    let user = await User.findOne({ phone: formattedPhone });
     
     if (!user) {
       // Create new user with phone number
       user = new User({
-        phone,
-        name: `User${phone.slice(-4)}`, // Default name
+        phone: formattedPhone,
+        name: `User${formattedPhone.slice(-4)}`, // Default name
         role: 'user',
         isPhoneVerified: true,
         registrationMethod: 'otp'
       });
       await user.save();
-      console.log(`✅ New user created via OTP: ${phone}`);
+      console.log(`✅ New user created via OTP: ${formattedPhone}`);
     } else {
       // Update existing user
       user.isPhoneVerified = true;
@@ -196,8 +138,7 @@ const verifyOtp = async (req, res) => {
       await user.save();
     }
 
-    // Delete used OTP
-    await Otp.deleteOne({ _id: otpRecord._id });
+    // OTP record already cleaned up above
 
     // Generate JWT token
     const token = jwt.sign(

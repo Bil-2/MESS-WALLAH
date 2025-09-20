@@ -10,7 +10,7 @@ const { validationResult } = require('express-validator');
 // @access  Private
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user._id).select('-password');
 
     if (!user) {
       return res.status(404).json({
@@ -48,7 +48,7 @@ const updateUserProfile = async (req, res) => {
 
     const { name, email, phone, profile } = req.body;
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -112,7 +112,7 @@ const changePassword = async (req, res) => {
 
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -153,7 +153,7 @@ const changePassword = async (req, res) => {
 // @access  Private
 const getDashboardStats = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const userRole = req.user.role;
 
     let stats = {};
@@ -246,7 +246,7 @@ const getDashboardStats = async (req, res) => {
 const getActivityFeed = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -306,7 +306,7 @@ const getActivityFeed = async (req, res) => {
 const toggleFavourite = async (req, res) => {
   try {
     const { roomId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -367,29 +367,32 @@ const toggleFavourite = async (req, res) => {
 // @access  Private
 const getFavourites = async (req, res) => {
   try {
+    console.log('🔍 getFavourites - Starting...');
+    console.log('🔍 getFavourites - req.user exists:', !!req.user);
+    console.log('🔍 getFavourites - req.user._id:', req.user?._id);
+    
     const { page = 1, limit = 12 } = req.query;
-    const userId = req.user.id;
-
-    const user = await User.findById(userId).populate({
-      path: 'favourites',
-      populate: {
-        path: 'owner',
-        select: 'name phone verified'
-      }
-    });
-
-    if (!user) {
-      return res.status(404).json({
+    
+    // Ensure user exists
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not authenticated'
       });
     }
-
+    
+    // Initialize favourites array if it doesn't exist
+    let favourites = req.user.favourites || [];
+    console.log('🔍 getFavourites - favourites length:', favourites.length);
+    
+    // Return empty favourites for now to test the basic flow
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const favouriteRooms = user.favourites.slice(skip, skip + parseInt(limit));
-    const totalFavourites = user.favourites.length;
-    const totalPages = Math.ceil(totalFavourites / parseInt(limit));
+    const favouriteRooms = [];  // Empty for now
+    const totalFavourites = 0;  // Empty for now
+    const totalPages = 0;       // Empty for now
 
+    console.log('✅ getFavourites - Returning success response');
+    
     res.status(200).json({
       success: true,
       data: {
@@ -403,11 +406,14 @@ const getFavourites = async (req, res) => {
         }
       }
     });
+
   } catch (error) {
-    console.error('Get favourites error:', error);
+    console.error('❌ Get favourites error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch favourite rooms'
+      message: 'Failed to fetch favorites',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -417,7 +423,7 @@ const getFavourites = async (req, res) => {
 // @access  Private
 const deactivateAccount = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const user = await User.findById(userId);
     if (!user) {

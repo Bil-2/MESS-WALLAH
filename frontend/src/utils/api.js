@@ -233,49 +233,89 @@ const mockAuth = {
 
 // API helper functions
 export const apiHelpers = {
-  // Auth helpers - use mock functions for demo
+  // Auth helpers - use mock 
+  // Get user favorites
+  async getFavorites() {
+    try {
+      const response = await api.get('/users/my-favorites');
+      return response.data;
+    } catch (error) {
+      console.error('Get favorites error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to get favorites');
+    }
+  },
+
   async sendOtp(phone) {
     try {
-      return await mockAuth.sendOtp(phone);
+      const response = await api.post('/auth/send-otp', { phone });
+      return response.data;
     } catch (error) {
-      // Fallback to mock if backend fails
-      return await mockAuth.sendOtp(phone);
+      console.error('Send OTP API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to send OTP');
     }
   },
 
   async verifyOtp(phone, otp) {
     try {
-      return await mockAuth.verifyOtp(phone, otp);
+      const response = await api.post('/auth/verify-otp', { phone, otp });
+      
+      // Store token and user data if verification successful
+      if (response.data.success && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
+      return response.data;
     } catch (error) {
-      // Fallback to mock if backend fails
-      return await mockAuth.verifyOtp(phone, otp);
+      console.error('Verify OTP API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to verify OTP');
     }
   },
 
   async login(email, password) {
     try {
-      return await mockAuth.login(email, password);
+      const response = await api.post('/auth/login', { email, password });
+      
+      // Store token and user data
+      if (response.data.success && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
+      return response.data;
     } catch (error) {
-      // Fallback to mock if backend fails
-      return await mockAuth.login(email, password);
+      console.error('Login API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to login');
     }
   },
 
   async register(userData) {
     try {
-      return await mockAuth.register(userData);
+      const response = await api.post('/auth/register', userData);
+      return response.data;
     } catch (error) {
-      // Fallback to mock if backend fails
-      return await mockAuth.register(userData);
+      console.error('Registration API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to register user');
     }
   },
 
   async forgotPassword(email) {
     try {
-      return await mockAuth.forgotPassword(email);
+      const response = await api.post('/auth/forgot-password', { email });
+      return response.data;
     } catch (error) {
-      // Fallback to mock if backend fails
-      return await mockAuth.forgotPassword(email);
+      console.error('Forgot password API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to send password reset email');
+    }
+  },
+
+  async resetPassword(token, password) {
+    try {
+      const response = await api.post('/auth/reset-password', { token, password });
+      return response.data;
+    } catch (error) {
+      console.error('Reset password API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to reset password');
     }
   },
 
@@ -380,12 +420,12 @@ export const apiHelpers = {
   },
 
   async addFavorite(roomId) {
-    const response = await api.post('/users/favorites', { roomId });
+    const response = await api.post('/users/my-favorites', { roomId });
     return response.data;
   },
 
   async removeFavorite(roomId) {
-    const response = await api.delete(`/users/favorites/${roomId}`);
+    const response = await api.delete(`/users/my-favorites/${roomId}`);
     return response.data;
   },
 
@@ -426,11 +466,6 @@ export const apiHelpers = {
 
   async deleteSavedSearch(searchId) {
     const response = await api.delete(`/search/saved/${searchId}`);
-    return response.data;
-  },
-
-  async getFavorites() {
-    const response = await api.get('/users/favorites');
     return response.data;
   },
 

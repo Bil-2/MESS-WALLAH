@@ -17,10 +17,10 @@ const createRateLimit = (windowMs, max, message) => {
   });
 };
 
-// Different rate limits for different endpoints
-const authLimiter = createRateLimit(15 * 60 * 1000, 5, 'Too many authentication attempts');
-const generalLimiter = createRateLimit(15 * 60 * 1000, 100, 'Too many requests');
-const uploadLimiter = createRateLimit(15 * 60 * 1000, 10, 'Too many upload attempts');
+// Different rate limits for different endpoints (increased for development)
+const authLimiter = createRateLimit(15 * 60 * 1000, 50, 'Too many authentication attempts');
+const generalLimiter = createRateLimit(15 * 60 * 1000, 1000, 'Too many requests');
+const uploadLimiter = createRateLimit(15 * 60 * 1000, 50, 'Too many upload attempts');
 
 // Security middleware
 const securityMiddleware = [

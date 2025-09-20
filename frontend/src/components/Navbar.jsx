@@ -106,18 +106,18 @@ const Navbar = () => {
             {user ? (
               <div className="hidden md:flex items-center space-x-3">
                 <Link
-                  to="/dashboard"
+                  to="/profile"
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors btn-hover"
                 >
                   <User className="w-4 h-4" />
-                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className="font-medium">Profile</span>
                 </Link>
                 
                 {/* Profile Button - Only show when logged in */}
                 <Link
-                  to="/dashboard"
+                  to="/profile"
                   className="w-10 h-10 bg-orange-600 hover:bg-orange-700 text-white rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
-                  title="Go to Dashboard"
+                  title="Go to Profile"
                 >
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </Link>
@@ -189,12 +189,12 @@ const Navbar = () => {
               {user ? (
                 <div className="space-y-2">
                   <Link
-                    to="/dashboard"
+                    to="/profile"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center px-3 py-2 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors hover-lift"
                   >
                     <User className="w-5 h-5 mr-3" />
-                    {user.name}
+                    Profile
                   </Link>
                   <button
                     onClick={handleLogout}

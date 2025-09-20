@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/animations.css';
+import './styles/preventAutoFill.css';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
@@ -14,7 +15,9 @@ const RoomDetails = lazy(() => import('./pages/RoomDetails'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const SMSTest = lazy(() => import('./pages/SMSTest'));
+const Profile = lazy(() => import('./pages/Profile'));
 const Bookings = lazy(() => import('./pages/Bookings'));
 const About = lazy(() => import('./pages/About'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
@@ -25,6 +28,7 @@ const BookingPolicy = lazy(() => import('./pages/BookingPolicy'));
 const Support = lazy(() => import('./pages/Support'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Report = lazy(() => import('./pages/Report'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
@@ -56,10 +60,15 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/rooms" element={<Rooms />} />
                   <Route path="/rooms/:id" element={<RoomDetails />} />
+                  <Route path="/search" element={<Navigate to="/rooms" replace />} />
+                  <Route path="/search-results" element={<SearchResults />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/sms-test" element={<SMSTest />} />
+                  <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route path="/bookings" element={<Bookings />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />

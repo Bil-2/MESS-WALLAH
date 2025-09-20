@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, Phone, Shield, UserCheck, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
+import { usePreventAutoFill } from '../hooks/usePreventAutoFill';
 import toast from 'react-hot-toast';
 
 const Register = () => {
@@ -28,6 +29,36 @@ const Register = () => {
 
   const navigate = useNavigate();
   const { sendOtp, verifyOtp, register } = useAuthContext();
+
+  // Aggressive auto-fill prevention
+  const initialFormData = {
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    role: 'student'
+  };
+
+  const { formRef, handleInputFocus, handleInputChange: preventAutoFillChange } = usePreventAutoFill(
+    formData, 
+    setFormData, 
+    initialFormData
+  );
+
+  // Clear form data on component mount to prevent auto-fill issues
+  useEffect(() => {
+    setFormData(initialFormData);
+    setErrors({});
+    setPhoneVerification({
+      sendingOtp: false,
+      otpSent: false,
+      showOtpInput: false,
+      otp: '',
+      verifying: false,
+      isVerified: false
+    });
+  }, []);
 
   const validatePhone = (phone) => {
     const phoneRegex = /^[6-9]\d{9}$/;
@@ -90,6 +121,9 @@ const Register = () => {
   };
 
   const handleChange = (e) => {
+    // Use the auto-fill prevention handler first
+    preventAutoFillChange(e);
+    
     const { name, value } = e.target;
 
     // Special handling for phone input to prevent duplicates and ensure only numbers
@@ -202,7 +236,19 @@ const Register = () => {
 
         {/* Main Form Container */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form 
+            ref={formRef}
+            className="space-y-4" 
+            onSubmit={handleSubmit} 
+            autoComplete="new-password"
+            noValidate
+            data-form-type="other"
+          >
+            {/* Fake hidden inputs to confuse browser auto-fill */}
+            <input type="text" className="fake-input" tabIndex="-1" />
+            <input type="email" className="fake-input" tabIndex="-1" />
+            <input type="password" className="fake-input" tabIndex="-1" />
+            <input type="tel" className="fake-input" tabIndex="-1" />
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -215,8 +261,14 @@ const Register = () => {
                   name="name"
                   type="text"
                   required
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  data-form-type="other"
                   value={formData.name}
                   onChange={handleChange}
+                  onFocus={handleInputFocus}
                   className={`w-full px-4 py-3 pl-10 border ${errors.name
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
@@ -243,7 +295,10 @@ const Register = () => {
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   required
                   value={formData.email}
                   onChange={handleChange}
@@ -279,7 +334,10 @@ const Register = () => {
                   id="phone"
                   name="phone"
                   type="tel"
-                  autoComplete="tel"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   required
                   value={formData.phone}
                   onChange={handleChange}
@@ -331,7 +389,10 @@ const Register = () => {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   required
                   value={formData.password}
                   onChange={handleChange}
@@ -367,7 +428,10 @@ const Register = () => {
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}

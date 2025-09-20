@@ -5,11 +5,20 @@ const { logger } = require('./logger');
 const createTransporter = () => {
   if (process.env.SENDGRID_API_KEY) {
     // Use SendGrid in production
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: 'SendGrid',
       auth: {
         user: 'apikey',
         pass: process.env.SENDGRID_API_KEY
+      }
+    });
+  } else if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+    // Use Gmail with App Password
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
       }
     });
   } else {
@@ -34,7 +43,7 @@ const sendEmail = async (options) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@messwallah.com',
+      from: `"MESS WALLAH" <${process.env.GMAIL_USER}>`,
       to: options.to,
       subject: options.subject,
       text: options.text,
@@ -43,7 +52,7 @@ const sendEmail = async (options) => {
 
     const result = await transporter.sendMail(mailOptions);
     
-    logger.info('Email sent successfully', {
+    console.log('✅ Email sent successfully:', {
       to: options.to,
       subject: options.subject,
       messageId: result.messageId
@@ -51,7 +60,7 @@ const sendEmail = async (options) => {
     
     return result;
   } catch (error) {
-    logger.error('Email sending failed', {
+    console.error('Email sending failed:', {
       error: error.message,
       to: options.to,
       subject: options.subject

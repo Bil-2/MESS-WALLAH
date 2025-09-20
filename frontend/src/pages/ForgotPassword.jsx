@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
@@ -12,6 +12,13 @@ const ForgotPassword = () => {
 
   const navigate = useNavigate();
   const { forgotPassword } = useAuthContext();
+
+  // Clear form data on component mount to prevent auto-fill issues
+  useEffect(() => {
+    setEmail('');
+    setErrors({});
+    setEmailSent(false);
+  }, []);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -93,7 +100,7 @@ const ForgotPassword = () => {
         {/* Main Form Container */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
           {!emailSent ? (
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off" noValidate>
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -105,7 +112,10 @@ const ForgotPassword = () => {
                     id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                     required
                     value={email}
                     onChange={handleChange}
@@ -154,11 +164,6 @@ const ForgotPassword = () => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 We've sent a password reset link to <span className="font-medium text-orange-600">{email}</span>
               </p>
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Demo Mode:</strong> This is currently a simulation. In production, this would send a real email with a password reset link.
-                </p>
-              </div>
               <div className="space-y-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Didn't receive the email? Check your spam folder or try again.

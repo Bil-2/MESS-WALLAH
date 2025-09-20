@@ -94,7 +94,10 @@ const register = async (req, res) => {
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { phone }]
+      $or: [
+        { email },
+        ...(phone ? [{ phone }] : [])
+      ]
     });
 
     if (existingUser) {
@@ -112,22 +115,40 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user with additional security fields
-    const user = new User({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
+    const userData = {
+      name,
+      email,
       password: hashedPassword,
-      role: role || 'student',
-      phone: phone?.trim(),
-      college: college?.trim(),
-      course: course?.trim(),
-      year: year,
-      securityInfo: {
-        registrationIP: req.ip,
-        registrationDate: new Date(),
-        passwordStrength: passwordValidation.strength,
-        lastPasswordChange: new Date()
+      role: role || 'user',
+      isActive: true,
+      loginAttempts: 0,
+      accountLockUntil: undefined,
+      profile: {
+        college,
+        course,
+        year
       }
-    });
+    };
+
+    // Only add phone if it's provided to avoid null constraint issues
+    if (phone) {
+      // Format phone number to international format if it's not already
+      let formattedPhone = phone;
+      if (phone && !phone.startsWith('+')) {
+        // Assume Indian number if no country code provided
+        formattedPhone = `+91${phone}`;
+      }
+      userData.phone = formattedPhone;
+    }
+
+    const user = new User(userData);
+
+    user.securityInfo = {
+      registrationIP: req.ip,
+      registrationDate: new Date(),
+      passwordStrength: passwordValidation.strength,
+      lastPasswordChange: new Date()
+    };
 
     await user.save();
 

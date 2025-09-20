@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 // Protect routes - verify JWT token
 const protect = async (req, res, next) => {
@@ -25,8 +26,34 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get user from token
-    req.user = await User.findById(decoded.id);
+    // Get user from token - ensure proper ObjectId conversion
+    const userId = decoded.userId || decoded.id;
+    console.log('🔍 Auth middleware - userId:', userId, 'type:', typeof userId);
+    
+    try {
+      // Convert string to ObjectId with error handling
+      let objectId;
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        objectId = new mongoose.Types.ObjectId(userId);
+      } else {
+        console.error('❌ Auth middleware - Invalid ObjectId format:', userId);
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user token format'
+        });
+      }
+      
+      console.log('🔍 Auth middleware - Finding user with ObjectId:', objectId);
+      req.user = await User.findById(objectId);
+      console.log('🔍 Auth middleware - User found:', !!req.user);
+      
+    } catch (objectIdError) {
+      console.error('❌ Auth middleware - ObjectId conversion error:', objectIdError.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid user token'
+      });
+    }
 
     if (!req.user) {
       return res.status(401).json({
@@ -79,7 +106,9 @@ const optionalAuth = async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id);
+      const userId = decoded.userId || decoded.id;
+      const objectId = new mongoose.Types.ObjectId(userId);
+      req.user = await User.findById(objectId);
     } catch (error) {
       // Token is invalid, but we don't fail the request
       req.user = null;
