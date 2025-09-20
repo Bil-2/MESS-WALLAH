@@ -15,16 +15,18 @@ class SecurePaymentController {
   // Create secure payment session
   async createPaymentSession(req, res) {
     try {
-      const { bookingId, amount } = req.body;
-      const userId = req.user.id;
+      const { bookingId, amount, currency = 'INR', paymentMethod = 'razorpay' } = req.body;
+      const userId = req.user._id || req.user.id;
 
-      // Validate booking ownership
-      const booking = await Booking.findById(bookingId);
-      if (!booking || booking.user.toString() !== userId) {
-        return res.status(403).json({
-          error: 'Unauthorized booking access',
-          code: 'UNAUTHORIZED_BOOKING'
-        });
+      // If bookingId is provided, validate booking ownership
+      if (bookingId) {
+        const booking = await Booking.findById(bookingId);
+        if (!booking || booking.user.toString() !== userId.toString()) {
+          return res.status(403).json({
+            error: 'Unauthorized booking access',
+            code: 'UNAUTHORIZED_BOOKING'
+          });
+        }
       }
 
       // Generate secure payment session

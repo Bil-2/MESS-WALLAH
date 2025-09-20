@@ -148,7 +148,7 @@ const generateIndianMobile = () => {
   const prefixes = ['98', '97', '96', '95', '94', '93', '92', '91', '90', '89', '88', '87', '86', '85', '84', '83', '82', '81', '80', '79', '78', '77', '76', '75', '74', '73', '72', '70'];
   const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
   const remaining = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
-  return `${prefix}${remaining}`;
+  return `+91${prefix}${remaining}`;
 };
 
 // Indian reviewer names by category
@@ -333,7 +333,7 @@ const generateRoomsForCity = (city, ownerId) => {
     const ownerPhone = generateIndianMobile();
 
     rooms.push({
-      ownerId: ownerId,
+      owner: ownerId,
       title: roomDetails.title,
       description: roomDetails.description,
       address: {
@@ -350,6 +350,9 @@ const generateRoomsForCity = (city, ownerId) => {
       maxOccupancy: roomType === 'apartment' ? 4 : roomType === 'studio' ? 2 : roomType === 'shared' ? 3 : 1,
       roomType: roomType,
       amenities: amenities,
+      isActive: true,
+      isAvailable: true,
+      featured: Math.random() < 0.1, // 10% chance of being featured
       photos: [
         {
           url: `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500`,

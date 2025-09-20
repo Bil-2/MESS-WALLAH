@@ -205,7 +205,7 @@ const startServer = async () => {
     }
 
     try {
-      app.use('/api/payments', require('./routes/securePaymentRoutes'));
+      app.use('/api/payments', require('./routes/simplePaymentRoutes'));
       console.log('   ✓ /api/payments routes registered');
     } catch (error) {
       console.error('   ❌ Failed to register /api/payments routes:', error.message);

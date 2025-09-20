@@ -19,6 +19,40 @@ const {
 router.use(paymentLogger);
 router.use(paymentTimeout);
 
+// @desc    Get payment methods
+// @route   GET /api/payments/methods
+// @access  Public
+router.get('/methods', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      methods: [
+        {
+          id: 'razorpay',
+          name: 'Razorpay',
+          type: 'gateway',
+          supported: ['card', 'netbanking', 'upi', 'wallet'],
+          enabled: true
+        },
+        {
+          id: 'upi',
+          name: 'UPI',
+          type: 'direct',
+          supported: ['upi'],
+          enabled: true
+        },
+        {
+          id: 'card',
+          name: 'Credit/Debit Card',
+          type: 'card',
+          supported: ['visa', 'mastercard', 'rupay'],
+          enabled: true
+        }
+      ]
+    }
+  });
+});
+
 // @desc    Create payment session
 // @route   POST /api/payments/session
 // @access  Private
@@ -27,7 +61,23 @@ router.post('/session',
   paymentRateLimit,
   generatePaymentNonce,
   [
-    ...paymentValidationRules.slice(0, 3), // amount, currency, paymentMethod
+    body('amount')
+      .isNumeric()
+      .withMessage('Amount must be a number')
+      .isFloat({ min: 1 })
+      .withMessage('Amount must be greater than 0'),
+    body('currency')
+      .optional()
+      .isIn(['INR', 'USD'])
+      .withMessage('Currency must be INR or USD'),
+    body('paymentMethod')
+      .optional()
+      .isIn(['razorpay', 'upi', 'card'])
+      .withMessage('Invalid payment method'),
+    body('bookingId')
+      .optional()
+      .isMongoId()
+      .withMessage('Invalid booking ID')
   ],
   validatePaymentData,
   fraudDetection,

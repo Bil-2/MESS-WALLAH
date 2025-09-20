@@ -18,7 +18,7 @@ router.use(rateLimiters.general);
 router.post('/', [
   protect,
   csrfProtection,
-  authorize('user'),
+  authorize('user', 'student'),
   body('roomId').isMongoId().withMessage('Invalid room ID'),
   body('checkInDate').isISO8601().withMessage('Invalid check-in date'),
   body('duration').isInt({ min: 1, max: 24 }).withMessage('Duration must be between 1-24 months'),

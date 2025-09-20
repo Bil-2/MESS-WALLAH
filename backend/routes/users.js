@@ -189,8 +189,46 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    Toggle favorite room
 // @route   POST /api/users/favorites/:roomId
 // @access  Private
-// TEMPORARILY DISABLED TO FIX ROUTE CONFLICT
-// router.post('/favorites/:roomId', protect, toggleFavourite);
+router.post('/favorites/:roomId', protect, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.user._id;
+    
+    // Simple toggle favorite implementation
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const favoriteIndex = user.favourites.indexOf(roomId);
+    if (favoriteIndex > -1) {
+      // Remove from favorites
+      user.favourites.splice(favoriteIndex, 1);
+    } else {
+      // Add to favorites
+      user.favourites.push(roomId);
+    }
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: favoriteIndex > -1 ? 'Removed from favorites' : 'Added to favorites',
+      data: {
+        isFavorite: favoriteIndex === -1,
+        totalFavorites: user.favourites.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle favorite'
+    });
+  }
+});
 
 // @desc    Get platform statistics (public)
 // @route   GET /api/users/stats/platform

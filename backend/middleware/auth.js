@@ -26,32 +26,39 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get user from token - ensure proper ObjectId conversion
-    const userId = decoded.userId || decoded.id;
-    console.log('🔍 Auth middleware - userId:', userId, 'type:', typeof userId);
+    // Get user from token - handle multiple token formats
+    const userId = decoded.userId || decoded.id || decoded.user;
     
-    try {
-      // Convert string to ObjectId with error handling
-      let objectId;
-      if (mongoose.Types.ObjectId.isValid(userId)) {
-        objectId = new mongoose.Types.ObjectId(userId);
-      } else {
-        console.error('❌ Auth middleware - Invalid ObjectId format:', userId);
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid user token format'
-        });
-      }
-      
-      console.log('🔍 Auth middleware - Finding user with ObjectId:', objectId);
-      req.user = await User.findById(objectId);
-      console.log('🔍 Auth middleware - User found:', !!req.user);
-      
-    } catch (objectIdError) {
-      console.error('❌ Auth middleware - ObjectId conversion error:', objectIdError.message);
+    if (!userId) {
+      console.error('No userId found in token payload:', decoded);
       return res.status(401).json({
         success: false,
-        message: 'Invalid user token'
+        message: 'Invalid token payload'
+      });
+    }
+    
+    try {
+      // Find user by ID - try multiple approaches
+      req.user = await User.findById(userId);
+      
+      // Fallback approaches if first attempt fails
+      if (!req.user) {
+        // Try with explicit ObjectId conversion
+        if (mongoose.Types.ObjectId.isValid(userId)) {
+          req.user = await User.findById(mongoose.Types.ObjectId(userId));
+        }
+        
+        // Try finding by string representation
+        if (!req.user && typeof userId === 'object') {
+          req.user = await User.findById(userId.toString());
+        }
+      }
+      
+    } catch (dbError) {
+      console.error('Database error in auth middleware:', dbError.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Database error during authentication'
       });
     }
 
@@ -106,9 +113,10 @@ const optionalAuth = async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userId = decoded.userId || decoded.id;
-      const objectId = new mongoose.Types.ObjectId(userId);
-      req.user = await User.findById(objectId);
+      const userId = decoded.userId || decoded.id || decoded.user;
+      if (userId) {
+        req.user = await User.findById(userId);
+      }
     } catch (error) {
       // Token is invalid, but we don't fail the request
       req.user = null;

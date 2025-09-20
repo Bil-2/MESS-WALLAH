@@ -309,9 +309,9 @@ export const apiHelpers = {
     }
   },
 
-  async resetPassword(token, password) {
+  async resetPassword(token, newPassword) {
     try {
-      const response = await api.post('/auth/reset-password', { token, password });
+      const response = await api.post('/auth/reset-password', { token, newPassword });
       return response.data;
     } catch (error) {
       console.error('Reset password API error:', error);

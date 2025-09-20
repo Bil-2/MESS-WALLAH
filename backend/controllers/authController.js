@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const { createBruteForceProtector, handleFailedAttempt } = require('../middleware/advancedSecurity');
+const { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetSuccessEmail } = require('../services/notify');
 
 // Password strength validation
 const validatePasswordStrength = (password) => {
@@ -110,15 +112,12 @@ const register = async (req, res) => {
       });
     }
 
-    // Hash password with higher salt rounds for security
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
     // Create user with additional security fields
+    // Note: Password will be hashed by the User model's pre-save hook
     const userData = {
       name,
       email,
-      password: hashedPassword,
+      password: password, // Plain password - model will hash it
       role: role || 'user',
       isActive: true,
       loginAttempts: 0,
@@ -152,6 +151,15 @@ const register = async (req, res) => {
 
     await user.save();
 
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+      console.log(`Welcome email sent to: ${user.email}`);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError.message);
+      // Don't fail registration if email fails
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       {
@@ -183,10 +191,19 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Registration error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
     res.status(500).json({
       success: false,
-      message: 'Internal server error during registration'
+      message: 'Internal server error during registration',
+      ...(process.env.NODE_ENV === 'development' && { 
+        error: error.message,
+        details: error.stack 
+      })
     });
   }
 };
@@ -453,11 +470,183 @@ const logout = async (req, res) => {
   }
 };
 
+// Forgot password - send reset email
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Input validation
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    
+    // Always return success to prevent email enumeration attacks
+    if (!user) {
+      console.log(`Password reset requested for non-existent email: ${email} from IP: ${req.ip}`);
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, we have sent a password reset link.'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Set reset token and expiry (1 hour)
+    user.passwordResetToken = resetTokenHash;
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await user.save();
+
+    // Send reset email
+    try {
+      await sendPasswordResetEmail(user.email, resetToken, user.name);
+      console.log(`Password reset email sent to: ${user.email} from IP: ${req.ip}`);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      // Clear reset token if email fails
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send password reset email. Please try again.'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Password reset link has been sent to your email address.'
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during password reset request'
+    });
+  }
+};
+
+// Reset password with token
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // Input validation
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token and new password are required'
+      });
+    }
+
+    // Password strength validation
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password does not meet security requirements',
+        errors: passwordValidation.errors,
+        passwordStrength: passwordValidation.strength
+      });
+    }
+
+    // Hash the token to compare with stored hash
+    const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      passwordResetToken: resetTokenHash,
+      passwordResetExpires: { $gt: new Date() }
+    }).select('+password +securityInfo');
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    // Check if new password is same as current
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be different from current password'
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password and clear reset token
+    user.password = hashedNewPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    // Update security info
+    if (!user.securityInfo) {
+      user.securityInfo = {};
+    }
+    user.securityInfo.lastPasswordChange = new Date();
+    user.securityInfo.passwordStrength = passwordValidation.strength;
+    user.securityInfo.failedLoginAttempts = 0; // Reset failed attempts
+    user.securityInfo.accountLocked = false;
+    user.securityInfo.lockUntil = null;
+
+    await user.save();
+
+    // Send confirmation email
+    try {
+      await sendPasswordResetSuccessEmail(user.email, user.name);
+    } catch (emailError) {
+      console.error('Failed to send password reset success email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    // Log password reset
+    console.log(`Password reset successful for user: ${user.email} from IP: ${req.ip}`);
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now login with your new password.'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during password reset'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   changePassword,
   getProfile,
   logout,
+  forgotPassword,
+  resetPassword,
   validatePasswordStrength
 };

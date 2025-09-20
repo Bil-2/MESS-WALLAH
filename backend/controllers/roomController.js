@@ -20,8 +20,16 @@ const getRooms = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Build filter object
-    const filter = { isAvailable: true };
+    // Build filter object - make isAvailable optional for testing
+    const filter = {};
+    
+    // Only filter by isAvailable if it's explicitly set to false
+    if (req.query.isAvailable === 'false') {
+      filter.isAvailable = false;
+    } else if (req.query.isAvailable === 'true') {
+      filter.isAvailable = true;
+    }
+    // If not specified, show all rooms
 
     if (search) {
       filter.$or = [
@@ -80,15 +88,13 @@ const getRooms = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: {
-        rooms,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages,
-          totalRooms,
-          hasNextPage: parseInt(page) < totalPages,
-          hasPrevPage: parseInt(page) > 1
-        }
+      data: rooms,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalRooms,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
       }
     });
   } catch (error) {

@@ -31,12 +31,21 @@ const ResetPassword = () => {
       return;
     }
 
-    // Validate token format (basic check)
+    // Validate token format (accept both JWT and crypto tokens)
     try {
+      if (!token || token.length < 10) {
+        throw new Error('Token too short');
+      }
+      
+      // Accept both JWT tokens (3 parts) and crypto tokens (hex strings)
       const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) {
+      const isJWT = tokenParts.length === 3;
+      const isCryptoToken = /^[a-f0-9]+$/i.test(token) && token.length >= 32;
+      
+      if (!isJWT && !isCryptoToken) {
         throw new Error('Invalid token format');
       }
+      
       setTokenValid(true);
     } catch (error) {
       setTokenValid(false);
