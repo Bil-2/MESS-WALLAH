@@ -11,6 +11,16 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// Import production-ready error handling and monitoring
+const {
+  gracefulErrorRecovery,
+  asyncErrorHandler,
+  databaseHealthCheck,
+  requestTimeout,
+  memoryMonitor
+} = require('./middleware/productionErrorHandler');
+const healthMonitor = require('./utils/healthMonitor');
+
 const app = express();
 
 // Performance optimizations
@@ -30,15 +40,11 @@ app.set('trust proxy', 1);
 
 // Import security middleware
 const {
-  securityHeaders,
-  rateLimits,
+  securityMiddleware,
+  rateLimiters,
   csrfProtection,
-  generateCSRFToken,
-  sanitizeInput,
-  requestSizeLimit,
-  securityLogger,
-  checkBruteForce
-} = require('./middleware/securityHeaders');
+  createBruteForceProtector
+} = require('./middleware/advancedSecurity');
 
 // CORS configuration
 const corsOptions = {
@@ -78,16 +84,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Enhanced security middleware
-app.use(securityHeaders);
-app.use(securityLogger);
-app.use(requestSizeLimit);
-app.use(sanitizeInput);
+app.use(securityMiddleware);
 
-// Compression middleware
-app.use(compression());
+// Production-ready middleware
+app.use(requestTimeout(30000)); // 30 second timeout
+app.use(memoryMonitor);
+app.use(databaseHealthCheck);
 
 // Apply general rate limiting
-app.use(rateLimits.general);
+app.use(rateLimiters.general);
 
 // Logging middleware
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -146,34 +151,79 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    // Health check endpoint
-    app.get('/health', (req, res) => {
+    // Enhanced health check endpoint with monitoring
+    app.get('/health', asyncErrorHandler(async (req, res) => {
+      const healthReport = healthMonitor.getHealthReport();
+      const healthMetrics = healthMonitor.getHealthMetrics();
+      
       res.status(200).json({
         status: 'OK',
         message: 'MESS WALLAH API is running',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        health: healthReport,
+        metrics: healthMetrics,
+        uptime: Math.floor(process.uptime()),
+        version: '1.0.0'
       });
-    });
+    }));
+    
+    // Detailed health monitoring endpoint
+    app.get('/health/detailed', asyncErrorHandler(async (req, res) => {
+      const healthReport = healthMonitor.getHealthReport();
+      res.status(200).json(healthReport);
+    }));
+    
+    // Health metrics endpoint for monitoring tools
+    app.get('/health/metrics', asyncErrorHandler(async (req, res) => {
+      const metrics = healthMonitor.getHealthMetrics();
+      res.status(200).json(metrics);
+    }));
 
-    // Test endpoint
-    app.get('/api/test', (req, res) => {
+    // Enhanced test endpoint with error recovery
+    app.get('/api/test', asyncErrorHandler(async (req, res) => {
+      // Test database connectivity
+      const dbStatus = mongoose.connection.readyState === 1;
+      
+      // Test memory usage
+      const memUsage = process.memoryUsage();
+      const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+      
       res.json({
         success: true,
         message: 'API is working correctly',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        system: {
+          database: dbStatus ? 'Connected' : 'Disconnected',
+          memory: memUsageMB + 'MB',
+          uptime: Math.floor(process.uptime()) + 's',
+          nodeVersion: process.version,
+          platform: process.platform
+        },
+        environment: process.env.NODE_ENV || 'development'
       });
-    });
+    }));
 
     // Register API routes
     console.log('📋 Registering API routes...');
 
     try {
-      app.use('/api/auth', require('./routes/auth'));
+      const authRoutes = require('./routes/auth');
+      app.use('/api/auth', authRoutes);
       console.log('   ✓ /api/auth routes registered');
     } catch (error) {
       console.error('   ❌ Failed to register /api/auth routes:', error.message);
+      // Create fallback auth routes to prevent 404 errors
+      app.use('/api/auth/*', (req, res) => {
+        res.status(503).json({
+          success: false,
+          message: 'Authentication service temporarily unavailable',
+          error: 'Service initialization failed',
+          type: 'ServiceError',
+          retryAfter: 60
+        });
+      });
     }
 
     try {
@@ -225,7 +275,14 @@ const startServer = async () => {
       console.error('   ❌ Failed to register /api/analytics routes:', error.message);
     }
 
-    // Global error handling middleware - Production Ready
+    // Start health monitoring system
+    healthMonitor.startMonitoring(30000); // Check every 30 seconds
+    console.log('✅ Health monitoring system started');
+    
+    // Production-ready global error handling middleware
+    app.use(gracefulErrorRecovery);
+    
+    // Fallback error handler
     app.use((err, req, res, next) => {
       console.error('🚨 Global Error Handler:', {
         message: err.message,

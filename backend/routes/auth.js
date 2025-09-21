@@ -93,6 +93,24 @@ router.post('/resend-otp', [
     .withMessage('Please provide a valid Indian phone number')
 ], resendOtp);
 
+// Alias routes for SMS OTP (for API test compatibility)
+router.post('/send-otp-sms', [
+  rateLimiters.general,
+  body('phone')
+    .matches(/^[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian phone number')
+], sendOtp);
+
+router.post('/verify-otp-sms', [
+  createBruteForceProtector,
+  body('phone')
+    .matches(/^[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian phone number'),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+], verifyOtp);
+
 // @desc    Send OTP to email address
 // @route   POST /api/auth/send-otp-email
 // @access  Public

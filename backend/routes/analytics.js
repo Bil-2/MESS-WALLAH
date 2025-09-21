@@ -156,4 +156,67 @@ router.get('/rooms', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// @desc    Get analytics summary (public endpoint for basic stats)
+// @route   GET /api/analytics/summary
+// @access  Public
+router.get('/summary', async (req, res) => {
+  try {
+    // Get basic public statistics
+    const totalRooms = await Room.countDocuments({ isActive: true });
+    const availableRooms = await Room.countDocuments({ isAvailable: true, isActive: true });
+    const totalUsers = await User.countDocuments({ isActive: true });
+    
+    // Get room statistics by type
+    const roomsByType = await Room.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: '$roomType',
+          count: { $sum: 1 },
+          avgPrice: { $avg: '$rentPerMonth' }
+        }
+      }
+    ]);
+
+    // Get top locations (public data)
+    const topLocations = await Room.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: '$address.city',
+          count: { $sum: 1 },
+          avgPrice: { $avg: '$rentPerMonth' }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Analytics summary retrieved successfully',
+      data: {
+        overview: {
+          totalRooms,
+          availableRooms,
+          occupiedRooms: totalRooms - availableRooms,
+          totalUsers,
+          occupancyRate: totalRooms > 0 ? ((totalRooms - availableRooms) / totalRooms * 100).toFixed(1) : 0
+        },
+        roomsByType,
+        topLocations,
+        generatedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Analytics summary error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve analytics summary',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

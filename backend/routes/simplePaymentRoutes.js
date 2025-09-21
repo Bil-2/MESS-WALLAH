@@ -2,6 +2,42 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 
+// @desc    Get payment configuration
+// @route   GET /api/payments/config
+// @access  Public
+router.get('/config', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Payment configuration retrieved successfully',
+      data: {
+        razorpay: {
+          enabled: true,
+          keyId: process.env.RAZORPAY_KEY_ID || 'demo_key',
+          currency: 'INR',
+          methods: ['card', 'netbanking', 'upi', 'wallet']
+        },
+        upi: {
+          enabled: true,
+          supportedApps: ['PhonePe', 'GPay', 'Paytm', 'BHIM']
+        },
+        fees: {
+          processingFee: 2.5, // percentage
+          minimumAmount: 1,
+          maximumAmount: 100000
+        },
+        status: 'active'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve payment configuration',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // @desc    Get payment methods
 // @route   GET /api/payments/methods
 // @access  Public

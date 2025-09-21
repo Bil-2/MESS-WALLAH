@@ -2,7 +2,7 @@ const Room = require('../models/Room');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
-const { createSafeSearchQuery } = require('../utils/regexSecurity');
+const { createSafeSearchQuery, createTextSearchQuery } = require('../utils/regexSecurity');
 const logger = require('../utils/productionLogger');
 
 // Get all rooms with filtering and pagination
@@ -34,7 +34,7 @@ const getRooms = async (req, res) => {
     // If not specified, show all rooms
 
     if (search) {
-      const searchQuery = createSafeSearchQuery(search, [
+      const searchQuery = createTextSearchQuery(search, [
         'title',
         'description', 
         'address.city',
@@ -44,7 +44,7 @@ const getRooms = async (req, res) => {
     }
 
     if (location) {
-      const locationQuery = createSafeSearchQuery(location, [
+      const locationQuery = createTextSearchQuery(location, [
         'address.city',
         'address.area',
         'address.state'
