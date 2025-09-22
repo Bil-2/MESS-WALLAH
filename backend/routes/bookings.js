@@ -12,12 +12,11 @@ const router = express.Router();
 // Apply rate limiting to all booking routes
 router.use(rateLimiters.general);
 
-// @desc    Get all bookings (Admin only)
+// @desc    Get user's own bookings
 // @route   GET /api/bookings
-// @access  Private (Admin only)
+// @access  Private (User)
 router.get('/', [
   protect,
-  authorize('admin'),
   query('status').optional().isIn(['pending', 'confirmed', 'rejected', 'cancelled', 'active', 'completed', 'expired']).withMessage('Invalid status'),
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1-50')
@@ -35,8 +34,8 @@ router.get('/', [
     const { status, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    // Build query
-    let query = {};
+    // Build query for user's own bookings
+    let query = { user: req.user._id };
     if (status) {
       query.status = status;
     }
@@ -89,13 +88,73 @@ router.get('/', [
   }
 });
 
+// @desc    Get all bookings (Admin only)
+// @route   GET /api/bookings/admin
+// @access  Private (Admin only)
+router.get('/admin', [
+  protect,
+  authorize('admin'),
+  query('status').optional().isIn(['pending', 'confirmed', 'rejected', 'cancelled', 'active', 'completed', 'expired']).withMessage('Invalid status'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1-50')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { status, page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Build query for all bookings (admin view)
+    let query = {};
+    if (status) {
+      query.status = status;
+    }
+
+    // Get all bookings with pagination
+    const bookings = await Booking.find(query)
+      .populate('user', 'name email phone role')
+      .populate('room', 'title location price roomType')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Booking.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: bookings,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalBookings: total,
+        hasNextPage: skip + bookings.length < total,
+        hasPrevPage: page > 1
+      }
+    });
+
+  } catch (error) {
+    console.error('Get admin bookings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve bookings',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // @desc    Create new booking request
 // @route   POST /api/bookings
-// @access  Private (Room seekers only)
+// @access  Private (Authenticated users)
 router.post('/', [
   protect,
   // csrfProtection, // Temporarily disabled for API testing
-  authorize('user', 'student'),
   body('roomId').isMongoId().withMessage('Invalid room ID'),
   body('checkInDate').isISO8601().withMessage('Invalid check-in date'),
   body('duration').isInt({ min: 1, max: 24 }).withMessage('Duration must be between 1-24 months'),

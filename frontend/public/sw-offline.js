@@ -2,10 +2,14 @@
 const CACHE_NAME = 'mess-wallah-offline-v1';
 const API_CACHE_NAME = 'mess-wallah-api-v1';
 
-// Static assets to cache (only essential files that definitely exist)
+// Static assets to cache
 const urlsToCache = [
   '/',
+  '/static/js/bundle.js',
+  '/static/css/main.css',
   '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
   '/prevent-autofill.js'
 ];
 
@@ -18,46 +22,28 @@ const apiEndpointsToCache = [
   '/api/analytics/summary'
 ];
 
-// Install event - cache static assets with error handling
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker...');
   event.waitUntil(
     Promise.all([
-      // Cache static assets with individual error handling
-      caches.open(CACHE_NAME).then(async (cache) => {
+      caches.open(CACHE_NAME).then((cache) => {
         console.log('[SW] Caching static assets');
-        const cachePromises = urlsToCache.map(async (url) => {
-          try {
-            const response = await fetch(url);
-            if (response.ok) {
-              await cache.put(url, response);
-              console.log('[SW] Cached:', url);
-            } else {
-              console.warn('[SW] Failed to cache (bad response):', url, response.status);
-            }
-          } catch (error) {
-            console.warn('[SW] Failed to cache (network error):', url, error.message);
-          }
-        });
-        return Promise.all(cachePromises);
+        return cache.addAll(urlsToCache);
       }),
-      // Pre-cache API endpoints with error handling
       caches.open(API_CACHE_NAME).then((cache) => {
         console.log('[SW] Pre-caching API endpoints');
-        const apiPromises = apiEndpointsToCache.map(async (url) => {
-          try {
-            const response = await fetch(url);
-            if (response.ok) {
-              await cache.put(url, response.clone());
-              console.log('[SW] API cached:', url);
-            } else {
-              console.warn('[SW] API cache failed (bad response):', url, response.status);
-            }
-          } catch (error) {
-            console.warn('[SW] API cache failed (network error):', url, error.message);
-          }
-        });
-        return Promise.all(apiPromises);
+        return Promise.all(
+          apiEndpointsToCache.map(url => {
+            return fetch(url).then(response => {
+              if (response.ok) {
+                return cache.put(url, response.clone());
+              }
+            }).catch(() => {
+              console.log('[SW] Failed to pre-cache:', url);
+            });
+          })
+        );
       })
     ])
   );

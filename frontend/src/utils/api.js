@@ -405,7 +405,7 @@ export const apiHelpers = {
   },
 
   async updateProfile(profileData) {
-    const response = await api.put('/users/profile', profileData);
+    const response = await api.put('/auth/profile', profileData);
     return response.data;
   },
 
