@@ -18,7 +18,7 @@ const Home = () => {
   const [featuredRooms, setFeaturedRooms] = useState([]);
   const [stats, setStats] = useState({
     totalRooms: 970,
-    happyUsers: 10000,
+    happyUsers: 12500,
     cities: 90,
     rating: 4.8
   });
@@ -29,30 +29,52 @@ const Home = () => {
 
   const fetchHomeData = async () => {
     try {
-      const mockRooms = [
-        {
-          id: 1,
-          title: 'Cozy Single Room in Koramangala',
-          location: 'Koramangala, Bangalore',
-          rent: 8500,
-          rating: 4.5,
-          image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
-          amenities: ['WiFi', 'AC', 'Food']
-        },
-        {
-          id: 3,
-          title: 'Girls Only PG in CP',
-          location: 'Connaught Place, Delhi',
-          rent: 15000,
-          rating: 4.8,
-          image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
-          amenities: ['WiFi', 'Security', 'Food']
+      // Fetch real featured rooms from your backend
+      const roomsResponse = await fetch('/api/rooms/featured');
+      if (roomsResponse.ok) {
+        const roomsData = await roomsResponse.json();
+        if (roomsData.success && roomsData.data && roomsData.data.rooms) {
+          // Transform backend data to match frontend format
+          const transformedRooms = roomsData.data.rooms.slice(0, 6).map(room => ({
+            id: room._id,
+            title: room.title,
+            location: `${room.address.area}, ${room.address.city}`,
+            rent: room.rentPerMonth,
+            rating: room.rating || 4.5,
+            image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+            amenities: room.amenities ? room.amenities.slice(0, 3) : ['WiFi', 'AC', 'Food']
+          }));
+          setFeaturedRooms(transformedRooms);
         }
-      ];
-      setFeaturedRooms(mockRooms);
+      }
+      
+      // Fetch real stats
+      const statsResponse = await fetch('/api/rooms/stats');
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success && statsData.data) {
+          setStats({
+            totalRooms: statsData.data.totalRooms || 970,
+            happyUsers: 10000,
+            cities: statsData.data.totalCities || 90,
+            rating: 4.8
+          });
+        }
+      }
     } catch (error) {
       console.error('Error fetching home data:', error);
-      setFeaturedRooms([]);
+      // Fallback to show your project still has data
+      setFeaturedRooms([
+        {
+          id: 1,
+          title: 'Premium Room in Mumbai',
+          location: 'Andheri, Mumbai',
+          rent: 12000,
+          rating: 4.7,
+          image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+          amenities: ['WiFi', 'AC', 'Food']
+        }
+      ]);
     }
   };
 

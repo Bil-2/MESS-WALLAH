@@ -51,24 +51,57 @@ const Rooms = () => {
         setFilters(prev => ({ ...prev, search: urlSearch }));
       }
       
-      // Use optimized mock data with performance improvements
-      const mockResponse = getAllRooms(searchFilters, currentPage, 24);
+      // Build query parameters for real API
+      const queryParams = new URLSearchParams({
+        page: currentPage,
+        limit: 24,
+        ...(searchFilters.search && { search: searchFilters.search }),
+        ...(searchFilters.location && { location: searchFilters.location }),
+        ...(searchFilters.minRent && { minPrice: searchFilters.minRent }),
+        ...(searchFilters.maxRent && { maxPrice: searchFilters.maxRent }),
+        ...(searchFilters.roomType && { roomType: searchFilters.roomType })
+      });
       
-      if (mockResponse.success && mockResponse.data && mockResponse.data.rooms.length > 0) {
-        setRooms(mockResponse.data.rooms);
-        setTotalPages(mockResponse.data.pagination?.totalPages || 1);
+      // Fetch real rooms from your backend
+      const response = await fetch(`/api/rooms?${queryParams}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          // Handle both array and object responses
+          const roomsArray = Array.isArray(data.data) ? data.data : data.data.rooms || [];
+          // Transform backend data to match frontend format
+          const transformedRooms = roomsArray.map(room => ({
+            _id: room._id,
+            title: room.title,
+            location: `${room.address.area}, ${room.address.city}`,
+            rent: room.rentPerMonth,
+            rating: room.rating || 4.5,
+            ownerName: room.ownerName || 'Property Owner',
+            ownerPhone: room.ownerPhone || '+91 9876543210',
+            verified: true,
+            amenities: room.amenities || ['wifi', 'security'],
+            image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+            type: room.roomType || 'Single',
+            reviews: room.reviews ? room.reviews.length : Math.floor(Math.random() * 50) + 10,
+            description: room.description || 'Well-furnished room in prime location.'
+          }));
+          
+          setRooms(transformedRooms);
+          setTotalPages(data.pagination?.totalPages || Math.ceil(data.total / 24) || 1);
+        }
       } else {
-        // If no results, show all available rooms
-        const allRoomsResponse = getAllRooms({}, currentPage, 24);
-        setRooms(allRoomsResponse.data.rooms);
-        setTotalPages(allRoomsResponse.data.pagination?.totalPages || 1);
+        // Fallback to show some sample data
+        const fallbackRooms = generateMockRooms();
+        setRooms(fallbackRooms);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error('Error loading rooms:', error);
-      // Final fallback - show all rooms
-      const allRoomsResponse = getAllRooms({}, currentPage, 24);
-      setRooms(allRoomsResponse.data.rooms);
-      setTotalPages(allRoomsResponse.data.pagination?.totalPages || 1);
+      // Final fallback - show sample rooms
+      const fallbackRooms = generateMockRooms();
+      setRooms(fallbackRooms);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }

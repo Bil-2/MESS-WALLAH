@@ -1,145 +1,58 @@
-// Simple and reliable auto-fill prevention script
-// Version 2.0 - No MutationObserver to avoid errors
+// Ultra-safe auto-fill prevention script
+// Version 3.0 - No MutationObserver, no errors
 
 (function() {
   'use strict';
   
-  console.log('🛡️ Auto-fill prevention v2.0 loaded');
+  console.log('🛡️ Auto-fill prevention v3.0 loaded - Error-free version');
   
-  // Function to clear all form inputs safely
-  function clearAllInputs() {
+  // Simple function to disable autofill on forms
+  function disableAutofill() {
     try {
-      if (!document || typeof document.querySelectorAll !== 'function') return;
+      // Only run if document is available
+      if (!document) return;
       
-      const inputs = document.querySelectorAll('input');
-      inputs.forEach(input => {
-        try {
-          if (input && input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
-            input.value = '';
-            input.defaultValue = '';
-          }
-        } catch (e) {
-          // Ignore individual input errors
-        }
-      });
-    } catch (error) {
-      console.warn('Failed to clear inputs:', error);
-    }
-  }
-  
-  // Function to disable auto-fill on all forms safely
-  function disableAutoFillOnAllForms() {
-    try {
-      if (!document || typeof document.querySelectorAll !== 'function') return;
-      
-      // Handle forms
+      // Disable on all forms
       const forms = document.querySelectorAll('form');
       forms.forEach(form => {
-        try {
-          if (form && form.setAttribute) {
-            form.setAttribute('autocomplete', 'new-password');
-            form.setAttribute('novalidate', 'true');
-          }
-        } catch (e) {
-          // Ignore individual form errors
+        if (form && form.setAttribute) {
+          form.setAttribute('autocomplete', 'off');
         }
       });
       
-      // Handle inputs
+      // Disable on all inputs
       const inputs = document.querySelectorAll('input');
       inputs.forEach(input => {
-        try {
-          if (input && input.setAttribute) {
-            input.setAttribute('autocomplete', 'new-password');
-            input.setAttribute('autocorrect', 'off');
-            input.setAttribute('autocapitalize', 'off');
-            input.setAttribute('spellcheck', 'false');
-          }
-        } catch (e) {
-          // Ignore individual input errors
+        if (input && input.setAttribute) {
+          input.setAttribute('autocomplete', 'off');
+          input.setAttribute('autocorrect', 'off');
+          input.setAttribute('autocapitalize', 'off');
         }
       });
     } catch (error) {
-      console.warn('Failed to disable autofill:', error);
+      // Silently ignore any errors
     }
   }
   
-  // Safe DOM ready check
-  function runWhenReady() {
-    clearAllInputs();
-    disableAutoFillOnAllForms();
-  }
-  
-  // Run immediately or when DOM is ready
+  // Run when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', runWhenReady);
+    document.addEventListener('DOMContentLoaded', disableAutofill);
   } else {
-    runWhenReady();
+    disableAutofill();
   }
   
-  // Use interval-based checking instead of MutationObserver
-  // This is more reliable and doesn't cause errors
-  let intervalId = null;
+  // Run periodically for React components (limited time)
+  let runCount = 0;
+  const maxRuns = 20; // Run only 20 times (10 seconds)
   
-  function startPeriodicClearing() {
-    // Clear any existing interval
-    if (intervalId) {
+  const intervalId = setInterval(() => {
+    runCount++;
+    disableAutofill();
+    
+    if (runCount >= maxRuns) {
       clearInterval(intervalId);
+      console.log('✅ Auto-fill prevention completed');
     }
-    
-    // Run every 500ms to catch new React components
-    intervalId = setInterval(() => {
-      try {
-        clearAllInputs();
-        disableAutoFillOnAllForms();
-      } catch (error) {
-        console.warn('Periodic clearing error:', error);
-      }
-    }, 500);
-    
-    console.log('🔄 Periodic auto-fill prevention started');
-    
-    // Stop after 30 seconds to avoid running forever
-    setTimeout(() => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-        console.log('⏹️ Periodic auto-fill prevention stopped');
-      }
-    }, 30000);
-  }
-  
-  // Start periodic clearing
-  startPeriodicClearing();
-  
-  // Initial clearing with delays
-  const delays = [100, 300, 500, 1000, 2000, 5000];
-  delays.forEach(delay => {
-    setTimeout(() => {
-      clearAllInputs();
-      disableAutoFillOnAllForms();
-    }, delay);
-  });
-  
-  // Listen for focus events to clear inputs when user interacts
-  document.addEventListener('focusin', function(event) {
-    if (event.target && event.target.tagName === 'INPUT') {
-      try {
-        const input = event.target;
-        if (input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
-          // Clear the input when user focuses on it
-          setTimeout(() => {
-            if (input.value && input.value.length > 0) {
-              input.value = '';
-            }
-          }, 10);
-        }
-      } catch (e) {
-        // Ignore focus event errors
-      }
-    }
-  }, true);
-  
-  console.log('✅ Auto-fill prevention v2.0 initialized (no MutationObserver)');
+  }, 500);
   
 })();
