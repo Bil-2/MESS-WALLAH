@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Lock, CheckCircle, AlertCircle, ArrowLeft 
 } from '../utils/iconMappings';
 import toast from 'react-hot-toast';
-import { api } from '../utils/api';
+import api from '../utils/api';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiHelpers } from '../utils/api';
+import api from '../utils/api';
 
 const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -33,7 +33,7 @@ const useAuth = () => {
   const sendOtp = async (phone) => {
     setOtpLoading(true);
     try {
-      const response = await apiHelpers.sendOtp(phone);
+      const response = await api.post('/auth/send-otp', { phone });
 
       if (response.success) {
         console.log(`OTP sent to +91${phone}`);
@@ -59,7 +59,7 @@ const useAuth = () => {
   const resendOtp = async (phone) => {
     setOtpLoading(true);
     try {
-      const response = await apiHelpers.resendOtp(phone);
+      const response = await api.post('/auth/resend-otp', { phone });
 
       if (response.success) {
         console.log('OTP resent successfully!');
@@ -85,7 +85,7 @@ const useAuth = () => {
   const verifyOtp = async (phone, otp) => {
     setLoading(true);
     try {
-      const response = await apiHelpers.verifyOtp(phone, otp);
+      const response = await api.post('/auth/verify-otp', { phone, otp });
 
       if (response.success) {
         const { token, user: userData } = response.data;
@@ -115,7 +115,7 @@ const useAuth = () => {
   const updateProfile = async (profileData) => {
     setLoading(true);
     try {
-      const response = await apiHelpers.updateProfile(profileData);
+      const response = await api.put('/auth/profile', profileData);
 
       if (response.success) {
         const updatedUser = response.data.user;
@@ -142,7 +142,7 @@ const useAuth = () => {
   // Get fresh user profile
   const refreshProfile = async () => {
     try {
-      const response = await apiHelpers.getProfile();
+      const response = await api.get('/auth/me');
 
       if (response.success) {
         const userData = response.data.user;
@@ -159,7 +159,7 @@ const useAuth = () => {
   // Logout
   const logout = async () => {
     try {
-      await apiHelpers.logout();
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -190,7 +190,7 @@ const useAuth = () => {
   const forgotPassword = async (email) => {
     setLoading(true);
     try {
-      const response = await apiHelpers.forgotPassword(email);
+      const response = await api.post('/auth/forgot-password', { email });
 
       if (response.success) {
         console.log('Password reset link sent to your email!');
@@ -212,7 +212,7 @@ const useAuth = () => {
   const register = async (userData) => {
     setLoading(true);
     try {
-      const response = await apiHelpers.register(userData);
+      const response = await api.post('/auth/register', userData);
 
       if (response.success) {
         console.log('Account created successfully!');
@@ -234,7 +234,7 @@ const useAuth = () => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await apiHelpers.login(email, password);
+      const response = await api.post('/auth/login', { email, password });
 
       if (response.success) {
         const { token, user: userData } = response;

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FiSearch, 
-  FiMapPin, 
-  FiStar, 
-  FiShield, 
-  FiUsers, 
-  FiHome,
-  FiMail,
-  FiPhone
-} from 'react-icons/fi';
+  Search, 
+  MapPin, 
+  Star, 
+  Shield, 
+  Users, 
+  Home as HomeIcon,
+  Mail,
+  Phone
+} from '../utils/iconMappings';
 import SuccessStories from '../components/SuccessStories';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
@@ -95,7 +95,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
       {/* Hero Section */}
-      <section className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
+      <section className="relative pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-orange-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse"></div>
@@ -107,7 +107,7 @@ const Home = () => {
           <div className="mb-8">
             <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl text-base font-bold mb-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-white/20">
               <div className="relative">
-                <FiShield className="w-5 h-5 text-white" />
+                <Shield className="w-5 h-5 text-white" />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow- rounded-full flex items-center justify-center">
                   
                 </div>
@@ -194,19 +194,19 @@ const Home = () => {
               {/* Key Features Pills */}
               <div className="flex flex-wrap justify-center gap-3 mb-8">
                 <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
-                  <FiShield className="w-4 h-4 text-green-400" />
+                  <Shield className="w-4 h-4 text-green-400" />
                   <span className="text-green-300 font-semibold text-sm">24/7 Security</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
-                  <FiUsers className="w-4 h-4 text-blue-400" />
+                  <Users className="w-4 h-4 text-blue-400" />
                   <span className="text-blue-300 font-semibold text-sm">Verified Owners</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
-                  <FiHome className="w-4 h-4 text-purple-400" />
+                  <HomeIcon className="w-4 h-4 text-purple-400" />
                   <span className="text-purple-300 font-semibold text-sm">Premium Amenities</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 border border-orange-400/30 rounded-full backdrop-blur-sm">
-                  <FiMapPin className="w-4 h-4 text-orange-400" />
+                  <MapPin className="w-4 h-4 text-orange-400" />
                   <span className="text-orange-300 font-semibold text-sm">Prime Locations</span>
                 </div>
               </div>
@@ -221,7 +221,7 @@ const Home = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center gap-3">
-                  <FiSearch className="w-6 h-6" />
+                  <Search className="w-6 h-6" />
                   <span>Find Student Housing</span>
                   <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                 </div>
@@ -233,7 +233,7 @@ const Home = () => {
                 className="group px-10 py-5 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:bg-white/10 backdrop-blur-sm border-2 border-blue-200/60 dark:border-white/20 text-blue-700 dark:text-white rounded-2xl font-bold text-xl hover:from-blue-100/90 hover:to-purple-100/90 dark:hover:bg-white/20 hover:border-blue-300/80 dark:hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg"
               >
                 <div className="flex items-center gap-3">
-                  <FiUsers className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   <span>Register Now</span>
                 </div>
               </button>
@@ -346,7 +346,7 @@ const Home = () => {
                     {city.name}
                   </h3>
                   <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-bold text-lg mb-3 shadow-lg` }>
-                    <FiHome className="w-4 h-4 mr-2" />
+                    <HomeIcon className="w-4 h-4 mr-2" />
                     {city.rooms}
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-4">{city.popular}</p>
@@ -354,7 +354,7 @@ const Home = () => {
                   {/* Action Button */}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className={`inline-flex items-center px-6 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow duration-300` }>
-                      <FiSearch className="w-4 h-4 mr-2" />
+                      <Search className="w-4 h-4 mr-2" />
                       Explore Rooms
                     </div>
                   </div>
@@ -374,12 +374,12 @@ const Home = () => {
             </p>
             <div className="flex justify-center items-center mt-4 space-x-4">
               <div className="flex items-center space-x-2 text-green-400">
-                <FiShield className="w-5 h-5" />
+                <Shield className="w-5 h-5" />
                 <span className="text-sm font-medium">100% Verified Properties</span>
               </div>
               <div className="w-px h-4 bg-gray-600"></div>
               <div className="flex items-center space-x-2 text-blue-400">
-                <FiStar className="w-5 h-5" />
+                <Star className="w-5 h-5" />
                 <span className="text-sm font-medium">Premium Locations</span>
               </div>
             </div>
@@ -394,7 +394,7 @@ const Home = () => {
           {/* Section Header */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full text-sm font-bold mb-6 shadow-lg">
-              <FiStar className="w-4 h-4" />
+              <Star className="w-4 h-4" />
               <span>Why Students Trust Us</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-black mb-4">
@@ -411,7 +411,7 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { 
-                icon: FiUsers, 
+                icon: Users, 
                 label: "Daily Visitors", 
                 value: "50,000+", 
                 color: "from-blue-500 to-cyan-500",
@@ -419,7 +419,7 @@ const Home = () => {
                 description: "Students explore daily"
               },
               { 
-                icon: FiHome, 
+                icon: HomeIcon, 
                 label: "Rooms Booked", 
                 value: "6,500+", 
                 color: "from-green-500 to-emerald-500",
@@ -427,7 +427,7 @@ const Home = () => {
                 description: "Successfully booked daily"
               },
               { 
-                icon: FiShield, 
+                icon: Shield, 
                 label: "Safety Score", 
                 value: "100%", 
                 color: "from-purple-500 to-violet-500",
@@ -435,7 +435,7 @@ const Home = () => {
                 description: "Verified & secure"
               },
               { 
-                icon: FiShield, 
+                icon: Shield, 
                 label: "Girls Safety", 
                 value: "Premium", 
                 color: "from-pink-500 to-rose-500",

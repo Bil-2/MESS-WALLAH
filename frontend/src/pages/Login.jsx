@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight 
-} from '../utils/iconMappings';
+import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import toast from 'react-hot-toast';
 
@@ -37,7 +35,7 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'phone') {
       const cleanedValue = value.replace(/\D/g, '').slice(0, 10);
       setFormData({
@@ -73,7 +71,7 @@ const Login = () => {
     try {
       setLoading(true);
       const result = await sendOtp(formData.phone);
-      
+
       if (result.success) {
         setOtpSent(true);
         toast.success('OTP sent successfully!');
@@ -100,7 +98,7 @@ const Login = () => {
     try {
       setVerifyingOtp(true);
       const result = await verifyOtp(formData.phone, otp);
-      
+
       if (result.success) {
         toast.success('Login successful!');
         navigate('/profile');
@@ -132,7 +130,7 @@ const Login = () => {
     try {
       setLoading(true);
       const result = await login(formData.email, formData.password);
-      
+
       if (result.success) {
         toast.success('Login successful!');
         navigate('/profile');
@@ -141,21 +139,21 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Error logging in:', error);
-      
+
       // Handle specific error cases
       if (error.message.includes('complete your registration')) {
         toast.error('Please complete your registration first');
-        setErrors({ 
+        setErrors({
           email: 'You signed up using phone verification. Please complete your profile by registering with a password.',
           action: 'complete_registration'
         });
-        
+
         // Optionally redirect to register page after a delay
         setTimeout(() => {
           navigate('/register');
         }, 3000);
       } else if (error.message.includes('Invalid credentials')) {
-        setErrors({ 
+        setErrors({
           email: 'Invalid email or password. Please check your credentials and try again.',
           password: 'Please verify your password is correct'
         });
@@ -176,16 +174,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center pt-24 pb-6 px-4 relative overflow-hidden fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center py-6 px-4 relative overflow-hidden fade-in">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 text-6xl opacity-10 pulse">
           🏠
         </div>
-        <div className="absolute top-40 right-20 text-4xl opacity-10 pulse" style={{animationDelay: '1s'}}>
+        <div className="absolute top-40 right-20 text-4xl opacity-10 pulse" style={{ animationDelay: '1s' }}>
           🔑
         </div>
-        <div className="absolute bottom-32 left-20 text-5xl opacity-10 pulse" style={{animationDelay: '2s'}}>
+        <div className="absolute bottom-32 left-20 text-5xl opacity-10 pulse" style={{ animationDelay: '2s' }}>
           🛏️
         </div>
       </div>

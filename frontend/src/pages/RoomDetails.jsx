@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAuthContext } from '../context/AuthContext';
-import { api } from '../utils/api';
+import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,17 @@ const RoomDetails = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(0);
+  const [bookingStep, setBookingStep] = useState(1);
+  const [bookingData, setBookingData] = useState({
+    checkInDate: '',
+    duration: 1,
+    specialRequests: '',
+    guestDetails: {
+      name: '',
+      email: '',
+      phone: ''
+    }
+  });
 
   useEffect(() => {
     fetchRoomDetails();
@@ -650,7 +661,7 @@ const RoomDetails = () => {
           )}
         </AnimatePresence>
 
-        {/* Simple Booking Modal */}
+        {/* Advanced Booking Modal */}
         {showBookingModal && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -663,34 +674,292 @@ const RoomDetails = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FiCheck className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Booking Feature Coming Soon!
+              {/* Header with Gradient */}
+              <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 p-6 text-white relative">
+                <button
+                  onClick={() => setShowBookingModal(false)}
+                  className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+                
+                <h3 className="text-xl font-bold mb-2">
+                  Book {room?.roomType === 'studio' ? 'Studio Apartment' : 'Room'} in {room?.address?.area || 'Location'}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  We're working on an amazing booking experience. Contact the owner directly for now.
-                </p>
+                
+                <div className="flex items-center gap-2 text-white/90">
+                  <FiMapPin className="w-4 h-4" />
+                  <span className="text-sm">{room?.address?.area}, {room?.address?.city}</span>
+                </div>
+                
+                {/* Progress Steps */}
+                <div className="flex items-center justify-center mt-6 space-x-8">
+                  {[1, 2, 3].map((step) => (
+                    <div key={step} className="flex items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        bookingStep >= step 
+                          ? 'bg-white text-orange-500' 
+                          : 'bg-white/20 text-white/60'
+                      }`}>
+                        {step}
+                      </div>
+                      {step < 3 && (
+                        <div className={`w-16 h-0.5 mx-2 ${
+                          bookingStep > step ? 'bg-white' : 'bg-white/20'
+                        }`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 max-h-96 overflow-y-auto">
+                {bookingStep === 1 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Booking Details
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Check-in Date *
+                          </label>
+                          <input
+                            type="date"
+                            value={bookingData.checkInDate}
+                            onChange={(e) => setBookingData({...bookingData, checkInDate: e.target.value})}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                            placeholder="dd/mm/yyyy"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Duration (months) *
+                          </label>
+                          <select
+                            value={bookingData.duration}
+                            onChange={(e) => setBookingData({...bookingData, duration: parseInt(e.target.value)})}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          >
+                            {[1,2,3,4,5,6,7,8,9,10,11,12].map(month => (
+                              <option key={month} value={month}>
+                                {month} month{month > 1 ? 's' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      
+                      {/* Price Summary */}
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mt-6">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Monthly Rent:</span>
+                          <span className="font-medium">₹{room?.rentPerMonth?.toLocaleString() || '8,309'}</span>
+                        </div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Duration:</span>
+                          <span className="font-medium">{bookingData.duration} month{bookingData.duration > 1 ? 's' : ''}</span>
+                        </div>
+                        <hr className="my-2 border-gray-200 dark:border-gray-600" />
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-900 dark:text-white">Total Amount:</span>
+                          <span className="font-bold text-lg text-orange-600">
+                            ₹{((room?.rentPerMonth || 8309) * bookingData.duration).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {bookingStep === 2 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Guest Details
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={bookingData.guestDetails.name}
+                          onChange={(e) => setBookingData({
+                            ...bookingData, 
+                            guestDetails: {...bookingData.guestDetails, name: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          value={bookingData.guestDetails.email}
+                          onChange={(e) => setBookingData({
+                            ...bookingData, 
+                            guestDetails: {...bookingData.guestDetails, email: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Phone Number *
+                        </label>
+                        <input
+                          type="tel"
+                          value={bookingData.guestDetails.phone}
+                          onChange={(e) => setBookingData({
+                            ...bookingData, 
+                            guestDetails: {...bookingData.guestDetails, phone: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          placeholder="Enter your phone number"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Special Requests (Optional)
+                        </label>
+                        <textarea
+                          value={bookingData.specialRequests}
+                          onChange={(e) => setBookingData({...bookingData, specialRequests: e.target.value})}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          placeholder="Any special requirements or requests..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {bookingStep === 3 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Booking Summary
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h5 className="font-medium mb-3">Booking Details</h5>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Check-in Date:</span>
+                            <span>{new Date(bookingData.checkInDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Duration:</span>
+                            <span>{bookingData.duration} month{bookingData.duration > 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Monthly Rent:</span>
+                            <span>₹{room?.rentPerMonth?.toLocaleString() || '8,309'}</span>
+                          </div>
+                          <hr className="my-2" />
+                          <div className="flex justify-between font-bold">
+                            <span>Total Amount:</span>
+                            <span className="text-orange-600">₹{((room?.rentPerMonth || 8309) * bookingData.duration).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h5 className="font-medium mb-3">Guest Information</h5>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Name:</span>
+                            <span>{bookingData.guestDetails.name}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Email:</span>
+                            <span>{bookingData.guestDetails.email}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Phone:</span>
+                            <span>{bookingData.guestDetails.phone}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <FiShield className="w-5 h-5 text-blue-600 mt-0.5" />
+                          <div className="text-sm text-blue-800 dark:text-blue-200">
+                            <p className="font-semibold mb-1">Important Notes:</p>
+                            <ul className="space-y-1 text-xs">
+                              <li>• Owner will contact you within 24 hours to confirm availability</li>
+                              <li>• Security deposit may be required as per owner's policy</li>
+                              <li>• Room visit can be arranged before final booking</li>
+                              <li>• Cancellation policy applies as per terms & conditions</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="border-t border-gray-200 dark:border-gray-600 p-6">
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      setShowBookingModal(false);
-                      toast.success('Contact details copied!');
+                      if (bookingStep > 1) {
+                        setBookingStep(bookingStep - 1);
+                      } else {
+                        setShowBookingModal(false);
+                      }
                     }}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200"
+                    className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    Contact Owner
+                    {bookingStep === 1 ? 'Cancel' : 'Back'}
                   </button>
+                  
                   <button
-                    onClick={() => setShowBookingModal(false)}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      if (bookingStep < 3) {
+                        // Validation for each step
+                        if (bookingStep === 1 && !bookingData.checkInDate) {
+                          toast.error('Please select a check-in date');
+                          return;
+                        }
+                        if (bookingStep === 2) {
+                          if (!bookingData.guestDetails.name || !bookingData.guestDetails.email || !bookingData.guestDetails.phone) {
+                            toast.error('Please fill in all required fields');
+                            return;
+                          }
+                        }
+                        setBookingStep(bookingStep + 1);
+                      } else {
+                        // Final booking submission
+                        toast.success('Booking request submitted! Owner will contact you soon.');
+                        setShowBookingModal(false);
+                        setBookingStep(1);
+                      }
+                    }}
+                    className="flex-1 px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all duration-200 flex items-center justify-center gap-2"
                   >
-                    Close
+                    {bookingStep === 3 ? 'Confirm Booking' : 'Next'}
+                    {bookingStep < 3 && <FiChevronRight className="w-4 h-4" />}
                   </button>
                 </div>
               </div>

@@ -6,12 +6,11 @@ import {
   User,
   Menu,
   X,
-  LogOut,
   Settings,
   Bell,
   Search,
   Shield
-} from 'lucide-react';
+} from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import ThemeToggle from './ThemeToggle';
 
@@ -125,8 +124,9 @@ const Navbar = () => {
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors btn-hover"
+                  title="Sign Out"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
@@ -200,7 +200,7 @@ const Navbar = () => {
                     onClick={handleLogout}
                     className="w-full flex items-center px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover-lift"
                   >
-                    <LogOut className="w-5 h-5 mr-3" />
+                    <X className="w-5 h-5 mr-3" />
                     Sign Out
                   </button>
                 </div>

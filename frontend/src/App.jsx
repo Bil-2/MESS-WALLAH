@@ -53,7 +53,7 @@ function App() {
         >
           <div className="App min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
             <Navbar />
-            <main className="smooth-transition">
+            <main className="smooth-transition pt-16 pb-20 md:pb-8">
               <Suspense fallback={<PageLoadingFallback />}>
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -77,6 +77,7 @@ function App() {
                   <Route path="/booking-policy" element={<BookingPolicy />} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/report" element={<Report />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/favorites" element={<Favorites />} />
                 </Routes>

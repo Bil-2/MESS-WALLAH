@@ -3,6 +3,7 @@
 
 // API Utilities
 export { default as api, roomsAPI, authAPI, bookingAPI, userAPI, usersAPI } from './api';
+export { default } from './api'; // Also export as default for compatibility
 export { default as apiCache } from './apiCache';
 
 // Animation Utilities

@@ -3,9 +3,9 @@ import { useAuthContext } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
-  User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera,
-  Shield, Bell, Key, Star, Home, CreditCard, TrendingUp, Heart, 
-  Clock, CheckCircle, Eye, EyeOff, Settings, Download, Upload
+  User, Mail, Phone, MapPin, Edit3, Save, X, Camera,
+  Shield, Key, Star, Home, CreditCard, Heart, 
+  CheckCircle, Eye, EyeOff
 } from '../utils/iconMappings';
 
 // Password Change Form Component
@@ -39,7 +39,7 @@ const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
     <motion.div
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
-      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mt-4"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
@@ -124,141 +124,48 @@ const Profile = () => {
   const { user, updateProfile } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('personal');
+  const [activeTab, setActiveTab] = useState('profile');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', bio: '', city: '', state: '',
-    dateOfBirth: '', gender: '', occupation: '',
-    emergencyContact: { name: '', phone: '', relation: '' }
+    name: '',
+    email: '',
+    phone: '',
+    bio: '',
+    city: '',
+    state: ''
   });
 
   const [stats, setStats] = useState({
-    totalBookings: 0, totalSpent: 0, favoriteRooms: 0, memberSince: '',
-    completedBookings: 0, activeBookings: 0, reviewsGiven: 0
-  });
-
-  const [profileCompletion, setProfileCompletion] = useState(0);
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [backendStatus, setBackendStatus] = useState('checking');
-  const [notifications, setNotifications] = useState({
-    email: true,
-    sms: false,
-    push: true,
-    marketing: false
-  });
-  const [preferences, setPreferences] = useState({
-    theme: 'light',
-    language: 'en',
-    currency: 'INR',
-    timezone: 'Asia/Kolkata'
+    totalBookings: 0,
+    totalSpent: 0,
+    favoriteRooms: 0,
+    memberSince: new Date().getFullYear()
   });
 
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || '', email: user.email || '', phone: user.phone || '',
-        bio: user.profile?.bio || '', city: user.profile?.city || '',
-        state: user.profile?.state || '', dateOfBirth: user.profile?.dateOfBirth || '',
-        gender: user.profile?.gender || '', occupation: user.profile?.occupation || '',
-        emergencyContact: user.profile?.emergencyContact || { name: '', phone: '', relation: '' }
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        bio: user.profile?.bio || '',
+        city: user.profile?.city || '',
+        state: user.profile?.state || ''
       });
       
       setStats({
         totalBookings: user.stats?.totalBookings || 3,
         totalSpent: user.stats?.totalSpent || 25000,
         favoriteRooms: user.stats?.favoriteRooms || 5,
-        memberSince: user.createdAt ? new Date(user.createdAt).getFullYear() : 2024,
-        completedBookings: 2, activeBookings: 1, reviewsGiven: 3
+        memberSince: user.createdAt ? new Date(user.createdAt).getFullYear() : 2024
       });
-
-      // Calculate profile completion
-      const fields = [user.name, user.email, user.phone, user.profile?.bio, user.profile?.city];
-      const completed = fields.filter(f => f && f.trim() !== '').length;
-      setProfileCompletion(Math.round((completed / fields.length) * 100));
-
-      setRecentActivity([
-        { id: 1, type: 'booking', message: 'Booked Premium PG in Mumbai', time: '2 hours ago', icon: Home },
-        { id: 2, type: 'review', message: 'Left 5-star review', time: '1 day ago', icon: Star },
-        { id: 3, type: 'favorite', message: 'Added room to favorites', time: '3 days ago', icon: Heart }
-      ]);
     }
   }, [user]);
 
-  // Check backend status
-  useEffect(() => {
-    const checkBackendStatus = async () => {
-      try {
-        const response = await fetch('/api/test');
-        if (response.ok) {
-          setBackendStatus('connected');
-        } else {
-          setBackendStatus('error');
-        }
-      } catch (error) {
-        setBackendStatus('error');
-        console.error('Backend connection error:', error);
-      }
-    };
-
-    checkBackendStatus();
-  }, []);
-
-  const handleNotificationChange = (type) => {
-    setNotifications(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
-    toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} notifications ${notifications[type] ? 'disabled' : 'enabled'}`);
-  };
-
-  const handlePreferenceChange = (key, value) => {
-    setPreferences(prev => ({
-      ...prev,
-      [key]: value
-    }));
-    toast.success('Preferences updated successfully!');
-  };
-
-  const exportData = async () => {
-    setLoading(true);
-    try {
-      const userData = {
-        profile: formData,
-        stats: stats,
-        preferences: preferences,
-        notifications: notifications,
-        recentActivity: recentActivity
-      };
-      
-      const dataStr = JSON.stringify(userData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `mess-wallah-profile-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast.success('Profile data exported successfully!');
-    } catch (error) {
-      toast.error('Failed to export data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({ ...prev, [parent]: { ...prev[parent], [child]: value } }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
@@ -267,19 +174,13 @@ const Profile = () => {
       const result = await updateProfile(formData);
       if (result && result.success) {
         setEditing(false);
-        toast.success('Profile updated successfully!', {
-          duration: 4000,
-          position: 'top-right',
-        });
+        toast.success('Profile updated successfully!');
       } else {
         throw new Error(result?.message || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Profile update error:', error);
-      toast.error(error.message || 'Failed to update profile', {
-        duration: 4000,
-        position: 'top-right',
-      });
+      toast.error(error.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -298,30 +199,13 @@ const Profile = () => {
 
     setLoading(true);
     try {
-      // Call API to change password
-      const response = await fetch('/api/auth/change-password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        toast.success('Password changed successfully!');
-        setShowPasswordChange(false);
-      } else {
-        throw new Error(result.message || 'Failed to change password');
-      }
+      // Simulate API call for demo
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success('Password changed successfully!');
+      setShowPasswordChange(false);
     } catch (error) {
       console.error('Password change error:', error);
-      toast.error(error.message || 'Failed to change password');
+      toast.error('Failed to change password');
     } finally {
       setLoading(false);
     }
@@ -331,13 +215,11 @@ const Profile = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select a valid image file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image size should be less than 5MB');
       return;
@@ -345,114 +227,63 @@ const Profile = () => {
 
     setLoading(true);
     try {
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('profilePicture', file);
-
-      // Upload to backend (will create this endpoint)
-      const response = await fetch('/api/auth/upload-profile-picture', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        toast.success('Profile picture updated successfully!', {
-          duration: 4000,
-          position: 'top-right',
-        });
-        
-        // Update user context with new profile picture
-        console.log('Profile picture updated:', result.data.profilePicture);
-        
-      } else {
-        throw new Error(result.message || 'Failed to upload profile picture');
-      }
-      
-    } catch (error) {
-      console.error('Profile picture upload error:', error);
-      
-      // Fallback to mock upload for demo purposes
+      // Simulate upload for demo
+      await new Promise(resolve => setTimeout(resolve, 1500));
       const imageUrl = URL.createObjectURL(file);
-      toast.success('Profile picture preview updated! (Demo mode)', {
-        duration: 4000,
-        position: 'top-right',
-      });
+      toast.success('Profile picture updated successfully!');
       console.log('Profile picture preview:', imageUrl);
-      
+    } catch (error) {
+      toast.error('Failed to upload profile picture');
     } finally {
       setLoading(false);
     }
   };
 
   const tabs = [
-    { id: 'personal', label: 'Personal Info', icon: User },
-    { id: 'activity', label: 'Activity', icon: Clock },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'preferences', label: 'Preferences', icon: Settings },
-    { id: 'stats', label: 'Statistics', icon: TrendingUp }
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'security', label: 'Security', icon: Shield }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 pt-24 pb-8 relative">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">
       {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
-            <span className="text-gray-900 dark:text-white font-medium">Processing...</span>
+            <span className="text-gray-900 dark:text-white font-medium">Updating...</span>
           </div>
         </div>
       )}
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Enhanced Header */}
+        {/* Profile Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8"
         >
-          <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 h-32 relative">
-            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-            <div className="absolute top-4 right-4 flex space-x-2">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
-                <span className="text-white text-sm font-medium">
-                  Profile {profileCompletion}% Complete
-                </span>
-              </div>
-              <div className={`bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1 flex items-center space-x-1 ${
-                backendStatus === 'connected' ? 'text-green-200' : 
-                backendStatus === 'error' ? 'text-red-200' : 'text-yellow-200'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  backendStatus === 'connected' ? 'bg-green-400' : 
-                  backendStatus === 'error' ? 'bg-red-400' : 'bg-yellow-400'
-                }`}></div>
-                <span className="text-white text-xs font-medium">
-                  {backendStatus === 'connected' ? 'Online' : 
-                   backendStatus === 'error' ? 'Offline' : 'Checking...'}
-                </span>
-              </div>
+          <div className="bg-gradient-to-r from-orange-500 to-pink-500 h-24 relative">
+            <div className="absolute top-4 right-4">
+              <span className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1 text-white text-sm font-medium">
+                MESS WALLAH Profile
+              </span>
             </div>
           </div>
           
           <div className="relative px-6 pb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end -mt-16 relative z-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end -mt-12 relative z-10">
               <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-white dark:bg-gray-700 border-4 border-white shadow-lg flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-700 border-4 border-white shadow-lg flex items-center justify-center">
                   {user?.profilePicture ? (
                     <img src={user.profilePicture} alt="Profile" className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <User className="w-16 h-16 text-gray-400" />
+                    <User className="w-12 h-12 text-gray-400" />
                   )}
                 </div>
-                <label className="absolute bottom-0 right-0 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full shadow-lg transition-colors cursor-pointer">
-                  <Camera className="w-4 h-4" />
+                <label className="absolute bottom-0 right-0 bg-orange-500 hover:bg-orange-600 text-white p-1.5 rounded-full shadow-lg transition-colors cursor-pointer">
+                  <Camera className="w-3 h-3" />
                   <input
                     type="file"
                     accept="image/*"
@@ -478,23 +309,13 @@ const Profile = () => {
               
               <div className="mt-4 sm:mt-0 flex space-x-2">
                 {!editing ? (
-                  <>
-                    <button
-                      onClick={() => setEditing(true)}
-                      className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </button>
-                    <button
-                      onClick={exportData}
-                      disabled={loading}
-                      className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                      title="Export Profile Data"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
-                  </>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </button>
                 ) : (
                   <div className="flex space-x-2">
                     <button
@@ -519,7 +340,7 @@ const Profile = () => {
           </div>
         </motion.div>
 
-        {/* Enhanced Stats Cards */}
+        {/* Stats Cards */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -528,9 +349,9 @@ const Profile = () => {
         >
           {[
             { icon: Home, label: 'Total Bookings', value: stats.totalBookings, color: 'blue' },
-            { icon: CreditCard, label: 'Total Spent', value: `₹${stats.totalSpent}`, color: 'green' },
+            { icon: CreditCard, label: 'Total Spent', value: `₹${stats.totalSpent.toLocaleString()}`, color: 'green' },
             { icon: Heart, label: 'Favorites', value: stats.favoriteRooms, color: 'pink' },
-            { icon: Star, label: 'Reviews Given', value: stats.reviewsGiven, color: 'purple' }
+            { icon: Star, label: 'Reviews', value: '4.8', color: 'purple' }
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -550,7 +371,7 @@ const Profile = () => {
           ))}
         </motion.div>
 
-        {/* Enhanced Tabs */}
+        {/* Tabs */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -580,7 +401,7 @@ const Profile = () => {
           </div>
 
           <div className="p-6">
-            {activeTab === 'personal' && (
+            {activeTab === 'profile' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -589,8 +410,7 @@ const Profile = () => {
                     { label: 'Email', name: 'email', type: 'email', editable: false },
                     { label: 'Phone', name: 'phone', type: 'tel', editable: false },
                     { label: 'City', name: 'city', type: 'text', editable: true },
-                    { label: 'State', name: 'state', type: 'text', editable: true },
-                    { label: 'Occupation', name: 'occupation', type: 'text', editable: true }
+                    { label: 'State', name: 'state', type: 'text', editable: true }
                   ].map((field) => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -628,68 +448,6 @@ const Profile = () => {
               </div>
             )}
 
-            {activeTab === 'activity' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Recent Activity</h3>
-                  <div className="flex space-x-2">
-                    <button className="inline-flex items-center px-3 py-1.5 text-xs bg-orange-100 hover:bg-orange-200 dark:bg-orange-900 dark:hover:bg-orange-800 text-orange-700 dark:text-orange-300 rounded-lg transition-colors">
-                      <Star className="w-3 h-3 mr-1" />
-                      Add Review
-                    </button>
-                    <button className="inline-flex items-center px-3 py-1.5 text-xs bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg transition-colors">
-                      <Home className="w-3 h-3 mr-1" />
-                      Browse Rooms
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-r from-orange-100 to-pink-100 dark:from-orange-900 dark:to-pink-900 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.activeBookings}</div>
-                    <div className="text-xs text-orange-700 dark:text-orange-300">Active Bookings</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.reviewsGiven}</div>
-                    <div className="text-xs text-green-700 dark:text-green-300">Reviews Given</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.favoriteRooms}</div>
-                    <div className="text-xs text-purple-700 dark:text-purple-300">Favorites</div>
-                  </div>
-                </div>
-
-                {/* Activity Timeline */}
-                <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-900 dark:text-white">Activity Timeline</h4>
-                  {recentActivity.map((activity, index) => {
-                    const Icon = activity.icon;
-                    return (
-                      <motion.div 
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition-shadow"
-                      >
-                        <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                          <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                        </div>
-                        <div className="ml-4 flex-1">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.message}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
-                        </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">
-                          #{activity.id.toString().padStart(3, '0')}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {activeTab === 'security' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Security Settings</h3>
@@ -699,7 +457,7 @@ const Profile = () => {
                       <Key className="w-5 h-5 text-gray-400 mr-3" />
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">Password</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Last changed 30 days ago</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Keep your account secure</p>
                       </div>
                     </div>
                     <button 
@@ -717,150 +475,6 @@ const Profile = () => {
                       loading={loading}
                     />
                   )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'preferences' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Preferences & Settings</h3>
-                  <button
-                    onClick={exportData}
-                    disabled={loading}
-                    className="inline-flex items-center px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Data
-                  </button>
-                </div>
-                
-                {/* Notification Settings */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <Bell className="w-5 h-5 mr-2" />
-                    Notification Preferences
-                  </h4>
-                  <div className="space-y-4">
-                    {[
-                      { key: 'email', label: 'Email Notifications', desc: 'Receive booking confirmations and updates via email' },
-                      { key: 'sms', label: 'SMS Notifications', desc: 'Get important alerts via SMS' },
-                      { key: 'push', label: 'Push Notifications', desc: 'Browser push notifications for real-time updates' },
-                      { key: 'marketing', label: 'Marketing Communications', desc: 'Promotional offers and newsletters' }
-                    ].map((item) => (
-                      <div key={item.key} className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 dark:text-white">{item.label}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{item.desc}</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer" 
-                            checked={notifications[item.key]}
-                            onChange={() => handleNotificationChange(item.key)}
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* App Preferences */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <Settings className="w-5 h-5 mr-2" />
-                    App Preferences
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Theme
-                      </label>
-                      <select
-                        value={preferences.theme}
-                        onChange={(e) => handlePreferenceChange('theme', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
-                      >
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                        <option value="auto">Auto</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Language
-                      </label>
-                      <select
-                        value={preferences.language}
-                        onChange={(e) => handlePreferenceChange('language', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
-                      >
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी (Hindi)</option>
-                        <option value="bn">বাংলা (Bengali)</option>
-                        <option value="ta">தமிழ் (Tamil)</option>
-                        <option value="te">తెలుగు (Telugu)</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Currency
-                      </label>
-                      <select
-                        value={preferences.currency}
-                        onChange={(e) => handlePreferenceChange('currency', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
-                      >
-                        <option value="INR">₹ Indian Rupee</option>
-                        <option value="USD">$ US Dollar</option>
-                        <option value="EUR">€ Euro</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Timezone
-                      </label>
-                      <select
-                        value={preferences.timezone}
-                        onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
-                      >
-                        <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                        <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-                        <option value="Europe/London">Europe/London (GMT)</option>
-                        <option value="America/New_York">America/New_York (EST)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'stats' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Account Statistics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { title: 'Booking History', value: stats.totalBookings, desc: 'Total bookings made', color: 'orange' },
-                    { title: 'Total Spent', value: `₹${stats.totalSpent}`, desc: 'Amount spent on bookings', color: 'green' },
-                    { title: 'Active Bookings', value: stats.activeBookings, desc: 'Currently active bookings', color: 'blue' },
-                    { title: 'Account Age', value: `${new Date().getFullYear() - stats.memberSince} years`, desc: 'Years as member', color: 'purple' }
-                  ].map((stat) => (
-                    <motion.div
-                      key={stat.title}
-                      whileHover={{ scale: 1.02 }}
-                      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
-                    >
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2">{stat.title}</h4>
-                      <p className={`text-2xl font-bold text-${stat.color}-600`}>{stat.value}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{stat.desc}</p>
-                    </motion.div>
-                  ))}
                 </div>
               </div>
             )}

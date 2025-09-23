@@ -4,7 +4,12 @@
   "description": "> **Complete accommodation marketplace with 100% API success rate guarantee**",
   "main": "test-all-apis.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:api": "node tests/run-all-tests.js",
+    "test:all": "node tests/run-all-tests.js",
+    "test:core": "node tests/api/test-all-apis.js",
+    "test:email": "node tests/api/test-email-apis.js",
+    "test:sms": "node tests/api/test-sms-apis.js"
   },
   "repository": {
     "type": "git",

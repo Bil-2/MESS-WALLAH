@@ -3,18 +3,16 @@ import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   Shield,
-  Bug,
   MessageSquare,
   User,
   Home,
   CreditCard,
-  Wifi,
   Phone,
   Mail,
   Send,
   CheckCircle,
   ArrowLeft
-} from 'lucide-react';
+} from '../utils/iconMappings';
 import { Link } from 'react-router-dom';
 
 const Report = () => {
@@ -36,9 +34,9 @@ const Report = () => {
     { id: 'safety', label: 'Safety Concern', icon: Shield, color: 'from-red-500 to-pink-500', description: 'Security, harassment, or safety issues' },
     { id: 'property', label: 'Property Issue', icon: Home, color: 'from-blue-500 to-indigo-500', description: 'Room conditions, maintenance, or cleanliness' },
     { id: 'payment', label: 'Payment Problem', icon: CreditCard, color: 'from-green-500 to-emerald-500', description: 'Billing, refunds, or payment issues' },
-    { id: 'technical', label: 'Technical Bug', icon: Bug, color: 'from-purple-500 to-violet-500', description: 'App bugs or technical problems' },
+    { id: 'technical', label: 'Technical Bug', icon: AlertTriangle, color: 'from-purple-500 to-violet-500', description: 'App bugs or technical problems' },
     { id: 'service', label: 'Service Issue', icon: MessageSquare, color: 'from-orange-500 to-yellow-500', description: 'Customer service or booking issues' },
-    { id: 'other', label: 'Other', icon: AlertTriangle, color: 'from-gray-500 to-slate-500', description: 'Any other concerns or feedback' }
+    { id: 'other', label: 'Other', icon: User, color: 'from-gray-500 to-slate-500', description: 'Any other concerns or feedback' }
   ];
 
   const priorities = [

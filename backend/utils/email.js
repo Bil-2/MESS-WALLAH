@@ -25,7 +25,7 @@ const createTransporter = () => {
     // Use console logging in development
     return {
       sendMail: async (mailOptions) => {
-        logger.info('📧 [DEV EMAIL FALLBACK]', {
+        console.log('📧 [DEV EMAIL FALLBACK]', {
           to: mailOptions.to,
           subject: mailOptions.subject,
           text: mailOptions.text || 'No text content',

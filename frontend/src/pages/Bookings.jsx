@@ -3,7 +3,7 @@ import {
   Calendar, MapPin, Clock, CreditCard, Eye, Download, Filter, Search, Home 
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
-import { api } from '../utils/api';
+import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
