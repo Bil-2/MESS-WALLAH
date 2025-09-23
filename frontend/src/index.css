@@ -13,6 +13,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import responsive design system */
+@import './styles/responsive.css';
+
 /* Performance Optimizations */
 @layer base {
   /* Hardware acceleration for smooth animations */

@@ -1,14 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
+// MESS WALLAH - Rocket-Speed Vite Configuration
 export default defineConfig({
   plugins: [
     react({
-      // Enable React Fast Refresh
+      // Enable React Fast Refresh for instant updates
       fastRefresh: true,
-      // Optimize JSX runtime
-      jsxRuntime: 'automatic'
+      // Optimize JSX runtime for better performance
+      jsxRuntime: 'automatic',
+      babel: {
+        plugins: [
+          // Remove console.log in production
+          process.env.NODE_ENV === 'production' && 'babel-plugin-transform-remove-console'
+        ].filter(Boolean)
+      }
     })
   ],
   esbuild: {
@@ -27,7 +33,7 @@ export default defineConfig({
       },
       target: 'es2020'
     },
-    // Pre-bundle these dependencies for faster loading
+    // Pre-bundle these dependencies for rocket-fast loading
     include: [
       'react',
       'react-dom',
@@ -35,8 +41,15 @@ export default defineConfig({
       'framer-motion',
       'react-hot-toast',
       'react-icons/fi',
-      'axios'
-    ]
+      'react-icons/md',
+      'react-icons/bs',
+      'axios',
+      'date-fns',
+      'js-cookie',
+      'socket.io-client'
+    ],
+    // Force optimization of these packages
+    force: true
   },
   server: {
     port: 5173,

@@ -23,7 +23,7 @@ router.get('/dashboard', protect, authorize('admin'), async (req, res) => {
         $group: {
           _id: '$roomType',
           count: { $sum: 1 },
-          avgPrice: { $avg: '$price' }
+          avgPrice: { $avg: '$rentPerMonth' }
         }
       }
     ]);
@@ -31,7 +31,7 @@ router.get('/dashboard', protect, authorize('admin'), async (req, res) => {
     // Get recent bookings
     const recentBookings = await Booking.find()
       .populate('user', 'name email')
-      .populate('room', 'title location price')
+      .populate('room', 'title rentPerMonth')
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -74,9 +74,9 @@ router.get('/dashboard', protect, authorize('admin'), async (req, res) => {
     const topLocations = await Room.aggregate([
       {
         $group: {
-          _id: '$city',
+          _id: '$address.city',
           count: { $sum: 1 },
-          avgPrice: { $avg: '$price' }
+          avgPrice: { $avg: '$rentPerMonth' }
         }
       },
       { $sort: { count: -1 } },
@@ -124,9 +124,9 @@ router.get('/rooms', protect, authorize('admin'), async (req, res) => {
         $group: {
           _id: null,
           totalRooms: { $sum: 1 },
-          avgPrice: { $avg: '$price' },
-          minPrice: { $min: '$price' },
-          maxPrice: { $max: '$price' },
+          avgPrice: { $avg: '$rentPerMonth' },
+          minPrice: { $min: '$rentPerMonth' },
+          maxPrice: { $max: '$rentPerMonth' },
           availableRooms: {
             $sum: { $cond: [{ $eq: ['$isAvailable', true] }, 1, 0] }
           }

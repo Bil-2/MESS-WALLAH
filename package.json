@@ -1,0 +1,24 @@
+{
+  "name": "mess-wallah",
+  "version": "1.0.0",
+  "description": "> **Complete accommodation marketplace with 100% API success rate guarantee**",
+  "main": "test-all-apis.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bil-2/MESS-WALLAH.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Bil-2/MESS-WALLAH/issues"
+  },
+  "homepage": "https://github.com/Bil-2/MESS-WALLAH#readme",
+  "dependencies": {
+    "axios": "^1.12.2"
+  }
+}

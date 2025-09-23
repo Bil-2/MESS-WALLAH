@@ -3,37 +3,12 @@ import ReactDOM from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
 import App from './App.jsx'
 import './index.css'
+import './styles/performance.css'
 
 // Performance monitoring
 if (typeof window !== 'undefined') {
-  // Register service worker for PWA functionality
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('[SW] Service Worker registered successfully:', registration.scope);
-          
-          // Check for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New version available
-                  if (confirm('A new version of MESS WALLAH is available. Would you like to update?')) {
-                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    window.location.reload();
-                  }
-                }
-              });
-            }
-          });
-        })
-        .catch((error) => {
-          console.log('[SW] Service Worker registration failed:', error);
-        });
-    });
-  }
+  // Service Worker temporarily disabled to fix API loop issue
+  console.log('[SW] Service Worker registration disabled to prevent API loops');
 
   // Performance monitoring with Web Vitals
   const reportWebVitals = (metric) => {
@@ -151,5 +126,5 @@ root.render(
         },
       }}
     />
-  </React.StrictMode>,
+  </React.StrictMode>
 )

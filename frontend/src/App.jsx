@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
+import MobileNavigation from './components/MobileNavigation';
 
 // Lazy load components for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -78,7 +79,6 @@ function App() {
                   <Route path="/booking-policy" element={<BookingPolicy />} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/contact" element={<Contact />} />
-                  <Route path="/report" element={<Report />} />
                 </Routes>
               </Suspense>
             </main>
@@ -88,6 +88,6 @@ function App() {
       </AuthProvider>
     </ThemeProvider>
   );
-}
+};
 
 export default App;
