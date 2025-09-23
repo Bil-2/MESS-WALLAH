@@ -1,22 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  Shield,
-  Camera,
-  Phone,
-  UserCheck,
-  Lock,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  MapPin,
-  Users,
-  Heart,
-  Star,
-  Eye,
-  Headphones,
-  FileCheck
-} from 'lucide-react';
+  FiShield as Shield,
+  FiCamera as Camera,
+  FiPhone as Phone,
+  FiUserCheck as UserCheck,
+  FiLock as Lock,
+  FiAlertTriangle as AlertTriangle,
+  FiCheckCircle as CheckCircle,
+  FiClock as Clock,
+  FiMapPin as MapPin,
+  FiUsers as Users,
+  FiHeart as Heart,
+  FiStar as Star,
+  FiEye as Eye,
+  FiHeadphones as Headphones,
+  FiFileText as FileCheck
+} from 'react-icons/fi';
 
 const Safety = () => {
   const safetyFeatures = [
@@ -144,7 +144,7 @@ const Safety = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 py-20 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-24 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div

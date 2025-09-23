@@ -42,6 +42,35 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  registrationMethod: {
+    type: String,
+    enum: ['otp', 'email', 'complete'],
+    default: 'email'
+  },
+  profileCompleted: {
+    type: Boolean,
+    default: false
+  },
+  college: {
+    type: String,
+    maxlength: [100, 'College name cannot exceed 100 characters']
+  },
+  course: {
+    type: String,
+    maxlength: [100, 'Course name cannot exceed 100 characters']
+  },
+  year: {
+    type: String,
+    maxlength: [20, 'Year cannot exceed 20 characters']
+  },
   avatar: {
     type: String,
     default: null

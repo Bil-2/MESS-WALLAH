@@ -95,7 +95,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
       {/* Hero Section */}
-      <section className="relative pt-16 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
+      <section className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-orange-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse"></div>
@@ -113,7 +113,7 @@ const Home = () => {
                 </div>
               </div>
               <span className="text-white font-extrabold tracking-wide">
-                 SAFE STUDENT HOUSING Platform
+                 SAFE STUDENT HOUSING PLATFROM
               </span>
               <div className="px-2 py-1 bg-white/20 rounded-full">
                 <span className="text-xs font-bold text-white">TRUSTED</span>

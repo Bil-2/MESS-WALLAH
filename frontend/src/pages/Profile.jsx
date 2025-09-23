@@ -6,7 +6,7 @@ import {
   User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera,
   Shield, Bell, Key, Star, Home, CreditCard, TrendingUp, Heart, 
   Clock, CheckCircle, Eye, EyeOff, Settings, Download, Upload
-} from 'lucide-react';
+} from '../utils/iconMappings';
 
 // Password Change Form Component
 const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
@@ -398,7 +398,7 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 py-8 relative">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 pt-24 pb-8 relative">
       {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

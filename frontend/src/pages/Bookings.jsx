@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Clock, CreditCard, Eye, Download, Filter, Search, Home } from 'lucide-react';
+import { 
+  Calendar, MapPin, Clock, CreditCard, Eye, Download, Filter, Search, Home 
+} from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
-import { apiHelpers } from '../utils/api';
+import { api } from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -19,7 +21,7 @@ const Bookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await apiHelpers.getMyBookings();
+      const response = await api.get('/bookings');
       setBookings(response.data.data.bookings || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -88,7 +90,7 @@ const Bookings = () => {
     }
 
     try {
-      await apiHelpers.bookings.cancel(bookingId);
+      await api.delete(`/bookings/${bookingId}`);
       toast.success('Booking cancelled successfully');
       fetchBookings(); // Refresh bookings
     } catch (error) {
@@ -154,7 +156,7 @@ const Bookings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center pt-24">
         <LoadingSpinner size="large" text="Loading your bookings..." />
       </div>
     );
@@ -162,7 +164,7 @@ const Bookings = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

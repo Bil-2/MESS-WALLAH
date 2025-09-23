@@ -2,12 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/animations.css';
 import './styles/preventAutoFill.css';
-import { AuthProvider } from './context/AuthContext.jsx';
-import { ThemeProvider } from './context/ThemeContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import LoadingSpinner from './components/LoadingSpinner';
-import MobileNavigation from './components/MobileNavigation';
+import { AuthProvider, ThemeProvider } from './context';
+import { Navbar, Footer, LoadingSpinner, MobileNavigation } from './components';
 
 // Lazy load components for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -30,6 +26,8 @@ const Support = lazy(() => import('./pages/Support'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Report = lazy(() => import('./pages/Report'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
+const Menu = lazy(() => import('./pages/Menu'));
+const Favorites = lazy(() => import('./pages/Favorites'));
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
@@ -79,10 +77,13 @@ function App() {
                   <Route path="/booking-policy" element={<BookingPolicy />} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/menu" element={<Menu />} />
+                  <Route path="/favorites" element={<Favorites />} />
                 </Routes>
               </Suspense>
             </main>
             <Footer />
+            <MobileNavigation />
           </div>
         </Router>
       </AuthProvider>

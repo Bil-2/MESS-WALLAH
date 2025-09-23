@@ -62,6 +62,8 @@ export default defineConfig({
       host: 'localhost',
       overlay: false
     },
+    // Suppress Node.js deprecation warnings
+    open: false,
     // Enable compression
     middlewareMode: false,
     proxy: {

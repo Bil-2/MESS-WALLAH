@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Phone, MapPin, Clock, Send, MessageCircle, User, Building, Utensils, CheckCircle, Star, Heart } from 'lucide-react';
+import { 
+  FiMail as Mail, 
+  FiPhone as Phone, 
+  FiMapPin as MapPin, 
+  FiClock as Clock, 
+  FiSend as Send, 
+  FiMessageCircle as MessageCircle, 
+  FiUser as User, 
+  FiHome as Building, 
+  FiCoffee as Utensils, 
+  FiCheckCircle as CheckCircle, 
+  FiStar as Star, 
+  FiHeart as Heart 
+} from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const Contact = () => {
@@ -150,7 +163,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200 pt-24">
       {/* Floating Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div

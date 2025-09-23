@@ -237,7 +237,7 @@ const useAuth = () => {
       const response = await apiHelpers.login(email, password);
 
       if (response.success) {
-        const { token, user: userData } = response.data;
+        const { token, user: userData } = response;
 
         // Store auth data
         localStorage.setItem('token', token);

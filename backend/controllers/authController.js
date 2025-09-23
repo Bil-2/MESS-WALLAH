@@ -100,13 +100,55 @@ const register = async (req, res) => {
     });
 
     if (existingUser) {
-      // Log potential security issue
-      console.log(`Registration attempt with existing credentials: ${email} from IP: ${req.ip}`);
+      // Check if this is an OTP-created user without password
+      if (!existingUser.password && existingUser.registrationMethod === 'otp') {
+        // Allow completing registration by adding password and other details
+        console.log(`Completing registration for OTP user: ${email} from IP: ${req.ip}`);
+        
+        // Update existing user with registration details
+        existingUser.name = name;
+        existingUser.email = email;
+        existingUser.password = password; // Will be hashed by pre-save hook
+        existingUser.role = role || 'student';
+        existingUser.college = college;
+        existingUser.course = course;
+        existingUser.year = year;
+        existingUser.registrationMethod = 'complete';
+        existingUser.isEmailVerified = false; // Email needs verification
+        existingUser.profileCompleted = true;
+        
+        await existingUser.save();
+        
+        // Generate JWT token
+        const token = jwt.sign(
+          { 
+            id: existingUser._id,
+            email: existingUser.email,
+            role: existingUser.role 
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRE || '30d' }
+        );
 
-      return res.status(409).json({
-        success: false,
-        message: 'User already exists with this email or phone number'
-      });
+        // Remove password from response
+        const userResponse = existingUser.toObject();
+        delete userResponse.password;
+
+        return res.status(200).json({
+          success: true,
+          message: 'Registration completed successfully',
+          token,
+          user: userResponse
+        });
+      } else {
+        // User already exists with complete registration
+        console.log(`Registration attempt with existing credentials: ${email} from IP: ${req.ip}`);
+
+        return res.status(409).json({
+          success: false,
+          message: 'User already exists with this email or phone number'
+        });
+      }
     }
 
     // Create user with additional security fields
@@ -222,7 +264,7 @@ const login = async (req, res) => {
     // Find user
     const user = await User.findOne({
       email: email.toLowerCase().trim()
-    }).select('+password +securityInfo');
+    }).select('+password +securityInfo +registrationMethod');
 
     if (!user) {
       req.authFailed = true;
@@ -231,6 +273,18 @@ const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
+      });
+    }
+
+    // Check if user was created via OTP but hasn't set a password
+    if (!user.password && user.registrationMethod === 'otp') {
+      console.log(`Login attempt for OTP user without password: ${email} from IP: ${req.ip}`);
+
+      return res.status(400).json({
+        success: false,
+        message: 'Please complete your registration by setting up a password',
+        action: 'complete_registration',
+        hint: 'You signed up using phone verification. Please complete your profile by creating a password.'
       });
     }
 

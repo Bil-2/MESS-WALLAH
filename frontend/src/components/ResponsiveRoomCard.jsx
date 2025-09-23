@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FiHeart, 
-  FiMapPin, 
-  FiStar, 
-  FiPhone, 
-  FiEye, 
-  FiWifi, 
+import {
+  FiHeart,
+  FiMapPin,
+  FiStar,
+  FiPhone,
+  FiEye,
+  FiWifi,
   FiShield,
   FiUsers,
   FiHome
 } from 'react-icons/fi';
+import { getAnimationVariants, getOptimizedProps } from '../utils/animations';
 
-const ResponsiveRoomCard = ({ 
-  room, 
-  onBookNow, 
-  onViewDetails, 
-  onToggleFavorite, 
-  isFavorite = false 
+const ResponsiveRoomCard = ({
+  room,
+  onBookNow,
+  onViewDetails,
+  onToggleFavorite,
+  isFavorite = false
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -25,18 +26,8 @@ const ResponsiveRoomCard = ({
   const handleImageLoad = () => setImageLoaded(true);
   const handleImageError = () => setImageError(true);
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.3, ease: "easeOut" }
-    },
-    hover: { 
-      y: -4,
-      transition: { duration: 0.2, ease: "easeOut" }
-    }
-  };
+  const cardVariants = getAnimationVariants('card');
+  const optimizedProps = getOptimizedProps();
 
   const amenityIcons = {
     wifi: FiWifi,
@@ -55,6 +46,7 @@ const ResponsiveRoomCard = ({
       initial="hidden"
       animate="visible"
       whileHover="hover"
+      {...optimizedProps}
       className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 gpu-accelerated"
     >
       {/* Image Section */}
@@ -69,9 +61,8 @@ const ResponsiveRoomCard = ({
             <img
               src={room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop'}
               alt={room.title}
-              className={`w-full h-full object-cover transition-all duration-300 ${
-                imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-              } hover:scale-105`}
+              className={`w-full h-full object-cover transition-all duration-300 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                } hover:scale-105`}
               onLoad={handleImageLoad}
               onError={handleImageError}
               loading="lazy"
@@ -85,7 +76,7 @@ const ResponsiveRoomCard = ({
 
         {/* Overlay Elements */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-        
+
         {/* Favorite Button */}
         <button
           onClick={(e) => {
@@ -94,12 +85,11 @@ const ResponsiveRoomCard = ({
           }}
           className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200 touch-target"
         >
-          <FiHeart 
-            className={`w-4 h-4 transition-colors duration-200 ${
-              isFavorite 
-                ? 'text-red-500 fill-current' 
+          <FiHeart
+            className={`w-4 h-4 transition-colors duration-200 ${isFavorite
+                ? 'text-red-500 fill-current'
                 : 'text-gray-600 dark:text-gray-300'
-            }`} 
+              }`}
           />
         </button>
 
@@ -143,7 +133,7 @@ const ResponsiveRoomCard = ({
               ({room.reviews || 0} reviews)
             </span>
           </div>
-          
+
           {/* Owner Info */}
           <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
             <FiUsers className="w-3 h-3" />

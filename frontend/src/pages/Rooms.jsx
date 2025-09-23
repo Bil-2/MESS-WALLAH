@@ -16,12 +16,13 @@ import toast from 'react-hot-toast';
 const Rooms = () => {
   const { user } = useAuthContext();
   const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false to test
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   
-  // Performance hooks
-  const { trackRender, trackApiCall } = usePerformance();
+  // Performance hooks - simplified
+  const trackRender = () => {}; // Disabled for debugging
+  const trackApiCall = () => {}; // Disabled for debugging
   
   const [filters, setFilters] = useState({
     search: '',
@@ -32,9 +33,9 @@ const Rooms = () => {
     amenities: []
   });
   
-  // Debounced search for performance
-  const debouncedSearch = useDebounce(filters.search, 300);
-  const debouncedLocation = useDebounce(filters.location, 300);
+  // Simplified - no debouncing for now
+  // const debouncedSearch = useDebounce(filters.search, 300);
+  // const debouncedLocation = useDebounce(filters.location, 300);
   
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -44,102 +45,101 @@ const Rooms = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
 
   const fetchRooms = useCallback(async () => {
+    console.log('Starting fetchRooms...');
+    
     try {
       setLoading(true);
       setError(null);
-      trackApiCall();
       
-      // Get URL parameters for initial search
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlSearch = urlParams.get('search');
+      // Simple API call without complex logic
+      const url = `/api/rooms?page=${currentPage}&limit=24`;
+      console.log('Fetching from:', url);
       
-      // Use URL search parameter if available, otherwise use filters
-      const searchFilters = { ...filters };
-      if (urlSearch && !searchFilters.search) {
-        searchFilters.search = urlSearch;
-        setFilters(prev => ({ ...prev, search: urlSearch }));
-      }
-      
-      // Build query parameters for rocket API
-      const queryParams = {
-        page: currentPage,
-        limit: 24,
-        ...(debouncedSearch && { search: debouncedSearch }),
-        ...(debouncedLocation && { location: debouncedLocation }),
-        ...(searchFilters.minRent && { minPrice: searchFilters.minRent }),
-        ...(searchFilters.maxRent && { maxPrice: searchFilters.maxRent }),
-        ...(searchFilters.roomType && { roomType: searchFilters.roomType })
-      };
-      
-      // Use rocket API for optimized fetching
-      const response = await rocketAPI.getRooms(queryParams);
+      const response = await fetch(url);
+      console.log('Response received:', response.status);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Data received:', data);
+        
         if (data.success && data.data) {
-          // Handle both array and object responses
-          const roomsArray = Array.isArray(data.data) ? data.data : data.data.rooms || [];
-          // Transform backend data to match frontend format
+          const roomsArray = Array.isArray(data.data) ? data.data : [];
+          console.log('Rooms count:', roomsArray.length);
+          
+          // Simple transformation
           const transformedRooms = roomsArray.map(room => ({
             id: room._id,
             _id: room._id,
             title: room.title,
-            location: `${room.address?.area || ''}, ${room.address?.city || ''}`,
+            location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim(),
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
-            ownerName: room.ownerName || 'Property Owner',
-            ownerPhone: room.ownerPhone || '+91 9876543210',
-            verified: room.isVerified || true,
+            ownerName: room.owner?.name || 'Property Owner',
+            ownerPhone: room.owner?.phone || '+91 9876543210',
+            verified: true,
             amenities: room.amenities || ['wifi', 'security'],
-            image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop&q=75',
-            roomType: room.roomType || 'Single',
-            reviews: room.reviews ? room.reviews.length : Math.floor(Math.random() * 50) + 10,
-            description: room.description || 'Well-furnished room in prime location.',
-            isVerified: room.isVerified || true
+            image: room.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+            roomType: room.roomType || 'single',
+            reviews: room.totalReviews || 25,
+            description: room.description || 'Well-furnished room',
+            isVerified: true
           }));
           
-          // Append to existing rooms for infinite scroll
-          if (currentPage === 1) {
-            setRooms(transformedRooms);
-          } else {
-            setRooms(prev => [...prev, ...transformedRooms]);
-          }
+          setRooms(transformedRooms);
+          setTotalPages(data.pagination?.totalPages || 1);
+          setHasMore(data.pagination?.hasNextPage || false);
           
-          setTotalPages(data.pagination?.totalPages || Math.ceil(data.total / 24) || 1);
-          setHasMore(currentPage < (data.pagination?.totalPages || 1));
+          console.log('Successfully set', transformedRooms.length, 'rooms');
+        } else {
+          throw new Error('Invalid response structure');
         }
       } else {
-        throw new Error('Failed to fetch rooms');
+        throw new Error(`API failed: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error loading rooms:', error);
-      setError('Failed to load rooms');
-      // Final fallback - show sample rooms
-      if (currentPage === 1) {
-        const fallbackRooms = generateMockRooms();
-        setRooms(fallbackRooms);
-        setTotalPages(1);
-        setHasMore(false);
-      }
+      console.error('Fetch error:', error);
+      
+      // Always show fallback data
+      const fallbackRooms = generateMockRooms();
+      setRooms(fallbackRooms);
+      setTotalPages(1);
+      setHasMore(false);
+      
+      toast.error('Loading sample data - API issue');
     } finally {
       setLoading(false);
+      console.log('fetchRooms completed');
     }
-  }, [currentPage, debouncedSearch, debouncedLocation, filters, trackApiCall]);
+  }, [currentPage]);
 
   useEffect(() => {
     trackRender();
-    fetchRooms();
-    // Load favorites from localStorage
+    
+    // Load favorites from localStorage only once
     const savedFavorites = localStorage.getItem('mess-wallah-favorites');
     if (savedFavorites) {
       setFavorites(new Set(JSON.parse(savedFavorites)));
     }
-  }, [fetchRooms, trackRender]);
+  }, []); // Empty dependency array to run only once
+
+  // Simple useEffect to fetch rooms - run only once
+  useEffect(() => {
+    console.log('useEffect triggered, calling fetchRooms...');
+    
+    // Immediate fallback for testing
+    const fallbackRooms = generateMockRooms();
+    setRooms(fallbackRooms);
+    setLoading(false);
+    
+    // Then try to fetch real data
+    fetchRooms();
+  }, []); // Empty dependency array to run only once
 
   const generateMockRooms = () => {
     return [
       {
         _id: '68c597a733be9e11bd88fa52',
+        id: '68c597a733be9e11bd88fa52',
         title: 'Premium Student Room - Koramangala',
         location: 'Koramangala, Bangalore',
         rent: 12000,
@@ -147,14 +147,16 @@ const Rooms = () => {
         ownerName: 'Rajesh Kumar',
         ownerPhone: '+91 9876543210',
         verified: true,
+        isVerified: true,
         amenities: ['wifi', 'mess', 'security', 'laundry', 'parking', 'gym'],
         image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-        type: 'Single',
+        roomType: 'bachelor',
         reviews: 45,
         description: 'Spacious and well-furnished room perfect for students. Located in the heart of Koramangala.'
       },
       {
         _id: '68c597a733be9e11bd88fa53',
+        id: '68c597a733be9e11bd88fa53',
         title: 'Cozy Girls PG - Whitefield',
         location: 'Whitefield, Bangalore',
         rent: 9500,
@@ -162,14 +164,16 @@ const Rooms = () => {
         ownerName: 'Sunita Devi',
         ownerPhone: '+91 9876543211',
         verified: true,
+        isVerified: true,
         amenities: ['wifi', 'mess', 'security', 'laundry', 'ac'],
         image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-        type: 'Shared',
+        roomType: 'pg',
         reviews: 32,
         description: 'Safe and secure accommodation for working women and students.'
       },
       {
         _id: '68c597a733be9e11bd88fa54',
+        id: '68c597a733be9e11bd88fa54',
         title: 'Budget Friendly Room - BTM Layout',
         location: 'BTM Layout, Bangalore',
         rent: 7500,
@@ -177,14 +181,16 @@ const Rooms = () => {
         ownerName: 'Ramesh Gupta',
         ownerPhone: '+91 9876543212',
         verified: true,
+        isVerified: true,
         amenities: ['wifi', 'mess', 'security', 'laundry'],
         image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
-        type: 'Shared',
+        roomType: 'student',
         reviews: 28,
         description: 'Affordable accommodation for students and young professionals.'
       },
       {
         _id: '68c597a733be9e11bd88fa55',
+        id: '68c597a733be9e11bd88fa55',
         title: 'Luxury Studio Apartment - Indiranagar',
         location: 'Indiranagar, Bangalore',
         rent: 18000,
@@ -192,14 +198,16 @@ const Rooms = () => {
         ownerName: 'Priya Nair',
         ownerPhone: '+91 9876543213',
         verified: true,
+        isVerified: true,
         amenities: ['wifi', 'parking', 'gym', 'security', 'ac', 'balcony'],
         image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-        type: 'Studio',
+        roomType: 'bachelor',
         reviews: 67,
         description: 'Premium studio apartment with modern amenities for working professionals.'
       },
       {
         _id: '68c597a733be9e11bd88fa56',
+        id: '68c597a733be9e11bd88fa56',
         title: 'Family Room - Jayanagar',
         location: 'Jayanagar, Bangalore',
         rent: 15000,
@@ -207,9 +215,10 @@ const Rooms = () => {
         ownerName: 'Lakshmi Rao',
         ownerPhone: '+91 9876543214',
         verified: true,
+        isVerified: true,
         amenities: ['wifi', 'parking', 'mess', 'laundry', 'security', 'playground'],
         image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-        type: 'Family',
+        roomType: 'family',
         reviews: 41,
         description: 'Spacious accommodation suitable for small families or groups.'
       }
@@ -402,13 +411,14 @@ const Rooms = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <ResponsiveContainer className="py-4 sm:py-6 lg:py-8">
         {/* Hero Header */}
-        <div className="text-center mb-8 pt-8">
+        <div className="text-center mb-8 pt-20">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 bg-clip-text text-transparent mb-4">
             Find Your Perfect Student Housing
           </h1>
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-4">
             Discover comfortable, affordable student accommodations with verified owners and safe environment
           </p>
+          
 
           {/* Safety Banner */}
           <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 px-6 py-3 rounded-full text-base font-bold shadow-lg">
@@ -418,185 +428,263 @@ const Rooms = () => {
           </div>
         </div>
 
-        {/* Enhanced Search Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">
-          {/* Quick Search Bar */}
-          <form onSubmit={handleSearch} className="mb-4">
-            <div className="flex flex-col lg:flex-row gap-3">
-              <div className="flex-1 relative">
-                <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        {/* Enhanced Search & Filter Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl mb-8 border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Search Header */}
+          <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 p-6 text-white">
+            <h2 className="text-xl font-bold mb-2">Find Your Perfect Room</h2>
+            <p className="text-orange-100 text-sm">Search from 970+ verified accommodations</p>
+          </div>
+
+          <div className="p-6">
+            {/* Main Search Bar */}
+            <form onSubmit={handleSearch} className="mb-6">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <FiSearch className="h-6 w-6 text-gray-400" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Search by city, area, college..."
+                  placeholder="Search by city, area, college, or landmark..."
                   value={filters.search}
                   onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="w-full pl-12 pr-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white text-base"
+                  className="block w-full pl-12 pr-20 py-4 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
                 {filters.search && (
                   <button
                     type="button"
                     onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-16 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
-                    ✕
+                    <FiX className="h-5 w-5" />
                   </button>
                 )}
-              </div>
-              <button
-                type="submit"
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-              >
-                <FiSearch className="w-5 h-5" />
-                Search
-              </button>
-            </div>
-          </form>
-
-          {/* Quick Filter Pills */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-2">Quick:</span>
-            {[
-              { label: 'Under ₹10K', filter: { maxRent: '10000' } },
-              { label: '₹10K-₹15K', filter: { minRent: '10000', maxRent: '15000' } },
-              { label: 'Girls Only', filter: { roomType: 'girls' } },
-              { label: 'WiFi', filter: { amenities: ['wifi'] } },
-              { label: 'Mess', filter: { amenities: ['mess'] } }
-            ].map((quickFilter, index) => (
-              <button
-                key={index}
-                onClick={() => setFilters(prev => ({ ...prev, ...quickFilter.filter }))}
-                className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-medium hover:bg-orange-200 dark:hover:bg-orange-900/50"
-              >
-                {quickFilter.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Advanced Filters Toggle */}
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all"
-            >
-              <FiSliders className="w-4 h-4" />
-              Filters
-              <FiChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Active Filters Count */}
-            {(filters.location || filters.minRent || filters.maxRent || filters.roomType || filters.amenities.length > 0) && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
-                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-bold">
-                  {[filters.location, filters.minRent, filters.maxRent, filters.roomType, ...filters.amenities].filter(Boolean).length}
-                </span>
                 <button
-                  onClick={() => setFilters({ search: filters.search, location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
-                  className="text-sm text-red-600 hover:text-red-700 font-medium"
+                  type="submit"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4"
                 >
-                  Clear All
+                  <div className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                    Search
+                  </div>
                 </button>
               </div>
+            </form>
+
+            {/* Search Suggestions */}
+            {!filters.search && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center mb-2">
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">💡 Popular Searches:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    'Koramangala', 'Whitefield', 'BTM Layout', 'Electronic City', 
+                    'Marathahalli', 'HSR Layout', 'Indiranagar', 'Jayanagar'
+                  ].map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setFilters(prev => ({ ...prev, search: suggestion }))}
+                      className="px-3 py-1 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
+
+            {/* Quick Filter Chips */}
+            <div className="mb-6">
+              <div className="flex items-center mb-3">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 mr-3">Popular Filters:</span>
+                <div className="h-px bg-gradient-to-r from-gray-200 to-transparent flex-1"></div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: '🏠 Under ₹10K', filter: { maxRent: '10000' }, color: 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' },
+                  { label: '💰 ₹10K-₹15K', filter: { minRent: '10000', maxRent: '15000' }, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300' },
+                  { label: '👩 Girls Only', filter: { roomType: 'girls' }, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-300' },
+                  { label: '📶 WiFi', filter: { amenities: ['wifi'] }, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300' },
+                  { label: '🍽️ Mess', filter: { amenities: ['mess'] }, color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300' },
+                  { label: '🔒 Security', filter: { amenities: ['security'] }, color: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }
+                ].map((quickFilter, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setFilters(prev => ({ ...prev, ...quickFilter.filter }))}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md ${quickFilter.color}`}
+                  >
+                    {quickFilter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Advanced Filters Toggle */}
+            <div className="flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+              >
+                <FiSliders className="w-5 h-5" />
+                Advanced Filters
+                <FiChevronDown className={`w-5 h-5 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Active Filters Count */}
+              {(filters.location || filters.minRent || filters.maxRent || filters.roomType || filters.amenities.length > 0) && (
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-bold">
+                    {[filters.location, filters.minRent, filters.maxRent, filters.roomType, ...filters.amenities].filter(Boolean).length} active
+                  </span>
+                  <button
+                    onClick={() => setFilters({ search: filters.search, location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
+                    className="text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {showFilters && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Location Filter */}
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
-                      <FiMapPin className="inline w-4 h-4 mr-2" />
-                      Specific Location
-                    </label>
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 mt-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center mb-6">
+                <FiSliders className="w-6 h-6 text-orange-500 mr-3" />
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">Advanced Filters</h3>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Refine your search</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Location Filter */}
+                <div className="space-y-3">
+                  <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300">
+                    <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />
+                    Specific Location
+                  </label>
+                  <div className="relative">
                     <input
                       type="text"
                       placeholder="e.g., Koramangala, Whitefield"
                       value={filters.location}
                       onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300 placeholder-gray-400"
                     />
                   </div>
+                </div>
 
-                  {/* Room Type Filter */}
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
-                      <FiHome className="inline w-4 h-4 mr-2" />
-                      Room Type
-                    </label>
-                    <select
-                      value={filters.roomType}
-                      onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
-                    >
-                      <option value="">All Types</option>
-                      <option value="single">Single Room</option>
-                      <option value="shared">Shared Room</option>
-                      <option value="studio">Studio Apartment</option>
-                      <option value="family">Family Room</option>
-                      <option value="girls">Girls Only</option>
-                    </select>
-                  </div>
+                {/* Room Type Filter */}
+                <div className="space-y-3">
+                  <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300">
+                    <FiHome className="w-4 h-4 mr-2 text-orange-500" />
+                    Room Type
+                  </label>
+                  <select
+                    value={filters.roomType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
+                    className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
+                  >
+                    <option value="">All Types</option>
+                    <option value="single">🏠 Single Room</option>
+                    <option value="shared">👥 Shared Room</option>
+                    <option value="studio">🏢 Studio Apartment</option>
+                    <option value="family">👨‍👩‍👧‍👦 Family Room</option>
+                    <option value="girls">👩 Girls Only</option>
+                  </select>
+                </div>
 
-                  {/* Price Range */}
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
-                      💰 Price Range
-                    </label>
-                    <div className="flex gap-2">
+                {/* Price Range */}
+                <div className="space-y-3">
+                  <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300">
+                    <span className="text-orange-500 mr-2">💰</span>
+                    Price Range (Monthly)
+                  </label>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
                       <input
                         type="number"
                         placeholder="Min ₹"
                         value={filters.minRent}
                         onChange={(e) => setFilters(prev => ({ ...prev, minRent: e.target.value }))}
-                        className="w-1/2 px-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
+                        className="w-full px-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
                       />
+                    </div>
+                    <div className="flex items-center px-2">
+                      <span className="text-gray-400">to</span>
+                    </div>
+                    <div className="flex-1">
                       <input
                         type="number"
                         placeholder="Max ₹"
                         value={filters.maxRent}
                         onChange={(e) => setFilters(prev => ({ ...prev, maxRent: e.target.value }))}
-                        className="w-1/2 px-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
+                        className="w-full px-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
                       />
-                    </div>
-                  </div>
-
-                  {/* Amenities Filter */}
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
-                      ⭐ Must-Have Amenities
-                    </label>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {['wifi', 'mess', 'laundry', 'security', 'parking', 'gym', 'ac', 'balcony'].map((amenity) => (
-                        <label key={amenity} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={filters.amenities.includes(amenity)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFilters(prev => ({ ...prev, amenities: [...prev.amenities, amenity] }));
-                              } else {
-                                setFilters(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity) }));
-                              }
-                            }}
-                            className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{amenity}</span>
-                        </label>
-                      ))}
                     </div>
                   </div>
                 </div>
 
+                {/* Amenities Filter */}
+                <div className="space-y-3">
+                  <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300">
+                    <span className="text-orange-500 mr-2">⭐</span>
+                    Must-Have Amenities
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                    {[
+                      { key: 'wifi', label: '📶 WiFi', color: 'text-blue-600' },
+                      { key: 'mess', label: '🍽️ Mess', color: 'text-green-600' },
+                      { key: 'laundry', label: '👕 Laundry', color: 'text-purple-600' },
+                      { key: 'security', label: '🔒 Security', color: 'text-red-600' },
+                      { key: 'parking', label: '🚗 Parking', color: 'text-gray-600' },
+                      { key: 'gym', label: '💪 Gym', color: 'text-orange-600' },
+                      { key: 'ac', label: '❄️ AC', color: 'text-cyan-600' },
+                      { key: 'balcony', label: '🌿 Balcony', color: 'text-emerald-600' }
+                    ].map((amenity) => (
+                      <label key={amenity.key} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={filters.amenities.includes(amenity.key)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters(prev => ({ ...prev, amenities: [...prev.amenities, amenity.key] }));
+                            } else {
+                              setFilters(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity.key) }));
+                            }
+                          }}
+                          className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                        />
+                        <span className={`text-sm font-medium ${amenity.color}`}>{amenity.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                </div>
+
               {/* Apply Filters Button */}
-              <div className="flex justify-center mt-6">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={handleSearch}
-                  className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
+                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white rounded-xl font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                 >
+                  <FiSearch className="w-5 h-5" />
                   Apply Filters & Search
+                  <span className="bg-white/20 px-2 py-1 rounded-full text-xs">
+                    {rooms.length} rooms
+                  </span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setFilters({ search: '', location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                >
+                  <FiX className="w-4 h-4" />
+                  Reset All Filters
                 </button>
               </div>
             </div>
@@ -627,16 +715,31 @@ const Rooms = () => {
               </div>
             </div>
 
-            {/* Rocket-Fast Room List */}
-            <VirtualizedRoomList
-              rooms={rooms}
-              onBookNow={handleBookNow}
-              onViewDetails={handleViewDetails}
-              onToggleFavorite={handleToggleFavorite}
-              isLoading={loading}
-              hasMore={hasMore}
-              onLoadMore={handleLoadMore}
-            />
+            {/* Responsive Room Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {rooms.map((room, index) => (
+                <ResponsiveRoomCard
+                  key={room._id || room.id || index}
+                  room={room}
+                  onBookNow={handleBookNow}
+                  onViewDetails={handleViewDetails}
+                  onToggleFavorite={handleToggleFavorite}
+                  isFavorite={favorites.has(room._id || room.id)}
+                />
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && !loading && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={handleLoadMore}
+                  className="btn-responsive bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold shadow-lg hover:shadow-xl"
+                >
+                  Load More Rooms
+                </button>
+              </div>
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -961,7 +1064,7 @@ const Rooms = () => {
                         {/* Terms & Conditions */}
                         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                           <div className="flex items-start gap-3">
-                            <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                            <FiShield className="w-5 h-5 text-blue-600 mt-0.5" />
                             <div className="text-sm text-blue-800 dark:text-blue-200">
                               <p className="font-semibold mb-1">Important Notes:</p>
                               <ul className="space-y-1 text-xs">

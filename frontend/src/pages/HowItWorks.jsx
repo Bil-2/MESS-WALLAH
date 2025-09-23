@@ -1,5 +1,12 @@
 import React from 'react';
-import { Search, MapPin, Calendar, CreditCard, CheckCircle, Users } from 'lucide-react';
+import { 
+  FiSearch as Search, 
+  FiMapPin as MapPin, 
+  FiCalendar as Calendar, 
+  FiCreditCard as CreditCard, 
+  FiCheckCircle as CheckCircle, 
+  FiUsers as Users 
+} from 'react-icons/fi';
 
 const HowItWorks = () => {
   const steps = [
@@ -56,7 +63,7 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             How MESS WALLAH Works

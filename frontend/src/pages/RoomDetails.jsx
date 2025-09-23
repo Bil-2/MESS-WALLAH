@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { useAuth } from '../hooks/useAuth';
-import { apiHelpers } from '../utils/api';
-import { getRoomById, mockRooms } from '../data/mockRooms';
+import { useAuthContext } from '../context/AuthContext';
+import { api } from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -28,22 +27,25 @@ const RoomDetails = () => {
     try {
       setLoading(true);
       
-      // Try to get room from mock data first
-      const mockResponse = getRoomById(id);
-      if (mockResponse.success && mockResponse.data) {
-        setRoom(mockResponse.data);
-        toast.success('Room details loaded successfully');
-        return;
+      // Try to fetch from API
+      const response = await fetch(`/api/rooms/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setRoom(data.data);
+          toast.success('Room details loaded successfully');
+          return;
+        }
       }
       
-      // Fallback to API call
-      const response = await apiHelpers.getRoomById(id);
-      setRoom(response.data || response);
-      toast.success('Room details loaded successfully');
+      // Fallback to mock data if API fails
+      const fallbackRoom = getMockRoomData(id);
+      setRoom(fallbackRoom);
+      toast.error('Failed to load room details. Showing demo data.');
     } catch (error) {
       console.error('Error fetching room details:', error);
-      // Final fallback to any available mock room
-      const fallbackRoom = mockRooms[0] || getMockRoomData();
+      // Final fallback to mock room
+      const fallbackRoom = getMockRoomData(id);
       setRoom(fallbackRoom);
       toast.error('Failed to load room details. Showing demo data.');
     } finally {
@@ -111,10 +113,10 @@ const RoomDetails = () => {
 
     try {
       if (isLiked) {
-        await apiHelpers.users.removeFavorite(id);
+        await api.delete(`/users/favorites/${id}`);
         toast.success('Removed from favorites');
       } else {
-        await apiHelpers.users.addFavorite(id);
+        await api.post(`/users/favorites/${id}`);
         toast.success('Added to favorites');
       }
       setIsLiked(!isLiked);
@@ -148,7 +150,7 @@ const RoomDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center pt-24">
         <LoadingSpinner size="large" text="Loading room details..." />
       </div>
     );
@@ -156,7 +158,7 @@ const RoomDetails = () => {
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center pt-24">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Room not found</h2>
           <button
@@ -172,7 +174,7 @@ const RoomDetails = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* Back Button */}
         <motion.button 
           onClick={() => navigate('/rooms')}

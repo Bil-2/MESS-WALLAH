@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, ArrowLeft, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  Mail, ArrowLeft, Shield, CheckCircle, AlertCircle 
+} from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import toast from 'react-hot-toast';
 
@@ -66,7 +68,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-6 px-4 fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center pt-24 pb-6 px-4 relative overflow-hidden fade-in">
       <div className="w-full max-w-md slide-in-up">
         {/* Header */}
         <div className="text-center mb-6">

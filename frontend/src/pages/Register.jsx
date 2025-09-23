@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Eye, EyeOff, Phone, Shield, UserCheck, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
+import { 
+  User, Mail, Lock, Eye, EyeOff, Phone, Shield, UserCheck, CheckCircle, ArrowRight, AlertCircle 
+} from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import { usePreventAutoFill } from '../hooks/usePreventAutoFill';
 import toast from 'react-hot-toast';
@@ -103,18 +105,32 @@ const Register = () => {
 
     try {
       setLoading(true);
-      await register({
+      const result = await register({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
         role: formData.role
       });
-      toast.success('Account created successfully! Please login.');
-      navigate('/login');
+
+      if (result.success) {
+        toast.success('Account created successfully! Please login.');
+        navigate('/login');
+      } else {
+        toast.error(result.message || 'Registration failed');
+      }
     } catch (error) {
       console.error('Error registering:', error);
-      toast.error(error.message || 'Registration failed');
+      
+      // Handle specific error cases
+      if (error.message.includes('User already exists')) {
+        toast.error('An account with this email or phone already exists. Please try logging in instead.');
+      } else if (error.message.includes('complete your registration')) {
+        toast.success('Registration completed! You can now login with your password.');
+        navigate('/login');
+      } else {
+        toast.error(error.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -203,7 +219,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-6 px-4 fade-in">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center pt-24 pb-6 px-4 fade-in">
       <div className="w-full max-w-md slide-in-up">
         {/* Header */}
         <div className="text-center mb-6">

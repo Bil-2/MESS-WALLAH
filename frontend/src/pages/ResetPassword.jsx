@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Eye, EyeOff, Lock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { 
+  Eye, EyeOff, Lock, CheckCircle, AlertCircle, ArrowLeft 
+} from '../utils/iconMappings';
 import toast from 'react-hot-toast';
-import { apiHelpers } from '../utils/api';
+import { api } from '../utils/api';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -113,7 +115,7 @@ const ResetPassword = () => {
     try {
       setLoading(true);
       
-      const result = await apiHelpers.resetPassword(token, password);
+      const result = await api.post('/auth/reset-password', { token, password });
       
       if (result.success) {
         setResetSuccess(true);
@@ -185,7 +187,7 @@ const ResetPassword = () => {
   const passwordStrength = password ? getPasswordStrength(password) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center pt-24 pb-6 px-4 relative overflow-hidden fade-in">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">

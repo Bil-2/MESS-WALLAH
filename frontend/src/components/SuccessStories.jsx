@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Users, Heart, Award } from 'lucide-react';
+import { FiStar, FiUsers, FiHeart, FiAward } from 'react-icons/fi';
 
 const SuccessStories = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
@@ -9,7 +9,7 @@ const SuccessStories = () => {
   const reviewCategories = [
     {
       title: "Bachelor Reviews",
-      icon: <Users className="w-6 h-6" />,
+      icon: <FiUsers className="w-6 h-6" />,
       color: "from-blue-500 to-purple-600",
       reviews: [
         {
@@ -37,7 +37,7 @@ const SuccessStories = () => {
     },
     {
       title: "Family Reviews",
-      icon: <Heart className="w-6 h-6" />,
+      icon: <FiHeart className="w-6 h-6" />,
       color: "from-pink-500 to-rose-600",
       reviews: [
         {
@@ -65,7 +65,7 @@ const SuccessStories = () => {
     },
     {
       title: "Senior Citizen Reviews",
-      icon: <Award className="w-6 h-6" />,
+      icon: <FiAward className="w-6 h-6" />,
       color: "from-green-500 to-teal-600",
       reviews: [
         {
@@ -93,7 +93,7 @@ const SuccessStories = () => {
     }
   ];
 
-  const allReviews = reviewCategories.flatMap(category => 
+  const allReviews = reviewCategories.flatMap(category =>
     category.reviews.map(review => ({
       ...review,
       categoryTitle: category.title,
@@ -145,11 +145,10 @@ const SuccessStories = () => {
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Star
+      <FiStar
         key={i}
-        className={`w-4 h-4 ${
-          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-        }`}
+        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+          }`}
       />
     ));
   };
@@ -188,7 +187,7 @@ const SuccessStories = () => {
             </div>
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
             <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-blue-500" />
+              <FiUsers className="w-5 h-5 text-blue-500" />
               <span className="font-semibold text-gray-900 dark:text-white">50,000+ Happy Students</span>
             </div>
           </motion.div>
@@ -249,11 +248,10 @@ const SuccessStories = () => {
           {allReviews.map((_, index) => (
             <motion.div
               key={index}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentReviewIndex
+              className={`h-2 rounded-full transition-all duration-300 ${index === currentReviewIndex
                   ? `w-8 bg-gradient-to-r ${currentReview?.categoryColor}`
                   : 'w-2 bg-gray-300 dark:bg-gray-600'
-              }`}
+                }`}
               animate={{
                 scale: index === currentReviewIndex ? 1.2 : 1,
               }}
