@@ -216,6 +216,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               {/* Primary CTA */}
               <button
+                type="button"
                 onClick={() => navigate('/rooms')}
                 className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
               >
@@ -229,6 +230,7 @@ const Home = () => {
 
               {/* Secondary CTA */}
               <button
+                type="button"
                 onClick={() => navigate('/register')}
                 className="group px-10 py-5 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:bg-white/10 backdrop-blur-sm border-2 border-blue-200/60 dark:border-white/20 text-blue-700 dark:text-white rounded-2xl font-bold text-xl hover:from-blue-100/90 hover:to-purple-100/90 dark:hover:bg-white/20 hover:border-blue-300/80 dark:hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg"
               >

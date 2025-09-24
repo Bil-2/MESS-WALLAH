@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, FileText, AlertCircle } from 'lucide-react';
+import { Shield, Users, FileText, AlertCircle, HelpCircle } from 'lucide-react';
 
 const Terms = () => {
   const sections = [
@@ -145,7 +145,7 @@ const Terms = () => {
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
               Learn how we protect your personal information
             </p>
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+            <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
               Read Privacy Policy
             </button>
           </div>
@@ -158,20 +158,20 @@ const Terms = () => {
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
               Guidelines for respectful community interaction
             </p>
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+            <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
               View Guidelines
             </button>
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
-            <FileText className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
+            <HelpCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Help Center
+              Help & Support
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
               Get answers to frequently asked questions
             </p>
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+            <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
               Get Help
             </button>
           </div>

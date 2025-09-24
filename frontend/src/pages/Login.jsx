@@ -70,16 +70,20 @@ const Login = () => {
 
     try {
       setLoading(true);
+      console.log('🔄 Sending OTP to:', formData.phone);
       const result = await sendOtp(formData.phone);
+      console.log('📱 OTP Send Result:', result);
 
-      if (result.success) {
+      if (result && result.success) {
+        console.log('✅ OTP sent successfully, showing input field');
         setOtpSent(true);
-        toast.success('OTP sent successfully!');
+        toast.success('OTP sent successfully! Enter the 6-digit code.');
       } else {
-        setErrors({ phone: result.message || 'Failed to send OTP' });
+        console.error('❌ OTP send failed:', result);
+        setErrors({ phone: result?.message || 'Failed to send OTP' });
       }
     } catch (error) {
-      console.error('Error sending OTP:', error);
+      console.error('💥 Error sending OTP:', error);
       setErrors({ phone: error.message || 'Failed to send OTP' });
     } finally {
       setLoading(false);
@@ -135,7 +139,24 @@ const Login = () => {
         toast.success('Login successful!');
         navigate('/profile');
       } else {
-        setErrors({ email: result.message || 'Invalid credentials' });
+        // Handle different error scenarios
+        if (result.action === 'complete_registration') {
+          setErrors({ 
+            email: result.message,
+            action: 'complete_registration'
+          });
+          toast.error('Please complete your registration first');
+        } else if (result.attemptsRemaining !== undefined) {
+          setErrors({ 
+            email: result.message,
+            password: `${result.attemptsRemaining} attempts remaining`
+          });
+          if (result.hint) {
+            toast.error(result.hint);
+          }
+        } else {
+          setErrors({ email: result.message || 'Invalid credentials' });
+        }
       }
     } catch (error) {
       console.error('Error logging in:', error);

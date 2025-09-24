@@ -114,18 +114,23 @@ const Register = () => {
       });
 
       if (result.success) {
-        toast.success('Account created successfully! Please login.');
-        navigate('/login');
+        // CRITICAL FIX: Handle account linking
+        if (result.accountLinked) {
+          toast.success('🎉 Account linked successfully! Your phone and email are now connected.');
+          // User is already logged in, redirect to dashboard
+          navigate('/dashboard');
+        } else {
+          toast.success('Account created successfully! Please login.');
+          navigate('/login');
+        }
       } else {
         toast.error(result.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Error registering:', error);
       
-      // Handle specific error cases
-      if (error.message.includes('User already exists')) {
-        toast.error('An account with this email or phone already exists. Please try logging in instead.');
-      } else if (error.message.includes('complete your registration')) {
+      // Handle specific error cases - REMOVED the blocking error for account linking
+      if (error.message.includes('complete your registration')) {
         toast.success('Registration completed! You can now login with your password.');
         navigate('/login');
       } else {

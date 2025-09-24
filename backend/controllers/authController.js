@@ -91,19 +91,97 @@ const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
+    // CRITICAL FIX: Check for existing users with unified account system
+    let phoneVariants = [];
+    if (phone) {
+      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+      phoneVariants = [
+        phone,
+        formattedPhone,
+        formattedPhone.replace('+91', ''),
+        formattedPhone.replace('+', '')
+      ];
+    }
+
+    let existingUser = await User.findOne({
       $or: [
         { email },
-        ...(phone ? [{ phone }] : [])
+        ...(phoneVariants.length > 0 ? [{ phone: { $in: phoneVariants } }] : [])
       ]
     });
 
+    console.log(`🔍 REGISTRATION: Searching for existing user with email: ${email}, phone variants:`, phoneVariants);
+    console.log(`👤 EXISTING USER FOUND:`, existingUser ? {
+      id: existingUser._id,
+      email: existingUser.email,
+      phone: existingUser.phone,
+      hasPassword: !!existingUser.password,
+      registrationMethod: existingUser.registrationMethod,
+      accountType: existingUser.accountType
+    } : 'None');
+
+    // ADDITIONAL CHECK: Look for OTP-only accounts that can be linked
+    if (!existingUser && phone) {
+      // Format phone number consistently
+      let formattedPhone = phone;
+      if (phone && !phone.startsWith('+')) {
+        formattedPhone = `+91${phone}`;
+      }
+      
+      const phoneVariants = [
+        formattedPhone,
+        formattedPhone.replace('+91', ''),
+        formattedPhone.replace('+', ''),
+        phone
+      ];
+      
+      existingUser = await User.findOne({ 
+        phone: { $in: phoneVariants },
+        accountType: 'otp-only',
+        canLinkEmail: true
+      });
+      
+      if (existingUser) {
+        console.log(`🔗 LINKING OTP account ${existingUser.phone} with email ${email}`);
+      }
+    }
+
     if (existingUser) {
-      // Check if this is an OTP-created user without password
-      if (!existingUser.password && existingUser.registrationMethod === 'otp') {
-        // Allow completing registration by adding password and other details
-        console.log(`Completing registration for OTP user: ${email} from IP: ${req.ip}`);
+      // ENHANCED: Check if this is an OTP-created user that can be linked
+      const isOtpOnlyUser = (
+        // Primary check: OTP user without password
+        (!existingUser.password && existingUser.registrationMethod === 'otp') || 
+        // Secondary check: Explicitly marked as linkable
+        (existingUser.accountType === 'otp-only' && existingUser.canLinkEmail) ||
+        // CRITICAL FIX: Legacy OTP users without email
+        (!existingUser.email && existingUser.phone && existingUser.registrationMethod === 'otp') ||
+        // ADDITIONAL FIX: OTP users with phone but no complete profile
+        (existingUser.phone && !existingUser.email && existingUser.isPhoneVerified && !existingUser.profileCompleted)
+      );
+
+      console.log(`🔍 ACCOUNT LINKING CHECK:`, {
+        hasPassword: !!existingUser.password,
+        registrationMethod: existingUser.registrationMethod,
+        accountType: existingUser.accountType,
+        hasEmail: !!existingUser.email,
+        hasPhone: !!existingUser.phone,
+        isPhoneVerified: existingUser.isPhoneVerified,
+        profileCompleted: existingUser.profileCompleted,
+        canLinkEmail: existingUser.canLinkEmail,
+        isOtpOnlyUser: isOtpOnlyUser
+      });
+
+      if (isOtpOnlyUser) {
+        // ACCOUNT LINKING: Complete registration by adding email/password to existing OTP account
+        console.log(`🔗 LINKING ACCOUNTS: Completing registration for OTP user: ${existingUser.phone} -> ${email} from IP: ${req.ip}`);
+        console.log(`👤 Existing user details:`, {
+          id: existingUser._id,
+          phone: existingUser.phone,
+          hasEmail: !!existingUser.email,
+          hasPassword: !!existingUser.password,
+          registrationMethod: existingUser.registrationMethod,
+          accountType: existingUser.accountType
+        });
         
         // Update existing user with registration details
         existingUser.name = name;
@@ -114,16 +192,24 @@ const register = async (req, res) => {
         existingUser.course = course;
         existingUser.year = year;
         existingUser.registrationMethod = 'complete';
+        existingUser.accountType = 'unified'; // Mark as unified account
+        existingUser.canLinkEmail = false; // Prevent further linking
         existingUser.isEmailVerified = false; // Email needs verification
         existingUser.profileCompleted = true;
+        
+        // Ensure phone is in correct format
+        if (phone && !existingUser.phone.startsWith('+')) {
+          existingUser.phone = `+91${existingUser.phone.replace(/^\+?91/, '')}`;
+        }
         
         await existingUser.save();
         
         // Generate JWT token
         const token = jwt.sign(
           { 
-            id: existingUser._id,
+            userId: existingUser._id,
             email: existingUser.email,
+            phone: existingUser.phone,
             role: existingUser.role 
           },
           process.env.JWT_SECRET,
@@ -136,17 +222,30 @@ const register = async (req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'Registration completed successfully',
+          message: '🎉 Account linked successfully! Your phone and email are now connected.',
           token,
-          user: userResponse
+          user: userResponse,
+          accountLinked: true
         });
       } else {
         // User already exists with complete registration
-        console.log(`Registration attempt with existing credentials: ${email} from IP: ${req.ip}`);
+        console.log(`❌ REGISTRATION BLOCKED: User already exists with complete profile: ${email} from IP: ${req.ip}`);
+        console.log(`👤 Existing user cannot be linked:`, {
+          id: existingUser._id,
+          email: existingUser.email,
+          phone: existingUser.phone,
+          hasPassword: !!existingUser.password,
+          registrationMethod: existingUser.registrationMethod,
+          accountType: existingUser.accountType,
+          profileCompleted: existingUser.profileCompleted
+        });
 
         return res.status(409).json({
           success: false,
-          message: 'User already exists with this email or phone number'
+          message: 'User already exists with this email or phone number',
+          hint: existingUser.email ? 
+            'An account with this email already exists. Try logging in instead.' :
+            'An account with this phone number already exists. Try logging in with OTP instead.'
         });
       }
     }
@@ -261,14 +360,30 @@ const login = async (req, res) => {
       });
     }
 
-    // Find user
+    // CRITICAL FIX: Find user by email OR phone (unified account system)
+    console.log(`🔍 LOGIN ATTEMPT: Searching for user with email: ${email}`);
+    
     const user = await User.findOne({
-      email: email.toLowerCase().trim()
-    }).select('+password +securityInfo +registrationMethod');
+      $or: [
+        { email: email.toLowerCase().trim() },
+        // Also check if email matches a phone number format (in case user enters phone as email)
+        { phone: email.trim() },
+        { phone: `+91${email.trim()}` }
+      ]
+    }).select('+password +securityInfo +registrationMethod +accountType');
+
+    console.log(`👤 USER SEARCH RESULT:`, user ? {
+      id: user._id,
+      email: user.email,
+      phone: user.phone,
+      hasPassword: !!user.password,
+      registrationMethod: user.registrationMethod,
+      accountType: user.accountType
+    } : 'No user found');
 
     if (!user) {
       req.authFailed = true;
-      console.log(`Login attempt with non-existent email: ${email} from IP: ${req.ip}`);
+      console.log(`❌ LOGIN FAILED: No user found with email: ${email} from IP: ${req.ip}`);
 
       return res.status(401).json({
         success: false,
@@ -276,15 +391,20 @@ const login = async (req, res) => {
       });
     }
 
-    // Check if user was created via OTP but hasn't set a password
-    if (!user.password && user.registrationMethod === 'otp') {
-      console.log(`Login attempt for OTP user without password: ${email} from IP: ${req.ip}`);
+    // ENHANCED: Check if user was created via OTP but hasn't set a password
+    if (!user.password && (user.registrationMethod === 'otp' || user.accountType === 'otp-only')) {
+      console.log(`🔗 LOGIN ATTEMPT: OTP-only user trying email login: ${email} from IP: ${req.ip}`);
+      console.log(`👤 User details: ID=${user._id}, phone=${user.phone}, accountType=${user.accountType}`);
 
       return res.status(400).json({
         success: false,
-        message: 'Please complete your registration by setting up a password',
+        message: 'Account found but password not set. Please register with your email to complete your account setup.',
         action: 'complete_registration',
-        hint: 'You signed up using phone verification. Please complete your profile by creating a password.'
+        hint: 'You signed up using phone verification. Please go to Register page and complete your profile with email and password.',
+        userExists: true,
+        needsPasswordSetup: true,
+        phone: user.phone,
+        userId: user._id
       });
     }
 
@@ -299,7 +419,9 @@ const login = async (req, res) => {
     }
 
     // Verify password
+    console.log(`🔐 PASSWORD CHECK: Comparing password for user ${email}`);
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(`🔐 PASSWORD RESULT: ${isPasswordValid ? 'VALID' : 'INVALID'}`);
 
     if (!isPasswordValid) {
       req.authFailed = true;
@@ -312,20 +434,23 @@ const login = async (req, res) => {
       user.securityInfo.failedLoginAttempts = (user.securityInfo.failedLoginAttempts || 0) + 1;
       user.securityInfo.lastFailedLogin = new Date();
 
+      console.log(`❌ LOGIN FAILED: Invalid password for ${email}. Attempts: ${user.securityInfo.failedLoginAttempts}/5`);
+
       // Lock account after 5 failed attempts
       if (user.securityInfo.failedLoginAttempts >= 5) {
         user.securityInfo.accountLocked = true;
         user.securityInfo.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-        console.log(`Account locked for user: ${email} due to failed login attempts from IP: ${req.ip}`);
+        console.log(`🔒 ACCOUNT LOCKED: ${email} due to failed login attempts from IP: ${req.ip}`);
       }
 
       await user.save();
 
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials',
-        attemptsRemaining: Math.max(0, 5 - user.securityInfo.failedLoginAttempts)
+        message: 'Invalid email or password. Please check your credentials.',
+        attemptsRemaining: Math.max(0, 5 - user.securityInfo.failedLoginAttempts),
+        hint: user.securityInfo.failedLoginAttempts >= 3 ? 'If you forgot your password, use the "Forgot Password" link.' : undefined
       });
     }
 
@@ -688,6 +813,86 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Check if user exists (for frontend to guide user)
+const checkUserExists = async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+
+    if (!email && !phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email or phone is required'
+      });
+    }
+
+    let query = {};
+    if (email) {
+      query.$or = [
+        { email: email.toLowerCase().trim() }
+      ];
+    }
+    if (phone) {
+      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+      query.$or = query.$or || [];
+      query.$or.push(
+        { phone: phone },
+        { phone: formattedPhone }
+      );
+    }
+
+    const user = await User.findOne(query).select('email phone registrationMethod accountType');
+
+    if (!user) {
+      return res.json({
+        success: true,
+        exists: false,
+        message: 'No account found. You can register a new account.',
+        action: 'register'
+      });
+    }
+
+    // User exists - check their account type
+    const isOtpOnlyUser = (
+      (!user.password && user.registrationMethod === 'otp') || 
+      (user.accountType === 'otp-only') ||
+      // CRITICAL FIX: Also check for OTP users without accountType field (legacy users)
+      (!user.email && user.phone && user.registrationMethod === 'otp')
+    );
+
+    if (isOtpOnlyUser) {
+      return res.json({
+        success: true,
+        exists: true,
+        needsLinking: true,
+        message: 'Account found with phone verification. Complete your registration by adding email and password.',
+        action: 'complete_registration',
+        phone: user.phone,
+        hasEmail: !!user.email,
+        userId: user._id,
+        registrationMethod: user.registrationMethod,
+        accountType: user.accountType || 'otp-legacy'
+      });
+    }
+
+    return res.json({
+      success: true,
+      exists: true,
+      needsLinking: false,
+      message: 'Account found. You can login with your credentials.',
+      action: 'login',
+      hasEmail: !!user.email,
+      hasPhone: !!user.phone
+    });
+
+  } catch (error) {
+    console.error('Check user exists error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -696,5 +901,6 @@ module.exports = {
   logout,
   forgotPassword,
   resetPassword,
-  validatePasswordStrength
+  validatePasswordStrength,
+  checkUserExists
 };

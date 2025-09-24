@@ -35,16 +35,16 @@ const useAuth = () => {
     try {
       const response = await api.post('/auth/send-otp', { phone });
 
-      if (response.success) {
+      if (response.data.success) {
         console.log(`OTP sent to +91${phone}`);
         return { 
           success: true, 
-          message: response.message,
-          data: response.data 
+          message: response.data.message,
+          data: response.data.data 
         };
       } else {
-        console.error(response.message || 'Failed to send OTP');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Failed to send OTP');
+        return { success: false, message: response.data.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to send OTP';
@@ -61,16 +61,16 @@ const useAuth = () => {
     try {
       const response = await api.post('/auth/resend-otp', { phone });
 
-      if (response.success) {
+      if (response.data.success) {
         console.log('OTP resent successfully!');
         return { 
           success: true, 
-          message: response.message,
-          data: response.data 
+          message: response.data.message,
+          data: response.data.data 
         };
       } else {
-        console.error(response.message || 'Failed to resend OTP');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Failed to resend OTP');
+        return { success: false, message: response.data.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to resend OTP';
@@ -87,8 +87,8 @@ const useAuth = () => {
     try {
       const response = await api.post('/auth/verify-otp', { phone, otp });
 
-      if (response.success) {
-        const { token, user: userData } = response.data;
+      if (response.data.success) {
+        const { token, user: userData } = response.data.data;
 
         // Store auth data
         localStorage.setItem('token', token);
@@ -99,8 +99,8 @@ const useAuth = () => {
 
         return { success: true, user: userData };
       } else {
-        console.error(response.message || 'Invalid OTP');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Invalid OTP');
+        return { success: false, message: response.data.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Invalid OTP';
@@ -192,12 +192,12 @@ const useAuth = () => {
     try {
       const response = await api.post('/auth/forgot-password', { email });
 
-      if (response.success) {
+      if (response.data.success) {
         console.log('Password reset link sent to your email!');
-        return { success: true, message: response.message };
+        return { success: true, message: response.data.message };
       } else {
-        console.error(response.message || 'Failed to send reset email');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Failed to send reset email');
+        return { success: false, message: response.data.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Failed to send reset email';
@@ -214,17 +214,41 @@ const useAuth = () => {
     try {
       const response = await api.post('/auth/register', userData);
 
-      if (response.success) {
-        console.log('Account created successfully!');
-        return { success: true, message: response.message };
+      if (response.data.success) {
+        console.log('Account created/linked successfully!');
+        
+        // CRITICAL FIX: Handle account linking
+        if (response.data.accountLinked) {
+          // Store auth data for linked account
+          const { token, user } = response.data;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          setUser(user);
+          
+          return { 
+            success: true, 
+            message: response.data.message,
+            accountLinked: true,
+            user: user,
+            token: token
+          };
+        }
+        
+        return { success: true, message: response.data.message };
       } else {
-        console.error(response.message || 'Registration failed');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Registration failed');
+        return { success: false, message: response.data.message };
       }
     } catch (error) {
-      const message = error.response?.data?.message || error.message || 'Registration failed';
-      console.error(message);
-      return { success: false, message };
+      const errorData = error.response?.data;
+      const message = errorData?.message || error.message || 'Registration failed';
+      console.error('Registration error:', message);
+      
+      return { 
+        success: false, 
+        message,
+        accountLinked: errorData?.accountLinked || false
+      };
     } finally {
       setLoading(false);
     }
@@ -236,8 +260,8 @@ const useAuth = () => {
     try {
       const response = await api.post('/auth/login', { email, password });
 
-      if (response.success) {
-        const { token, user: userData } = response;
+      if (response.data.success) {
+        const { token, user: userData } = response.data;
 
         // Store auth data
         localStorage.setItem('token', token);
@@ -248,13 +272,40 @@ const useAuth = () => {
 
         return { success: true, user: userData };
       } else {
-        console.error(response.message || 'Login failed');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Login failed');
+        return { 
+          success: false, 
+          message: response.data.message,
+          attemptsRemaining: response.data.attemptsRemaining,
+          hint: response.data.hint
+        };
       }
     } catch (error) {
-      const message = error.response?.data?.message || error.message || 'Login failed';
-      console.error(message);
-      return { success: false, message };
+      console.error('Error logging in:', error);
+      const errorData = error.response?.data;
+
+      // Handle specific error cases
+      if (errorData?.action === 'complete_registration') {
+        return {
+          success: false,
+          message: errorData.message,
+          action: 'complete_registration',
+          hint: errorData.hint,
+          needsPasswordSetup: true
+        };
+      } else if (errorData?.message?.includes('Invalid')) {
+        return {
+          success: false,
+          message: errorData.message || 'Invalid email or password. Please check your credentials.',
+          attemptsRemaining: errorData.attemptsRemaining,
+          hint: errorData.hint
+        };
+      } else {
+        return { 
+          success: false, 
+          message: errorData?.message || error.message || 'Login failed' 
+        };
+      }
     } finally {
       setLoading(false);
     }

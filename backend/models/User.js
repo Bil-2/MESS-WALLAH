@@ -59,6 +59,16 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // CRITICAL: Account linking fields for unified authentication
+  accountType: {
+    type: String,
+    enum: ['otp-only', 'email-only', 'unified'],
+    default: 'email-only'
+  },
+  canLinkEmail: {
+    type: Boolean,
+    default: false
+  },
   college: {
     type: String,
     maxlength: [100, 'College name cannot exceed 100 characters']

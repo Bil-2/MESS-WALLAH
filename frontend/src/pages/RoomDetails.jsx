@@ -173,6 +173,7 @@ const RoomDetails = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Room not found</h2>
           <button
+            type="button"
             onClick={() => navigate('/rooms')}
             className="btn-primary"
           >
@@ -188,6 +189,7 @@ const RoomDetails = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* Back Button */}
         <motion.button 
+          type="button"
           onClick={() => navigate('/rooms')}
           className="flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 mb-8 transition-colors group"
           whileHover={{ x: -5 }}

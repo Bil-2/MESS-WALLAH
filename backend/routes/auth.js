@@ -17,7 +17,7 @@ const {
 const { sendOtp, verifyOtp, resendOtp } = require('../controllers/otpController');
 
 // Import auth controller
-const { register, login, forgotPassword, resetPassword, changePassword, getProfile, logout } = require('../controllers/authController');
+const { register, login, forgotPassword, resetPassword, changePassword, getProfile, logout, checkUserExists } = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -451,5 +451,13 @@ router.post('/logout', [protect, csrfProtection], (req, res) => {
     message: 'Logged out successfully'
   });
 });
+
+// @desc    Check if user exists
+// @route   POST /api/auth/check-user
+// @access  Public
+router.post('/check-user', [
+  body('email').optional().isEmail().withMessage('Please provide a valid email'),
+  body('phone').optional().isMobilePhone().withMessage('Please provide a valid phone number')
+], checkUserExists);
 
 module.exports = router;

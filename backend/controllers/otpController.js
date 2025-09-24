@@ -202,44 +202,72 @@ const verifyOtp = async (req, res) => {
       await Otp.deleteOne({ _id: existingOtp._id });
     }
 
-    // OTP verification successful - find or create user
+    // OTP verification successful - find or create user with UNIFIED ACCOUNT SYSTEM
     let user = await User.findOne({ phone: formattedPhone });
     
     if (!user) {
-      // Create new user with phone number - works for ALL numbers
-      try {
-        user = new User({
-          phone: formattedPhone,
-          name: `User${formattedPhone.slice(-4)}`, // Default name using last 4 digits
-          role: 'user',
-          isPhoneVerified: true,
-          registrationMethod: 'otp',
-          isActive: true,
-          createdAt: new Date(),
-          lastLogin: new Date()
-          // Don't set email to avoid duplicate key error
-        });
-        await user.save();
-        console.log(`✅ NEW USER CREATED via OTP: ${formattedPhone} with name: ${user.name}`);
-      } catch (saveError) {
-        if (saveError.code === 11000) {
-          // Duplicate key error, try to find existing user
-          user = await User.findOne({ phone: formattedPhone });
-          if (!user) {
-            // If still no user, create with unique identifier
-            user = new User({
-              phone: formattedPhone,
-              name: `User${formattedPhone.slice(-4)}_${Date.now()}`,
-              role: 'user',
-              isPhoneVerified: true,
-              registrationMethod: 'otp',
-              isActive: true
-            });
-            await user.save();
+      // CRITICAL FIX: Check if user exists with same phone in different format
+      const phoneVariants = [
+        formattedPhone,
+        formattedPhone.replace('+91', ''),
+        formattedPhone.replace('+', ''),
+        phone // Original input
+      ];
+      
+      user = await User.findOne({ 
+        phone: { $in: phoneVariants }
+      });
+      
+      if (!user) {
+        // Create new user with phone number - works for ALL numbers
+        try {
+          user = new User({
+            phone: formattedPhone,
+            name: `User${formattedPhone.slice(-4)}`, // Default name using last 4 digits
+            role: 'user',
+            isPhoneVerified: true,
+            registrationMethod: 'otp',
+            isActive: true,
+            createdAt: new Date(),
+            lastLogin: new Date(),
+            // CRITICAL: Mark as OTP-only account that can be linked later
+            accountType: 'otp-only',
+            canLinkEmail: true
+          });
+          await user.save();
+          console.log(`✅ NEW OTP-ONLY USER CREATED: ${formattedPhone} with name: ${user.name}`);
+        } catch (saveError) {
+          if (saveError.code === 11000) {
+            // Duplicate key error, try to find existing user
+            user = await User.findOne({ phone: formattedPhone });
+            if (!user) {
+              // If still no user, create with unique identifier
+              user = new User({
+                phone: formattedPhone,
+                name: `User${formattedPhone.slice(-4)}_${Date.now()}`,
+                role: 'user',
+                isPhoneVerified: true,
+                registrationMethod: 'otp',
+                isActive: true,
+                accountType: 'otp-only',
+                canLinkEmail: true
+              });
+              await user.save();
+            }
+          } else {
+            throw saveError;
           }
-        } else {
-          throw saveError;
         }
+      } else {
+        // Update existing user's phone format if needed
+        if (user.phone !== formattedPhone) {
+          user.phone = formattedPhone;
+        }
+        user.isPhoneVerified = true;
+        user.lastLogin = new Date();
+        user.isActive = true;
+        await user.save();
+        console.log(`✅ EXISTING USER FOUND AND UPDATED: ${formattedPhone}`);
       }
     } else {
       // Update existing user

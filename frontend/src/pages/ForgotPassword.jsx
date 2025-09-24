@@ -171,6 +171,7 @@ const ForgotPassword = () => {
                   Didn't receive the email? Check your spam folder or try again.
                 </p>
                 <button
+                  type="button"
                   onClick={() => {
                     setEmailSent(false);
                     setEmail('');
