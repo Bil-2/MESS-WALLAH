@@ -354,6 +354,60 @@ class AccountLinkingService {
       return { error: error.message };
     }
   }
+  /**
+   * Merge two accounts (Source -> Target)
+   * Used when an authenticated user adds a phone/email that belongs to an OTP-only account
+   * @param {Object} targetUser - The user to keep (currently logged in)
+   * @param {Object} sourceUser - The user to merge and delete (usually OTP-only)
+   * @returns {Object} - Merged user
+   */
+  static async mergeAccounts(targetUser, sourceUser) {
+    try {
+      console.log(`[INFO] MERGING ACCOUNTS: ${sourceUser._id} -> ${targetUser._id}`);
+
+      // 1. Move Bookings
+      const Booking = require('../models/Booking');
+      await Booking.updateMany(
+        { userId: sourceUser._id },
+        { $set: { userId: targetUser._id } }
+      );
+
+      // 2. Move Rooms (if owner)
+      const Room = require('../models/Room');
+      await Room.updateMany(
+        { owner: sourceUser._id },
+        { $set: { owner: targetUser._id } }
+      );
+
+      // 3. Update Target User with Source's verified info if missing
+      if (!targetUser.phone && sourceUser.phone) {
+        // CRITICAL: Unset phone from source user first to avoid duplicate key error
+        // Since we don't have transactions in standalone mode, we must do this first
+        await User.updateOne({ _id: sourceUser._id }, { $unset: { phone: 1 } });
+
+        targetUser.phone = sourceUser.phone;
+        targetUser.isPhoneVerified = sourceUser.isPhoneVerified;
+      }
+
+      // 4. Mark Target as Unified
+      targetUser.accountType = 'unified';
+      targetUser.canLinkEmail = false;
+      targetUser.profileCompleted = true;
+
+      await targetUser.save();
+
+      // 5. Delete Source User
+      await User.deleteOne({ _id: sourceUser._id });
+
+      console.log(`[SUCCESS] Accounts merged successfully`);
+
+      return targetUser;
+
+    } catch (error) {
+      console.error('[ERROR] Account merge error:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AccountLinkingService;

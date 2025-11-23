@@ -413,8 +413,11 @@ router.get('/:id', protect, async (req, res) => {
     console.log('   Request user._id:', req.user._id.toString());
     console.log('   Booking ownerId:', booking.ownerId.toString());
 
-    const isAuthorized = booking.userId.toString() === req.user._id.toString() ||
-      booking.ownerId.toString() === req.user._id.toString();
+    const userId = booking.userId._id ? booking.userId._id.toString() : booking.userId.toString();
+    const ownerId = booking.ownerId._id ? booking.ownerId._id.toString() : booking.ownerId.toString();
+
+    const isAuthorized = userId === req.user._id.toString() ||
+      ownerId === req.user._id.toString();
 
     console.log('   Is authorized:', isAuthorized);
 
@@ -474,7 +477,10 @@ router.patch('/:id/status', [
     }
 
     // Check if user owns this room
-    if (booking.ownerId.toString() !== req.user.id) {
+    // Handle populated ownerId
+    const ownerId = booking.ownerId._id ? booking.ownerId._id.toString() : booking.ownerId.toString();
+
+    if (ownerId !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this booking'

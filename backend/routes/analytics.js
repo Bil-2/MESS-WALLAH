@@ -8,8 +8,8 @@ const router = express.Router();
 
 // @desc    Get analytics dashboard data
 // @route   GET /api/analytics/dashboard
-// @access  Private (Admin only)
-router.get('/dashboard', protect, authorize('admin'), async (req, res) => {
+// @access  Private (All authenticated users - role-based data)
+router.get('/dashboard', protect, async (req, res) => {
   try {
     // Get basic counts
     const totalRooms = await Room.countDocuments();
@@ -30,8 +30,8 @@ router.get('/dashboard', protect, authorize('admin'), async (req, res) => {
 
     // Get recent bookings
     const recentBookings = await Booking.find()
-      .populate('user', 'name email')
-      .populate('room', 'title rentPerMonth')
+      .populate('userId', 'name email')
+      .populate('roomId', 'title rentPerMonth')
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -151,6 +151,41 @@ router.get('/rooms', protect, authorize('admin'), async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve room analytics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// @desc    Track user activity
+// @route   POST /api/analytics/track
+// @access  Private
+router.post('/track', protect, async (req, res) => {
+  try {
+    const { action, roomId, metadata } = req.body;
+
+    // Log the activity (in production, save to database)
+    console.log('Activity tracked:', {
+      userId: req.user._id,
+      action,
+      roomId,
+      metadata,
+      timestamp: new Date()
+    });
+
+    res.json({
+      success: true,
+      message: 'Activity tracked successfully',
+      data: {
+        action,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Track activity error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to track activity',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

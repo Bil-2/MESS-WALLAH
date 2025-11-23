@@ -4,9 +4,9 @@
   "description": "> **Complete accommodation marketplace with 100% API success rate guarantee**",
   "main": "test-all-apis.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test:api": "node tests/run-all-tests.js",
-    "test:all": "node tests/run-all-tests.js",
+    "test": "node test-everything.js",
+    "test:all": "node test-everything.js",
+    "test:api": "node tests/api/test-all-apis.js",
     "test:core": "node tests/api/test-all-apis.js",
     "test:profile": "node tests/api/test-profile-apis.js",
     "test:email": "node tests/api/test-email-apis.js",

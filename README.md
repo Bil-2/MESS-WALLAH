@@ -6,7 +6,7 @@
 
 **🎯 Production-Ready MERN Stack Accommodation Marketplace**
 
-*Making student accommodation hunting simple, safe, and reliable across India*
+_Making student accommodation hunting simple, safe, and reliable across India_
 
 [![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18.0+-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
@@ -28,6 +28,7 @@
 **MESS WALLAH** is a comprehensive, production-ready accommodation marketplace specifically designed for students and families across India. Built with modern MERN stack technologies, it offers a complete solution for finding, booking, and managing student accommodations with enterprise-level security and 100% API reliability.
 
 ### **🎯 Why MESS WALLAH?**
+
 - **🏠 970+ Verified Rooms** across 90+ cities in India
 - **🔐 Dual Authentication** - SMS & Email OTP with real-time verification
 - **📱 Mobile-First Design** - Perfect responsive experience across all devices
@@ -38,6 +39,7 @@
 ## 🎯 **PROJECT HIGHLIGHTS**
 
 ### **🏆 Production-Level Achievement**
+
 - ✅ **100% API Success Rate** - Guaranteed functionality every time
 - ✅ **Production Startup System** - Automatic service verification
 - ✅ **Enterprise Security** - JWT, rate limiting, input validation
@@ -48,6 +50,7 @@
 ### **🚀 Complete Feature Set**
 
 #### **🔐 Authentication & Security**
+
 - **Dual OTP System** - SMS (Twilio) + Email (SendGrid) verification
 - **JWT Authentication** - Secure token-based session management
 - **Role-Based Access** - Student, Owner, Admin permissions
@@ -56,6 +59,7 @@
 - **Input Validation** - Comprehensive data sanitization
 
 #### **🏠 Room Management**
+
 - **Complete CRUD Operations** - Create, read, update, delete rooms
 - **Advanced Search & Filters** - Location, price, amenities, room type
 - **Image Management** - Multiple photo uploads with Cloudinary
@@ -64,6 +68,7 @@
 - **Owner Dashboard** - Comprehensive room management interface
 
 #### **📅 Booking System**
+
 - **Full Booking Lifecycle** - Request, confirmation, payment, completion
 - **Status Tracking** - Real-time booking status updates
 - **Email Notifications** - Automated booking confirmations
@@ -72,6 +77,7 @@
 - **Cancellation Management** - Flexible cancellation policies
 
 #### **👥 User Experience**
+
 - **Responsive Design** - Perfect mobile, tablet, desktop experience
 - **Dark/Light Mode** - Theme switching capability
 - **Progressive Web App** - PWA features for mobile installation
@@ -80,6 +86,7 @@
 - **Accessibility** - WCAG compliant design elements
 
 #### **📊 Admin & Analytics**
+
 - **Admin Dashboard** - Comprehensive platform analytics
 - **User Management** - Complete user administration
 - **Booking Analytics** - Revenue and booking insights
@@ -89,6 +96,7 @@
 ## 🛠️ **TECHNOLOGY STACK**
 
 ### **Frontend (React Ecosystem)**
+
 - **React 18.2.0** - Latest React with concurrent features
 - **Vite 4.4+** - Lightning-fast build tool and dev server
 - **Tailwind CSS 3.3+** - Utility-first CSS framework
@@ -98,6 +106,7 @@
 - **React Hot Toast** - Toast notifications
 
 ### **Backend (Node.js Ecosystem)**
+
 - **Node.js 18+** - JavaScript runtime
 - **Express.js 4.18+** - Web application framework
 - **MongoDB 6.0+** - NoSQL database with Mongoose ODM
@@ -107,12 +116,14 @@
 - **express-rate-limit** - API rate limiting
 
 ### **Third-Party Integrations**
+
 - **Twilio Verify** - SMS OTP service
 - **SendGrid** - Email service with professional templates
 - **Cloudinary** - Image upload and management
 - **Razorpay** - Payment gateway integration
 
 ### **Security & Performance**
+
 - **Helmet.js** - Security headers
 - **CORS** - Cross-origin resource sharing
 - **Morgan** - HTTP request logging
@@ -122,6 +133,7 @@
 ## 🚀 **QUICK START GUIDE**
 
 ### **📋 Prerequisites**
+
 - **Node.js 18+** (LTS recommended)
 - **MongoDB 6.0+** (Local installation or MongoDB Atlas)
 - **Git** for version control
@@ -129,6 +141,7 @@
 - **SendGrid Account** (optional - for production emails)
 
 ### **⚡ One-Command Setup**
+
 ```bash
 # Clone repository
 git clone https://github.com/Bil-2/MESS-WALLAH.git
@@ -145,6 +158,7 @@ npm run production:start
 ```
 
 ### **🎯 Development Mode (No External Services Required)**
+
 ```bash
 # Backend setup
 cd backend
@@ -157,6 +171,7 @@ npm run dev
 ```
 
 **🌐 Access Points:**
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5001
 - **Health Check**: http://localhost:5001/health
@@ -164,6 +179,7 @@ npm run dev
 ### **🔧 Manual Setup (Development)**
 
 #### **Backend Setup**
+
 ```bash
 cd backend
 npm install
@@ -173,6 +189,7 @@ cp .env.example .env
 ```
 
 **Configure `.env` file:**
+
 ```env
 # Database
 MONGODB_URI=mongodb://localhost:27017/mess-wallah
@@ -199,6 +216,7 @@ FRONTEND_URL=http://localhost:5173
 ```
 
 **Start with production checks:**
+
 ```bash
 # Production startup (recommended)
 npm run production:start
@@ -208,6 +226,7 @@ npm run dev
 ```
 
 #### **Frontend Setup**
+
 ```bash
 cd frontend
 npm install
@@ -220,6 +239,7 @@ npm run dev
 ```
 
 ### **🌐 Access Points**
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:5001
 - **Health Check**: http://localhost:5001/health
@@ -232,30 +252,35 @@ npm run dev
 ### **🔥 Key Demonstrations**
 
 #### **1. 🔐 Authentication Flow**
+
 - **SMS OTP**: Real Twilio integration with Indian phone numbers
 - **Email OTP**: Professional SendGrid email templates
 - **Development Mode**: Use OTP `123456` for testing
 - **JWT Security**: Secure token-based authentication
 
 #### **2. 🏠 Room Discovery**
+
 - **970+ Real Rooms** across 90+ Indian cities
 - **Advanced Filters**: Location, price range, amenities, room type
 - **Search Suggestions**: Auto-complete for cities and areas
 - **Featured Rooms**: Premium highlighted accommodations
 
 #### **3. 📱 Mobile Experience**
+
 - **Responsive Design**: Perfect on all screen sizes
 - **Touch Optimized**: Mobile-first interaction design
 - **PWA Features**: Install as mobile app
 - **Offline Support**: Basic functionality without internet
 
 #### **4. 🛡️ Safety Features**
+
 - **Verified Owners**: Complete verification process
 - **Safety Ratings**: User-generated safety scores
 - **Emergency Contacts**: Quick access to help
 - **Girls Safety**: Special safety measures and indicators
 
 #### **5. 📊 Admin Dashboard**
+
 - **Real-time Analytics**: User engagement and booking metrics
 - **Room Management**: Complete CRUD operations
 - **User Administration**: Account management and verification
@@ -266,6 +291,7 @@ npm run dev
 ### **🎯 Dual OTP System (SMS + Email)**
 
 #### **SMS OTP (Primary)**
+
 ```bash
 # Send SMS OTP
 curl -X POST http://localhost:5001/api/auth/send-otp \
@@ -279,6 +305,7 @@ curl -X POST http://localhost:5001/api/auth/verify-otp \
 ```
 
 #### **Email OTP (Alternative)**
+
 ```bash
 # Send Email OTP
 curl -X POST http://localhost:5001/api/auth/send-otp-email \
@@ -294,12 +321,14 @@ curl -X POST http://localhost:5001/api/auth/verify-otp-email \
 ### **🔧 OTP Modes**
 
 #### **Development Mode (No External Services)**
+
 - **SMS OTP**: Always accepts `123456`
 - **Email OTP**: Always accepts `123456`
 - **Console Logging**: OTP displayed in server console
 - **Perfect for**: Development, testing, demos
 
 #### **Production Mode (Real Services)**
+
 - **SMS OTP**: Real SMS via Twilio Verify
 - **Email OTP**: Professional emails via SendGrid
 - **Security**: Only real OTP codes accepted
@@ -308,6 +337,7 @@ curl -X POST http://localhost:5001/api/auth/verify-otp-email \
 ## 🔧 **COMPLETE API DOCUMENTATION**
 
 ### **🔐 Authentication APIs (100% Working)**
+
 ```
 POST /api/auth/register           - User registration with email
 POST /api/auth/login              - Email/password login
@@ -323,6 +353,7 @@ POST /api/auth/logout             - User logout
 ```
 
 ### **🏠 Room Management APIs (100% Working)**
+
 ```
 GET    /api/rooms                 - Get all rooms with filters
 GET    /api/rooms/featured        - Get featured rooms
@@ -334,6 +365,7 @@ PATCH  /api/rooms/:id/availability - Toggle room availability
 ```
 
 ### **📅 Booking Management APIs (100% Working)**
+
 ```
 GET  /api/bookings                - Get all bookings (Admin)
 GET  /api/bookings/my-bookings    - Get user's bookings
@@ -344,6 +376,7 @@ DELETE /api/bookings/:id          - Cancel booking
 ```
 
 ### **🔍 Search & Filter APIs (100% Working)**
+
 ```
 GET  /api/search                  - Basic room search
 POST /api/search/advanced         - Advanced search with filters
@@ -351,6 +384,7 @@ GET  /api/search/suggestions      - Search suggestions
 ```
 
 ### **👥 User Management APIs (100% Working)**
+
 ```
 GET /api/users                    - Get all users (Admin)
 GET /api/users/:id                - Get single user
@@ -358,12 +392,14 @@ PUT /api/users/:id                - Update user (Admin)
 ```
 
 ### **📊 Analytics APIs (100% Working)**
+
 ```
 GET /api/analytics/dashboard      - Admin dashboard analytics
 GET /api/analytics/rooms          - Room analytics
 ```
 
 ### **🔧 Service APIs (100% Working)**
+
 ```
 GET /api/test-sms/config          - SMS service configuration
 GET /api/test-sms/twilio-status   - Twilio service status
@@ -375,6 +411,7 @@ GET /api/test                     - API connectivity test
 ## 🗄️ **DATABASE MODELS**
 
 ### **👤 User Model (Complete)**
+
 ```javascript
 {
   name: String (required),
@@ -420,6 +457,7 @@ GET /api/test                     - API connectivity test
 ```
 
 ### **🏠 Room Model (Complete)**
+
 ```javascript
 {
   owner: ObjectId (ref: 'User'),
@@ -461,6 +499,7 @@ GET /api/test                     - API connectivity test
 ```
 
 ### **📅 Booking Model (Complete)**
+
 ```javascript
 {
   user: ObjectId (ref: 'User'),
@@ -496,6 +535,7 @@ GET /api/test                     - API connectivity test
 ```
 
 ### **📱 OTP Model (Complete)**
+
 ```javascript
 {
   phone: String (optional),
@@ -513,20 +553,35 @@ GET /api/test                     - API connectivity test
 ## 🧪 **COMPREHENSIVE TESTING**
 
 ### **🎯 100% API Success Rate Verification**
-```bash
-# Run complete API test suite
-cd backend
-npm run api:test
 
-# Expected Result: 24/24 tests pass (100% success rate)
-# ✅ Authentication APIs (8/8 tests)
-# ✅ Room Management APIs (6/6 tests) 
-# ✅ Booking System APIs (5/5 tests)
-# ✅ Search & Filter APIs (3/3 tests)
-# ✅ Admin & Analytics APIs (2/2 tests)
+```bash
+# Run complete 400+ API test suite (ONE COMMAND!)
+npm test
+
+# Expected Result: 400/400 tests pass (100% success rate)
+# ✅ System Health: 60/60 (100%)
+# ✅ Room Operations: 140/140 (100%)
+# ✅ Search Operations: 50/50 (100%)
+# ✅ Analytics: 50/50 (100%)
+# ✅ Payment System: 50/50 (100%)
+# ✅ SMS Service: 50/50 (100%)
+```
+
+### **⚡ Quick Test Commands**
+
+```bash
+# Test everything (400+ tests)
+npm test
+
+# Test individual API suites
+npm run test:api      # Core API tests
+npm run test:profile  # Profile API tests
+npm run test:email    # Email service tests
+npm run test:sms      # SMS service tests
 ```
 
 ### **🔧 Production Health Verification**
+
 ```bash
 # Complete system health check
 npm run production:check
@@ -538,6 +593,7 @@ curl http://localhost:5001/api/rooms       # Database connection
 ```
 
 ### **📱 Frontend Testing**
+
 ```bash
 cd frontend
 npm run build                              # Production build test
@@ -545,6 +601,7 @@ npm run preview                            # Preview production build
 ```
 
 ### **🎯 Manual Testing Checklist**
+
 - [ ] **User Registration** - Email/SMS OTP verification
 - [ ] **User Login** - JWT token generation and validation
 - [ ] **Room Search** - Advanced filters and pagination
@@ -555,6 +612,7 @@ npm run preview                            # Preview production build
 - [ ] **Security Features** - Rate limiting and validation
 
 ### **📱 Complete Authentication Flow**
+
 ```bash
 # 1. Send SMS OTP
 curl -X POST http://localhost:5001/api/auth/send-otp \
@@ -572,6 +630,7 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 ```
 
 ### **🏠 Room Management Test**
+
 ```bash
 # Create room (Owner)
 curl -X POST http://localhost:5001/api/rooms \
@@ -608,6 +667,7 @@ curl -X POST http://localhost:5001/api/search/advanced \
 ### **🌐 Deployment Platforms**
 
 #### **Backend Deployment (Railway/Render/Heroku)**
+
 ```bash
 # Railway (Recommended)
 railway login
@@ -628,6 +688,7 @@ git push heroku main
 ```
 
 #### **Frontend Deployment (Vercel/Netlify)**
+
 ```bash
 # Vercel (Recommended)
 npm i -g vercel
@@ -644,12 +705,14 @@ npm run build:prod
 ```
 
 #### **Database (MongoDB Atlas)**
+
 1. Create cluster on [MongoDB Atlas](https://cloud.mongodb.com)
 2. Create database user and get connection string
 3. Update `MONGODB_URI` in production environment
 4. Whitelist deployment platform IPs (0.0.0.0/0 for development)
 
 ### **🔧 Environment Variables for Production**
+
 ```env
 # Backend (.env)
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/mess-wallah
@@ -670,6 +733,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 ## 🛡️ **SECURITY FEATURES**
 
 ### **🔒 Production-Level Security**
+
 - **JWT Authentication** - Secure token-based authentication with expiration
 - **Rate Limiting** - 100 requests per 15 minutes per IP address
 - **CORS Protection** - Configured for specific frontend domains
@@ -681,6 +745,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 - **Error Handling** - Secure error messages (no sensitive data exposure)
 
 ### **🔐 Authentication Security**
+
 - **Dual OTP System** - SMS and Email OTP options
 - **Account Lockout** - Temporary lockout after failed attempts
 - **Password Reset** - Secure token-based password reset
@@ -692,6 +757,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 ## 🏆 **PROJECT HIGHLIGHTS FOR INTERVIEWS**
 
 ### **💼 Business Impact & Real-World Application**
+
 - **🎯 Solves Real Problem** - Student accommodation crisis in India
 - **📈 Scalable Solution** - Built to handle thousands of users
 - **💰 Revenue Model** - Commission-based booking system
@@ -700,6 +766,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 - **🛡️ Safety-First** - Special focus on girls' safety and security
 
 ### **🏆 Technical Excellence**
+
 - **100% API Success Rate** - All 24 endpoints working flawlessly
 - **Production-Ready Architecture** - Enterprise-level code quality
 - **Real-Time Communication** - SMS (Twilio) + Email (SendGrid) integration
@@ -711,6 +778,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 - **Clean Code Architecture** - Modular, maintainable, and scalable codebase
 
 ### **🎨 Frontend Excellence**
+
 - **Modern React 18** - Latest React features with concurrent rendering
 - **Mobile-First Design** - Perfect responsive experience across all devices
 - **Performance Optimized** - Code splitting, lazy loading, image optimization
@@ -721,6 +789,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 - **Component Architecture** - Reusable, composable component library
 
 ### **⚡ Backend Excellence**
+
 - **RESTful API Design** - Proper HTTP methods, status codes, and conventions
 - **Database Design** - Normalized MongoDB schemas with proper relationships
 - **Third-Party Integrations** - Twilio, SendGrid, Cloudinary, Razorpay ready
@@ -735,6 +804,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 ## 📚 **LEARNING OUTCOMES**
 
 ### **🎓 Skills Demonstrated**
+
 - **Full-Stack Development** - Complete MERN stack implementation
 - **API Development** - RESTful API design and implementation
 - **Database Management** - MongoDB schema design and optimization
@@ -745,6 +815,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 - **Testing** - API testing and quality assurance
 
 ### **💼 Industry-Ready Features**
+
 - **Real-World Problem Solving** - Accommodation marketplace solution
 - **Scalable Architecture** - Built for growth and maintenance
 - **Professional Code Quality** - Clean, documented, and organized
@@ -789,6 +860,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ### **🎯 What Makes This Project Special**
 
 #### **🏢 Enterprise-Level Quality**
+
 - ✅ **100% API Success Rate** - All 24 endpoints working flawlessly
 - ✅ **Production Security** - JWT, rate limiting, input validation, XSS protection
 - ✅ **Real-Time Communication** - SMS (Twilio) + Email (SendGrid) integration
@@ -797,6 +869,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - ✅ **Clean Architecture** - Modular, maintainable, and scalable codebase
 
 #### **📱 User Experience Excellence**
+
 - ✅ **Mobile-First Design** - Perfect responsive experience across all devices
 - ✅ **Progressive Web App** - Install as mobile app with offline capabilities
 - ✅ **Smooth Animations** - Framer Motion powered interactions
@@ -805,6 +878,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - ✅ **Dark/Light Mode** - Complete theme switching capability
 
 #### **🚀 Business-Ready Features**
+
 - ✅ **970+ Real Rooms** - Comprehensive database across 90+ Indian cities
 - ✅ **Complete Booking System** - End-to-end booking lifecycle with payments
 - ✅ **Admin Dashboard** - Real-time analytics and management tools
@@ -813,6 +887,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - ✅ **Scalable Architecture** - Built to handle thousands of concurrent users
 
 #### **💼 Interview & Placement Ready**
+
 - ✅ **Clean Code Quality** - Professional-grade code organization
 - ✅ **Comprehensive Documentation** - Complete API and setup documentation
 - ✅ **Testing Suite** - 100% API functionality verification
@@ -821,6 +896,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - ✅ **Technical Depth** - Demonstrates full-stack expertise
 
 ### **🎖️ Technical Achievements Summary**
+
 - **Frontend**: React 18 + Vite + Tailwind CSS + Framer Motion
 - **Backend**: Node.js + Express + MongoDB + JWT Authentication
 - **Security**: Enterprise-grade security with rate limiting and validation
@@ -829,6 +905,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Deployment**: Production-ready with cloud platform compatibility
 
 ### **🌟 Perfect For:**
+
 - 🎓 **College Placements** - Demonstrates full-stack expertise
 - 💼 **Job Interviews** - Shows real-world problem-solving skills
 - 🚀 **Production Deployment** - Ready for actual business use
@@ -845,7 +922,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Built with ❤️ for students and families across India**
 
-*Making accommodation hunting simple, safe, and reliable*
+_Making accommodation hunting simple, safe, and reliable_
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/Bil-2/MESS-WALLAH)
 [![Portfolio](https://img.shields.io/badge/Portfolio-Visit-blue?style=for-the-badge&logo=web)](https://your-portfolio.com)
@@ -853,5 +930,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **⭐ Star this repository if it helped you! ⭐**
 
-</div> 
- 
+</div>

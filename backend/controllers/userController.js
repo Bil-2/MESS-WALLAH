@@ -47,8 +47,9 @@ const updateUserProfile = async (req, res) => {
     }
 
     const { name, email, phone, profile } = req.body;
+    const AccountLinkingService = require('../services/accountLinkingService');
 
-    const user = await User.findById(req.user._id);
+    let user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -69,9 +70,47 @@ const updateUserProfile = async (req, res) => {
       user.verified = false; // Reset verification if email changed
     }
 
+    // Check if phone is being changed/added
+    if (phone && phone !== user.phone) {
+      const formattedPhone = AccountLinkingService.formatPhoneNumber(phone);
+
+      // Check if phone is taken
+      const accountSearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
+
+      if (accountSearch.found) {
+        const existingUser = accountSearch.user;
+
+        // Check if it's the same user (shouldn't happen if IDs differ)
+        if (existingUser._id.toString() !== user._id.toString()) {
+
+          // Check if we can merge (Source must be OTP-only)
+          const isOtpOnly = (
+            (!existingUser.password && existingUser.registrationMethod === 'otp') ||
+            (existingUser.accountType === 'otp-only')
+          );
+
+          if (isOtpOnly) {
+            console.log(`[INFO] Found existing OTP account ${existingUser._id} for phone ${formattedPhone}. Merging...`);
+            // Merge existing OTP account into current account
+            user = await AccountLinkingService.mergeAccounts(user, existingUser);
+            // User is updated, no need to set phone again
+          } else {
+            return res.status(400).json({
+              success: false,
+              message: 'Phone number is already associated with another account. Please login with that phone number.'
+            });
+          }
+        }
+      } else {
+        // Phone not taken, just update
+        user.phone = formattedPhone;
+        // If user is adding phone for first time, mark as verified if they verified it via OTP flow (frontend should handle verification)
+        // For now, we assume frontend verified it if they are sending it here
+      }
+    }
+
     // Update fields
     if (name) user.name = name;
-    if (phone) user.phone = phone;
     if (profile) {
       user.profile = { ...user.profile, ...profile };
     }
@@ -370,9 +409,9 @@ const getFavourites = async (req, res) => {
     console.log('[DEBUG] getFavourites - Starting...');
     console.log('[DEBUG] getFavourites - req.user exists:', !!req.user);
     console.log('[DEBUG] getFavourites - req.user._id:', req.user?._id);
-    
+
     const { page = 1, limit = 12 } = req.query;
-    
+
     // Ensure user exists
     if (!req.user) {
       return res.status(401).json({
@@ -380,11 +419,11 @@ const getFavourites = async (req, res) => {
         message: 'User not authenticated'
       });
     }
-    
+
     // Initialize favourites array if it doesn't exist
     let favourites = req.user.favourites || [];
     console.log('[DEBUG] getFavourites - favourites length:', favourites.length);
-    
+
     // Return empty favourites for now to test the basic flow
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const favouriteRooms = [];  // Empty for now
@@ -392,7 +431,7 @@ const getFavourites = async (req, res) => {
     const totalPages = 0;       // Empty for now
 
     console.log('[SUCCESS] getFavourites - Returning success response');
-    
+
     res.status(200).json({
       success: true,
       data: {
