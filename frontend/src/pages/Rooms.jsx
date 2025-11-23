@@ -57,8 +57,18 @@ const Rooms = () => {
       setLoading(true);
       setError(null);
 
-      // Simple API call without complex logic
-      const url = `/api/rooms?page=${currentPage}&limit=24`;
+      // Build URL with search parameters
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 24
+      });
+
+      // Add search parameter if it exists
+      if (filters.search) {
+        params.append('search', filters.search);
+      }
+
+      const url = `/api/rooms?${params.toString()}`;
       console.log('Fetching from:', url);
 
       const response = await fetch(url);
@@ -78,6 +88,7 @@ const Rooms = () => {
             _id: room._id,
             title: room.title,
             location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim(),
+            city: room.address?.city || '',
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
             ownerName: room.owner?.name || 'Property Owner',
@@ -116,7 +127,7 @@ const Rooms = () => {
       setLoading(false);
       console.log('fetchRooms completed');
     }
-  }, [currentPage]);
+  }, [currentPage, filters.search]);
 
   useEffect(() => {
     trackRender();
@@ -128,23 +139,19 @@ const Rooms = () => {
     }
   }, []); // Empty dependency array to run only once
 
-  // Simple useEffect to fetch rooms - run only once
+  // Fetch rooms when page or search changes
   useEffect(() => {
     console.log('useEffect triggered, calling fetchRooms...');
+    console.log('Current filters:', filters);
 
-    // Immediate fallback for testing
-    const fallbackRooms = generateMockRooms();
-    setRooms(fallbackRooms);
-    setLoading(false);
-
-    // Then try to fetch real data
+    // Fetch real data
     fetchRooms();
-  }, []); // Empty dependency array to run only once
+  }, [fetchRooms]); // Re-fetch when fetchRooms changes (which depends on currentPage and filters.search)
 
-  // Handle URL search parameters - run immediately when component mounts
+  // Handle URL search parameters - update filters when URL changes
   useEffect(() => {
     const searchParam = searchParams.get('search');
-    if (searchParam) {
+    if (searchParam && searchParam !== filters.search) {
       console.log('URL search parameter found:', searchParam);
       // Update filters to trigger search
       setFilters(prev => ({
@@ -153,20 +160,8 @@ const Rooms = () => {
         location: searchParam
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  // Also update filters immediately when rooms are loaded
-  useEffect(() => {
-    const searchParam = searchParams.get('search');
-    if (searchParam && rooms.length > 0) {
-      console.log('Rooms loaded, applying search filter:', searchParam);
-      setFilters(prev => ({
-        ...prev,
-        search: searchParam,
-        location: searchParam
-      }));
-    }
-  }, [rooms, searchParams]);
 
   // Filter rooms based on search criteria
   const filteredRooms = useMemo(() => {

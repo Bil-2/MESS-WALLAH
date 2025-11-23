@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -124,12 +125,21 @@ const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
 };
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, updateProfile } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(0);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      toast.error('Please login to view your profile');
+      navigate('/login');
+    }
+  }, [user, navigate]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -275,6 +285,18 @@ const Profile = () => {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
+
+  // Show loading state while checking authentication
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">

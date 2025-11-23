@@ -185,6 +185,24 @@ const UserSchema = new mongoose.Schema({
   },
   lockUntil: Date,
 
+  // Social Authentication
+  socialAuth: {
+    googleId: {
+      type: String,
+      sparse: true,
+      unique: true
+    },
+    provider: {
+      type: String,
+      enum: ['google', 'facebook', 'twitter'],
+      default: 'google'
+    }
+  },
+  profilePicture: {
+    type: String,
+    default: null
+  },
+
   createdAt: {
     type: Date,
     default: Date.now
