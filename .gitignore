@@ -1,351 +1,52 @@
-# ===================================
-# MESS WALLAH - MERN Stack .gitignore
-# ===================================
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
 
-# ==========================================
-# 🔐 ENVIRONMENT VARIABLES - NEVER COMMIT!
-# ==========================================
+# Environment variables
 .env
 .env.local
-.env.development
-.env.test
-.env.production
-.env.staging
-frontend/.env*
-backend/.env*
-*/.env*
+.env.*.local
+backend/.env
+frontend/.env
 
-# ==========================================
-# 📦 DEPENDENCIES & NODE MODULES
-# ==========================================
-node_modules/
-*/node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-
-# Package manager lock files (keep package-lock.json for consistency)
-# yarn.lock
-# pnpm-lock.yaml
-
-# ==========================================
-# 🏗️ BUILD OUTPUTS & DISTRIBUTIONS
-# ==========================================
-dist/
-build/
-*/dist/
-*/build/
-frontend/dist/
-frontend/build/
-backend/dist/
-backend/build/
-
-# Vite build outputs
-frontend/.vite/
-.vite/
-
-# ==========================================
-# 📊 LOGS & RUNTIME DATA
-# ==========================================
+# Logs
 logs/
 *.log
-pids
-*.pid
-*.seed
-*.pid.lock
+npm-debug.log*
+backend/logs/
 
-# ==========================================
-# 🧪 TESTING & COVERAGE
-# ==========================================
-coverage/
-*.lcov
-.nyc_output
-test-results/
-playwright-report/
-test-results.xml
-
-# ==========================================
-# 📱 FRONTEND SPECIFIC (React/Vite)
-# ==========================================
-# Vite cache
-.vite/
-frontend/.vite/
-
-# React build
-frontend/build/
+# Build outputs
+dist/
+build/
 frontend/dist/
+frontend/build/
 
-# ESLint cache
-.eslintcache
-frontend/.eslintcache
+# OS files
+.DS_Store
+Thumbs.db
 
-# ==========================================
-# 🖥️ BACKEND SPECIFIC (Node.js/Express)
-# ==========================================
-# Backend build
-backend/dist/
-backend/build/
-
-# Session store
-sessions/
-backend/sessions/
-
-# File uploads (if not using cloud storage)
-uploads/
-backend/uploads/
-public/uploads/
-
-# ==========================================
-# 🗄️ DATABASE SPECIFIC
-# ==========================================
-# MongoDB dumps
-*.dump
-mongo-data/
-mongodb-data/
-
-# SQLite databases (if used for testing)
-*.sqlite
-*.sqlite3
-*.db
-
-# Database backups
-db-backups/
-*.sql
-
-# ==========================================
-# 📸 MEDIA & ASSETS
-# ==========================================
-# User uploaded files (should be in cloud storage)
-public/uploads/
-frontend/public/uploads/
-backend/public/uploads/
-
-# Generated thumbnails
-thumbnails/
-temp-images/
-
-# ==========================================
-# 🔧 DEVELOPMENT TOOLS
-# ==========================================
-# IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-.project
-.classpath
-.settings/
 
-# Editor backup files
-*~
-*.orig
-*.rej
+# Images and media (if you don't want to track them)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.mov
 
-# ==========================================
-# 💻 OS GENERATED FILES
-# ==========================================
-# macOS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-.AppleDouble
-.LSOverride
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
 
-# Windows
-ehthumbs.db
-Thumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-
-# ==========================================
-# 🔒 SECURITY & CERTIFICATES
-# ==========================================
-# SSL certificates
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-*.cer
-*.der
-
-# SSH keys
-id_rsa
-id_rsa.pub
-*.ppk
-
-# API keys and secrets (additional protection)
-secrets/
-keys/
-credentials/
-
-# ==========================================
-# 📦 PACKAGE MANAGERS & CACHES
-# ==========================================
-# npm
-.npm
-npm-debug.log*
-
-# Yarn
-.yarn-integrity
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-
-# pnpm
-.pnpm-debug.log*
-.pnpm-store/
-
-# Dependency directories
-jspm_packages/
-
-# Optional caches
+# Misc
+coverage/
 .cache/
-.parcel-cache/
-.eslintcache
-
-# ==========================================
-# 🚀 DEPLOYMENT & CLOUD
-# ==========================================
-# Vercel
-.vercel
-
-# Netlify
-.netlify/
-
-# Railway
-.railway/
-
-# Heroku
-.heroku/
-
-# Docker
-.dockerignore
-Dockerfile.prod
-
-# Serverless
-.serverless/
-
-# ==========================================
-# 📋 TEMPORARY & BACKUP FILES
-# ==========================================
-*.tmp
-*.temp
-*.backup
-*.bak
-*.swp
-*.swo
-*~
-
-# Temporary folders
-tmp/
-temp/
-.tmp/
-
-# ==========================================
-# 🧰 MISC TOOLS & FRAMEWORKS
-# ==========================================
-# Next.js
-.next/
-out/
-
-# Nuxt.js
-.nuxt/
-.output/
-
-# Gatsby
-.cache/
-public/
-
-# SvelteKit
-.svelte-kit/
-
-# Storybook
-storybook-static/
-
-# FuseBox
-.fusebox/
-
-# DynamoDB Local
-.dynamodb/
-
-# TernJS
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# ==========================================
-# 📊 ANALYTICS & MONITORING
-# ==========================================
-# Bundle analyzer
-bundle-analyzer-report.html
-stats.json
-
-# Performance monitoring
-.lighthouseci/
-
-# ==========================================
-# 🎯 PROJECT SPECIFIC
-# ==========================================
-# MESS WALLAH specific ignores
-test-uploads/
-demo-data/
-seed-backups/
-
-# Development scripts that shouldn't be committed
-dev-scripts/
-local-scripts/
-
-# Documentation builds (if using tools like GitBook)
-_book/
-.gitbook/
-
-# ==========================================
-# 🔍 SEARCH & INDEXING
-# ==========================================
-# Algolia
-.algolia/
-
-# Elasticsearch
-.elasticsearch/
-
-# ==========================================
-# 📱 MOBILE (if React Native is added later)
-# ==========================================
-# React Native
-*.jks
-*.p8
-*.p12
-*.mobileprovision
-*.orig.*
-web-build/
-
-# Expo
-.expo/
-.expo-shared/
-
-# ==========================================
-# 🎨 DESIGN & ASSETS
-# ==========================================
-# Figma exports
-figma-exports/
-
-# Design system builds
-design-tokens/build/
-
-# ==========================================
-# END OF .gitignore
-# ==========================================

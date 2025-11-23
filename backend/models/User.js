@@ -52,7 +52,7 @@ const UserSchema = new mongoose.Schema({
   },
   registrationMethod: {
     type: String,
-    enum: ['otp', 'email', 'complete'],
+    enum: ['otp', 'email', 'complete', 'google', 'facebook', 'social'],
     default: 'email'
   },
   profileCompleted: {
@@ -62,7 +62,7 @@ const UserSchema = new mongoose.Schema({
   // CRITICAL: Account linking fields for unified authentication
   accountType: {
     type: String,
-    enum: ['otp-only', 'email-only', 'unified'],
+    enum: ['otp-only', 'email-only', 'unified', 'social'],
     default: 'email-only'
   },
   canLinkEmail: {

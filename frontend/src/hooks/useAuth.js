@@ -133,7 +133,7 @@ const useAuth = () => {
     try {
       const response = await api.put('/auth/profile', profileData);
 
-      if (response.success) {
+      if (response.data.success) {
         const updatedUser = response.data.user;
 
         // Update localStorage and state
@@ -143,8 +143,8 @@ const useAuth = () => {
         console.log('Profile updated successfully!');
         return { success: true, user: updatedUser };
       } else {
-        console.error(response.message || 'Failed to update profile');
-        return { success: false, message: response.message };
+        console.error(response.data.message || 'Failed to update profile');
+        return { success: false, message: response.data.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to update profile';
@@ -160,7 +160,7 @@ const useAuth = () => {
     try {
       const response = await api.get('/auth/me');
 
-      if (response.success) {
+      if (response.data.success) {
         const userData = response.data.user;
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);

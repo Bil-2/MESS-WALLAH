@@ -210,8 +210,11 @@ const startServer = async () => {
 
     try {
       const authRoutes = require('./routes/auth');
+      const googleAuthRoutes = require('./routes/googleAuth');
       app.use('/api/auth', authRoutes);
+      app.use('/api/auth', googleAuthRoutes);
       console.log('   ✓ /api/auth routes registered');
+      console.log('   ✓ /api/auth/google routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/auth routes:', error.message);
       // Create fallback auth routes to prevent 404 errors

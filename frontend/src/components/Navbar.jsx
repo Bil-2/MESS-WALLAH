@@ -7,13 +7,12 @@ import {
   Menu,
   X,
   Settings,
-  Bell,
-  Search,
   Shield,
   ChevronDown,
   ChevronRight,
   Calendar,
-  Heart
+  Heart,
+  Star
 } from '../utils/iconMappings';
 import AppIcon from './AppIcon';
 import { useAuthContext } from '../context/AuthContext.jsx';
@@ -95,7 +94,12 @@ const Navbar = () => {
                 {/* Ultra-Modern Profile Dropdown */}
                 <div className="relative profile-dropdown">
                   <button
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Profile dropdown clicked, current state:', isProfileDropdownOpen);
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen);
+                    }}
                     className="group relative flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                   >
                     {/* Compact Profile Avatar */}
@@ -104,7 +108,19 @@ const Navbar = () => {
                         <div
                           className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm"
                         >
-                          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                          {(() => {
+                            if (!user?.name) return 'U';
+                            const fullName = user.name.trim();
+                            const words = fullName.split(/\s+/).filter(word => word.length > 0);
+                            
+                            if (words.length === 0) return 'U';
+                            if (words.length === 1) return words[0].charAt(0).toUpperCase();
+                            
+                            // Get first letter of first word and first letter of last word
+                            const firstInitial = words[0].charAt(0).toUpperCase();
+                            const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
+                            return firstInitial + lastInitial;
+                          })()}
                         </div>
 
                         {/* Compact Status Indicator */}
@@ -129,13 +145,30 @@ const Navbar = () => {
                   {/* Compact Modern Dropdown */}
                   {isProfileDropdownOpen && (
                     <div
-                      className="absolute right-0 mt-2 w-80 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300 bg-white/98 dark:bg-gray-800/98 backdrop-blur-md"
+                      className="absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl border-2 border-orange-500 z-[9999] overflow-hidden bg-white dark:bg-gray-800"
+                      style={{ 
+                        position: 'absolute', 
+                        top: '100%', 
+                        right: 0,
+                        marginTop: '8px'
+                      }}
                     >
                       {/* Compact Profile Header */}
                       <div className="relative p-6 bg-gradient-to-br from-orange-500 to-pink-500">
                         <div className="flex items-center space-x-4">
                           <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm text-white flex items-center justify-center font-bold text-lg shadow-lg">
-                            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            {(() => {
+                              if (!user?.name) return 'U';
+                              const fullName = user.name.trim();
+                              const words = fullName.split(/\s+/).filter(word => word.length > 0);
+                              
+                              if (words.length === 0) return 'U';
+                              if (words.length === 1) return words[0].charAt(0).toUpperCase();
+                              
+                              const firstInitial = words[0].charAt(0).toUpperCase();
+                              const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
+                              return firstInitial + lastInitial;
+                            })()}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-white font-bold text-lg truncate">{user.name || 'User Name'}</h3>

@@ -30,6 +30,9 @@ const Report = lazy(() => import('./pages/Report'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const Menu = lazy(() => import('./pages/Menu'));
 const Favorites = lazy(() => import('./pages/Favorites'));
+const GoogleAuthSuccess = lazy(() => import('./pages/GoogleAuthSuccess'));
+const FirebaseTest = lazy(() => import('./pages/FirebaseTest'));
+const FirebaseLogin = lazy(() => import('./pages/FirebaseLogin'));
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
@@ -68,6 +71,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
                   <Route path="/sms-test" element={<SMSTest />} />
                   <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
                   <Route path="/profile" element={<Profile />} />
@@ -83,6 +87,8 @@ function App() {
                   <Route path="/report" element={<Report />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/firebase-test" element={<FirebaseTest />} />
+                  <Route path="/firebase-login" element={<FirebaseLogin />} />
                 </Routes>
               </Suspense>
             </main>

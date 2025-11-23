@@ -126,20 +126,52 @@ const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, updateProfile } = useAuthContext();
+  const { user, updateProfile, logout, loading: authLoading } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [authChecked, setAuthChecked] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (after auth check is complete)
   useEffect(() => {
-    if (!user) {
-      toast.error('Please login to view your profile');
-      navigate('/login');
+    if (!authLoading) {
+      setAuthChecked(true);
+      if (!user) {
+        toast.error('Please login to view your profile');
+        navigate('/login');
+      }
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout');
+    }
+  };
+
+  // Get user initials (first letter of first name + first letter of last name)
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    
+    const fullName = user.name.trim();
+    const words = fullName.split(/\s+/).filter(word => word.length > 0);
+    
+    if (words.length === 0) return 'U';
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
+    
+    // Get first letter of first word and first letter of last word
+    const firstInitial = words[0].charAt(0).toUpperCase();
+    const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
+    return firstInitial + lastInitial;
+  };
   
   const [formData, setFormData] = useState({
     name: '',
@@ -287,12 +319,23 @@ const Profile = () => {
   ];
 
   // Show loading state while checking authentication
-  if (!user) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user after loading, don't render (will redirect)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400">Redirecting to login...</p>
         </div>
       </div>
     );
@@ -343,7 +386,9 @@ const Profile = () => {
                       <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
-                        <User className="w-16 h-16 text-white" />
+                        <span className="text-5xl font-bold text-white">
+                          {getUserInitials()}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -417,9 +462,12 @@ const Profile = () => {
                             <Edit3 className="w-5 h-5 mr-2" />
                             Edit Profile
                           </button>
-                          <button className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-all duration-200">
-                            <Download className="w-5 h-5 mr-2" />
-                            Export Data
+                          <button 
+                            onClick={handleLogout}
+                            className="inline-flex items-center justify-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                          >
+                            <Lock className="w-5 h-5 mr-2" />
+                            Logout
                           </button>
                         </>
                       ) : (

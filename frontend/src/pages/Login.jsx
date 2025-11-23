@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight, Home, Key, BedDouble } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import toast from 'react-hot-toast';
 
 const Login = () => {
@@ -497,6 +498,26 @@ const Login = () => {
                 )}
               </button>
             </form>
+          )}
+
+          {/* Google Sign-In - Only show for password login */}
+          {loginMethod === 'password' && (
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 font-medium">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <GoogleSignInButton />
+              </div>
+            </div>
           )}
 
           {/* Footer */}
