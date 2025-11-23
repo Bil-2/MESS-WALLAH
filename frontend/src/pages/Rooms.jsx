@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-  FiSearch, FiFilter, FiMapPin, FiStar, FiHeart, FiEye, FiCalendar, FiChevronDown, 
+import { useSearchParams } from 'react-router-dom';
+import {
+  FiSearch, FiFilter, FiMapPin, FiStar, FiHeart, FiEye, FiCalendar, FiChevronDown,
   FiSliders, FiHome, FiUsers, FiWifi, FiShield, FiClock, FiGift, FiPhone, FiShare2,
-  FiX, FiChevronRight, FiCheckCircle
+  FiX, FiChevronRight, FiCheckCircle, FiDollarSign, FiUser, FiCoffee, FiLock, FiWind,
+  FiSun, FiActivity, FiLayers, FiTruck
 } from 'react-icons/fi';
 import { useAuthContext } from '../context/AuthContext';
 import rocketAPI from '../services/rocketAPI';
@@ -15,28 +17,32 @@ import toast from 'react-hot-toast';
 
 const Rooms = () => {
   const { user } = useAuthContext();
+  const [searchParams] = useSearchParams();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false); // Start with false to test
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Performance hooks - simplified
-  const trackRender = () => {}; // Disabled for debugging
-  const trackApiCall = () => {}; // Disabled for debugging
-  
+  const trackRender = () => { }; // Disabled for debugging
+  const trackApiCall = () => { }; // Disabled for debugging
+
+  // Get initial search from URL parameters
+  const initialSearch = searchParams.get('search') || '';
+
   const [filters, setFilters] = useState({
-    search: '',
-    location: '',
+    search: initialSearch,
+    location: initialSearch, // Also set as location for city-based filtering
     minRent: '',
     maxRent: '',
     roomType: '',
     amenities: []
   });
-  
+
   // Simplified - no debouncing for now
   // const debouncedSearch = useDebounce(filters.search, 300);
   // const debouncedLocation = useDebounce(filters.location, 300);
-  
+
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,26 +52,26 @@ const Rooms = () => {
 
   const fetchRooms = useCallback(async () => {
     console.log('Starting fetchRooms...');
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       // Simple API call without complex logic
       const url = `/api/rooms?page=${currentPage}&limit=24`;
       console.log('Fetching from:', url);
-      
+
       const response = await fetch(url);
       console.log('Response received:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Data received:', data);
-        
+
         if (data.success && data.data) {
           const roomsArray = Array.isArray(data.data) ? data.data : [];
           console.log('Rooms count:', roomsArray.length);
-          
+
           // Simple transformation
           const transformedRooms = roomsArray.map(room => ({
             id: room._id,
@@ -84,11 +90,11 @@ const Rooms = () => {
             description: room.description || 'Well-furnished room',
             isVerified: true
           }));
-          
+
           setRooms(transformedRooms);
           setTotalPages(data.pagination?.totalPages || 1);
           setHasMore(data.pagination?.hasNextPage || false);
-          
+
           console.log('Successfully set', transformedRooms.length, 'rooms');
         } else {
           throw new Error('Invalid response structure');
@@ -98,13 +104,13 @@ const Rooms = () => {
       }
     } catch (error) {
       console.error('Fetch error:', error);
-      
+
       // Always show fallback data
       const fallbackRooms = generateMockRooms();
       setRooms(fallbackRooms);
       setTotalPages(1);
       setHasMore(false);
-      
+
       toast.error('Loading sample data - API issue');
     } finally {
       setLoading(false);
@@ -114,7 +120,7 @@ const Rooms = () => {
 
   useEffect(() => {
     trackRender();
-    
+
     // Load favorites from localStorage only once
     const savedFavorites = localStorage.getItem('mess-wallah-favorites');
     if (savedFavorites) {
@@ -125,15 +131,96 @@ const Rooms = () => {
   // Simple useEffect to fetch rooms - run only once
   useEffect(() => {
     console.log('useEffect triggered, calling fetchRooms...');
-    
+
     // Immediate fallback for testing
     const fallbackRooms = generateMockRooms();
     setRooms(fallbackRooms);
     setLoading(false);
-    
+
     // Then try to fetch real data
     fetchRooms();
   }, []); // Empty dependency array to run only once
+
+  // Handle URL search parameters - run immediately when component mounts
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      console.log('URL search parameter found:', searchParam);
+      // Update filters to trigger search
+      setFilters(prev => ({
+        ...prev,
+        search: searchParam,
+        location: searchParam
+      }));
+    }
+  }, [searchParams]);
+
+  // Also update filters immediately when rooms are loaded
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam && rooms.length > 0) {
+      console.log('Rooms loaded, applying search filter:', searchParam);
+      setFilters(prev => ({
+        ...prev,
+        search: searchParam,
+        location: searchParam
+      }));
+    }
+  }, [rooms, searchParams]);
+
+  // Filter rooms based on search criteria
+  const filteredRooms = useMemo(() => {
+    console.log('Filtering rooms:', {
+      totalRooms: rooms.length,
+      searchFilter: filters.search,
+      locationFilter: filters.location
+    });
+
+    let filtered = rooms;
+
+    // Filter by search term (title, location, owner name)
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      console.log('Applying search filter:', searchTerm);
+
+      filtered = filtered.filter(room => {
+        const matches = room.title?.toLowerCase().includes(searchTerm) ||
+          room.location?.toLowerCase().includes(searchTerm) ||
+          room.ownerName?.toLowerCase().includes(searchTerm) ||
+          room.city?.toLowerCase().includes(searchTerm);
+
+        if (matches) {
+          console.log('Room matches:', room.title, room.city);
+        }
+        return matches;
+      });
+    }
+
+    // Filter by location
+    if (filters.location && filters.location !== filters.search) {
+      const locationTerm = filters.location.toLowerCase();
+      filtered = filtered.filter(room =>
+        room.location?.toLowerCase().includes(locationTerm) ||
+        room.city?.toLowerCase().includes(locationTerm)
+      );
+    }
+
+    // Filter by rent range
+    if (filters.minRent) {
+      filtered = filtered.filter(room => room.rent >= parseInt(filters.minRent));
+    }
+    if (filters.maxRent) {
+      filtered = filtered.filter(room => room.rent <= parseInt(filters.maxRent));
+    }
+
+    // Filter by room type
+    if (filters.roomType) {
+      filtered = filtered.filter(room => room.roomType === filters.roomType);
+    }
+
+    console.log(`Filtered ${filtered.length} rooms from ${rooms.length} total`);
+    return filtered;
+  }, [rooms, filters]);
 
   const generateMockRooms = () => {
     return [
@@ -142,6 +229,7 @@ const Rooms = () => {
         id: '68c597a733be9e11bd88fa52',
         title: 'Premium Student Room - Koramangala',
         location: 'Koramangala, Bangalore',
+        city: 'Bangalore',
         rent: 12000,
         rating: 4.8,
         ownerName: 'Rajesh Kumar',
@@ -159,6 +247,7 @@ const Rooms = () => {
         id: '68c597a733be9e11bd88fa53',
         title: 'Cozy Girls PG - Whitefield',
         location: 'Whitefield, Bangalore',
+        city: 'Bangalore',
         rent: 9500,
         rating: 4.6,
         ownerName: 'Sunita Devi',
@@ -176,6 +265,7 @@ const Rooms = () => {
         id: '68c597a733be9e11bd88fa54',
         title: 'Budget Friendly Room - BTM Layout',
         location: 'BTM Layout, Bangalore',
+        city: 'Bangalore',
         rent: 7500,
         rating: 4.2,
         ownerName: 'Ramesh Gupta',
@@ -193,6 +283,7 @@ const Rooms = () => {
         id: '68c597a733be9e11bd88fa55',
         title: 'Luxury Studio Apartment - Indiranagar',
         location: 'Indiranagar, Bangalore',
+        city: 'Bangalore',
         rent: 18000,
         rating: 4.9,
         ownerName: 'Priya Nair',
@@ -210,6 +301,7 @@ const Rooms = () => {
         id: '68c597a733be9e11bd88fa56',
         title: 'Family Room - Jayanagar',
         location: 'Jayanagar, Bangalore',
+        city: 'Bangalore',
         rent: 15000,
         rating: 4.7,
         ownerName: 'Lakshmi Rao',
@@ -221,6 +313,154 @@ const Rooms = () => {
         roomType: 'family',
         reviews: 41,
         description: 'Spacious accommodation suitable for small families or groups.'
+      },
+      // Kolkata Rooms
+      {
+        _id: '68c597a733be9e11bd88fa57',
+        id: '68c597a733be9e11bd88fa57',
+        title: 'Student PG - Salt Lake',
+        location: 'Salt Lake, Kolkata',
+        city: 'Kolkata',
+        rent: 8500,
+        rating: 4.5,
+        ownerName: 'Amit Chatterjee',
+        ownerPhone: '+91 9876543215',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'ac'],
+        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+        roomType: 'pg',
+        reviews: 35,
+        description: 'Comfortable PG accommodation near IT hubs in Salt Lake.'
+      },
+      {
+        _id: '68c597a733be9e11bd88fa58',
+        id: '68c597a733be9e11bd88fa58',
+        title: 'Heritage Room - Park Street',
+        location: 'Park Street, Kolkata',
+        city: 'Kolkata',
+        rent: 11000,
+        rating: 4.6,
+        ownerName: 'Ruma Das',
+        ownerPhone: '+91 9876543216',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'balcony'],
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+        roomType: 'bachelor',
+        reviews: 42,
+        description: 'Beautiful room in the heart of Kolkata with cultural vibes.'
+      },
+      // Delhi Rooms
+      {
+        _id: '68c597a733be9e11bd88fa59',
+        id: '68c597a733be9e11bd88fa59',
+        title: 'Modern PG - Lajpat Nagar',
+        location: 'Lajpat Nagar, Delhi',
+        city: 'Delhi',
+        rent: 13000,
+        rating: 4.4,
+        ownerName: 'Vikash Sharma',
+        ownerPhone: '+91 9876543217',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'ac', 'gym'],
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+        roomType: 'pg',
+        reviews: 38,
+        description: 'Modern PG facility in central Delhi with metro connectivity.'
+      },
+      {
+        _id: '68c597a733be9e11bd88fa60',
+        id: '68c597a733be9e11bd88fa60',
+        title: 'Premium Room - Connaught Place',
+        location: 'Connaught Place, Delhi',
+        city: 'Delhi',
+        rent: 16000,
+        rating: 4.8,
+        ownerName: 'Neha Gupta',
+        ownerPhone: '+91 9876543218',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'parking', 'security', 'ac', 'balcony', 'gym'],
+        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+        roomType: 'bachelor',
+        reviews: 55,
+        description: 'Premium accommodation in the heart of Delhi.'
+      },
+      // Pune Rooms
+      {
+        _id: '68c597a733be9e11bd88fa61',
+        id: '68c597a733be9e11bd88fa61',
+        title: 'Student Hostel - Kothrud',
+        location: 'Kothrud, Pune',
+        city: 'Pune',
+        rent: 7000,
+        rating: 4.3,
+        ownerName: 'Sachin Patil',
+        ownerPhone: '+91 9876543219',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'library'],
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+        roomType: 'student',
+        reviews: 29,
+        description: 'Budget-friendly hostel near Pune University.'
+      },
+      {
+        _id: '68c597a733be9e11bd88fa62',
+        id: '68c597a733be9e11bd88fa62',
+        title: 'IT Professional PG - Hinjewadi',
+        location: 'Hinjewadi, Pune',
+        city: 'Pune',
+        rent: 12000,
+        rating: 4.7,
+        ownerName: 'Pradeep Joshi',
+        ownerPhone: '+91 9876543220',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'ac', 'parking'],
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+        roomType: 'pg',
+        reviews: 47,
+        description: 'Perfect for IT professionals working in Hinjewadi IT Park.'
+      },
+      // Chennai Rooms
+      {
+        _id: '68c597a733be9e11bd88fa63',
+        id: '68c597a733be9e11bd88fa63',
+        title: 'Beach Side Room - Marina',
+        location: 'Marina Beach, Chennai',
+        city: 'Chennai',
+        rent: 10000,
+        rating: 4.5,
+        ownerName: 'Kamala Krishnan',
+        ownerPhone: '+91 9876543221',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'balcony'],
+        image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+        roomType: 'bachelor',
+        reviews: 33,
+        description: 'Beautiful room with sea view near Marina Beach.'
+      },
+      {
+        _id: '68c597a733be9e11bd88fa64',
+        id: '68c597a733be9e11bd88fa64',
+        title: 'Tech Hub PG - OMR',
+        location: 'OMR, Chennai',
+        city: 'Chennai',
+        rent: 9500,
+        rating: 4.4,
+        ownerName: 'Rajesh Murugan',
+        ownerPhone: '+91 9876543222',
+        verified: true,
+        isVerified: true,
+        amenities: ['wifi', 'mess', 'security', 'laundry', 'ac', 'gym'],
+        image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
+        roomType: 'pg',
+        reviews: 41,
+        description: 'Modern PG facility on OMR for tech professionals.'
       }
     ];
   };
@@ -234,7 +474,7 @@ const Rooms = () => {
       }, 1500);
       return;
     }
-    
+
     const room = rooms.find(r => r.id === roomId || r._id === roomId);
     if (room) {
       setSelectedRoom(room);
@@ -248,7 +488,7 @@ const Rooms = () => {
 
   const handleToggleFavorite = useCallback((roomId) => {
     const newFavorites = new Set(favorites);
-    
+
     if (favorites.has(roomId)) {
       newFavorites.delete(roomId);
       toast.success('Removed from favorites');
@@ -256,7 +496,7 @@ const Rooms = () => {
       newFavorites.add(roomId);
       toast.success('Added to favorites');
     }
-    
+
     setFavorites(newFavorites);
     localStorage.setItem('mess-wallah-favorites', JSON.stringify([...newFavorites]));
   }, [favorites]);
@@ -316,15 +556,15 @@ const Rooms = () => {
     try {
       // Mock booking submission
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       toast.success('Booking request submitted successfully!', {
         duration: 5000,
         position: 'top-center',
       });
-      
+
       setShowBookingModal(false);
       setBookingStep(1);
-      
+
       // Show success message with owner contact
       setTimeout(() => {
         toast.success(`Owner will contact you at ${bookingData.phone} within 24 hours`, {
@@ -332,7 +572,7 @@ const Rooms = () => {
           position: 'top-center',
         });
       }, 1000);
-      
+
     } catch (error) {
       toast.error('Failed to submit booking request');
     } finally {
@@ -418,13 +658,13 @@ const Rooms = () => {
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-4">
             Discover comfortable, affordable student accommodations with verified owners and safe environment
           </p>
-          
+
 
           {/* Safety Banner */}
           <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 px-6 py-3 rounded-full text-base font-bold shadow-lg">
-            <span>🛡️</span>
+            <FiShield className="w-5 h-5" />
             <span>BE TENSION FREE! - Complete Girls Safety Guaranteed</span>
-            <span>✨</span>
+            <FiStar className="w-5 h-5" />
           </div>
         </div>
 
@@ -478,7 +718,7 @@ const Rooms = () => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    'Koramangala', 'Whitefield', 'BTM Layout', 'Electronic City', 
+                    'Koramangala', 'Whitefield', 'BTM Layout', 'Electronic City',
                     'Marathahalli', 'HSR Layout', 'Indiranagar', 'Jayanagar'
                   ].map((suggestion, index) => (
                     <button
@@ -501,21 +741,25 @@ const Rooms = () => {
               </div>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { label: '🏠 Under ₹10K', filter: { maxRent: '10000' }, color: 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' },
-                  { label: '💰 ₹10K-₹15K', filter: { minRent: '10000', maxRent: '15000' }, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300' },
-                  { label: '👩 Girls Only', filter: { roomType: 'girls' }, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-300' },
-                  { label: '📶 WiFi', filter: { amenities: ['wifi'] }, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300' },
-                  { label: '🍽️ Mess', filter: { amenities: ['mess'] }, color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300' },
-                  { label: '🔒 Security', filter: { amenities: ['security'] }, color: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }
-                ].map((quickFilter, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setFilters(prev => ({ ...prev, ...quickFilter.filter }))}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md ${quickFilter.color}`}
-                  >
-                    {quickFilter.label}
-                  </button>
-                ))}
+                  { label: 'Under ₹10K', icon: FiHome, filter: { maxRent: '10000' }, color: 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300' },
+                  { label: '₹10K-₹15K', icon: FiDollarSign, filter: { minRent: '10000', maxRent: '15000' }, color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300' },
+                  { label: 'Girls Only', icon: FiUser, filter: { roomType: 'girls' }, color: 'bg-pink-100 text-pink-700 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-300' },
+                  { label: 'WiFi', icon: FiWifi, filter: { amenities: ['wifi'] }, color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300' },
+                  { label: 'Mess', icon: FiCoffee, filter: { amenities: ['mess'] }, color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300' },
+                  { label: 'Security', icon: FiShield, filter: { amenities: ['security'] }, color: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' }
+                ].map((quickFilter, index) => {
+                  const Icon = quickFilter.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => setFilters(prev => ({ ...prev, ...quickFilter.filter }))}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 transform hover:scale-105 shadow-sm hover:shadow-md ${quickFilter.color}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {quickFilter.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -588,18 +832,18 @@ const Rooms = () => {
                     className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700/50 dark:text-white transition-all duration-300"
                   >
                     <option value="">All Types</option>
-                    <option value="single">🏠 Single Room</option>
-                    <option value="shared">👥 Shared Room</option>
-                    <option value="studio">🏢 Studio Apartment</option>
-                    <option value="family">👨‍👩‍👧‍👦 Family Room</option>
-                    <option value="girls">👩 Girls Only</option>
+                    <option value="single">Single Room</option>
+                    <option value="shared">Shared Room</option>
+                    <option value="studio">Studio Apartment</option>
+                    <option value="family">Family Room</option>
+                    <option value="girls">Girls Only</option>
                   </select>
                 </div>
 
                 {/* Price Range */}
                 <div className="space-y-3">
                   <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300">
-                    <span className="text-orange-500 mr-2">💰</span>
+                    <FiDollarSign className="w-4 h-4 text-orange-500 mr-2" />
                     Price Range (Monthly)
                   </label>
                   <div className="flex gap-3">
@@ -630,39 +874,43 @@ const Rooms = () => {
                 {/* Amenities Filter */}
                 <div className="space-y-3">
                   <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300">
-                    <span className="text-orange-500 mr-2">⭐</span>
+                    <FiStar className="w-4 h-4 text-orange-500 mr-2" />
                     Must-Have Amenities
                   </label>
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {[
-                      { key: 'wifi', label: '📶 WiFi', color: 'text-blue-600' },
-                      { key: 'mess', label: '🍽️ Mess', color: 'text-green-600' },
-                      { key: 'laundry', label: '👕 Laundry', color: 'text-purple-600' },
-                      { key: 'security', label: '🔒 Security', color: 'text-red-600' },
-                      { key: 'parking', label: '🚗 Parking', color: 'text-gray-600' },
-                      { key: 'gym', label: '💪 Gym', color: 'text-orange-600' },
-                      { key: 'ac', label: '❄️ AC', color: 'text-cyan-600' },
-                      { key: 'balcony', label: '🌿 Balcony', color: 'text-emerald-600' }
-                    ].map((amenity) => (
-                      <label key={amenity.key} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={filters.amenities.includes(amenity.key)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFilters(prev => ({ ...prev, amenities: [...prev.amenities, amenity.key] }));
-                            } else {
-                              setFilters(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity.key) }));
-                            }
-                          }}
-                          className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-                        />
-                        <span className={`text-sm font-medium ${amenity.color}`}>{amenity.label}</span>
-                      </label>
-                    ))}
+                      { key: 'wifi', label: 'WiFi', icon: FiWifi, color: 'text-blue-600' },
+                      { key: 'mess', label: 'Mess', icon: FiCoffee, color: 'text-green-600' },
+                      { key: 'laundry', label: 'Laundry', icon: FiLayers, color: 'text-purple-600' },
+                      { key: 'security', label: 'Security', icon: FiLock, color: 'text-red-600' },
+                      { key: 'parking', label: 'Parking', icon: FiTruck, color: 'text-gray-600' },
+                      { key: 'gym', label: 'Gym', icon: FiActivity, color: 'text-orange-600' },
+                      { key: 'ac', label: 'AC', icon: FiWind, color: 'text-cyan-600' },
+                      { key: 'balcony', label: 'Balcony', icon: FiSun, color: 'text-emerald-600' }
+                    ].map((amenity) => {
+                      const Icon = amenity.icon;
+                      return (
+                        <label key={amenity.key} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={filters.amenities.includes(amenity.key)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFilters(prev => ({ ...prev, amenities: [...prev.amenities, amenity.key] }));
+                              } else {
+                                setFilters(prev => ({ ...prev, amenities: prev.amenities.filter(a => a !== amenity.key) }));
+                              }
+                            }}
+                            className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <Icon className={`w-4 h-4 ${amenity.color}`} />
+                          <span className={`text-sm font-medium ${amenity.color}`}>{amenity.label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
-                </div>
+              </div>
 
               {/* Apply Filters Button */}
               <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -677,7 +925,7 @@ const Rooms = () => {
                     {rooms.length} rooms
                   </span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={() => setFilters({ search: '', location: '', minRent: '', maxRent: '', roomType: '', amenities: [] })}
@@ -717,16 +965,46 @@ const Rooms = () => {
 
             {/* Responsive Room Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {rooms.map((room, index) => (
-                <ResponsiveRoomCard
-                  key={room._id || room.id || index}
-                  room={room}
-                  onBookNow={handleBookNow}
-                  onViewDetails={handleViewDetails}
-                  onToggleFavorite={handleToggleFavorite}
-                  isFavorite={favorites.has(room._id || room.id)}
-                />
-              ))}
+              {filteredRooms.length > 0 ? (
+                filteredRooms.map((room, index) => (
+                  <ResponsiveRoomCard
+                    key={room._id || room.id || index}
+                    room={room}
+                    onBookNow={handleBookNow}
+                    onViewDetails={handleViewDetails}
+                    onToggleFavorite={handleToggleFavorite}
+                    isFavorite={favorites.has(room._id || room.id)}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <div className="flex justify-center mb-4">
+                    <FiHome className="w-16 h-16 text-gray-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    No rooms found
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    {filters.search || filters.location
+                      ? `No accommodations available for "${filters.search || filters.location}"`
+                      : 'No rooms match your current filters'
+                    }
+                  </p>
+                  <button
+                    onClick={() => setFilters({
+                      search: '',
+                      location: '',
+                      minRent: '',
+                      maxRent: '',
+                      roomType: '',
+                      amenities: []
+                    })}
+                    className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Load More Button */}
@@ -784,7 +1062,9 @@ const Rooms = () => {
 
             {rooms.length === 0 && (
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">🏠</div>
+                <div className="flex justify-center mb-4">
+                  <FiHome className="w-16 h-16 text-gray-400" />
+                </div>
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
                   No rooms found
                 </h3>
@@ -812,329 +1092,327 @@ const Rooms = () => {
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-                {/* Modal Header */}
-                <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-6 rounded-t-2xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-2xl font-bold text-white mb-1">
-                        Book {selectedRoom.title}
-                      </h3>
-                      <p className="text-orange-100 flex items-center gap-2">
-                        <FiMapPin className="w-4 h-4" />
-                        {selectedRoom.location}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowBookingModal(false)}
-                      className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
-                    >
-                      <FiX className="w-6 h-6" />
-                    </button>
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-6 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      Book {selectedRoom.title}
+                    </h3>
+                    <p className="text-orange-100 flex items-center gap-2">
+                      <FiMapPin className="w-4 h-4" />
+                      {selectedRoom.location}
+                    </p>
                   </div>
-                  
-                  {/* Step Indicator */}
-                  <div className="flex items-center mt-6 space-x-4">
-                    {[1, 2, 3].map((step) => (
-                      <div key={step} className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                          bookingStep >= step 
-                            ? 'bg-white text-orange-500' 
-                            : 'bg-white/30 text-white'
-                        }`}>
-                          {bookingStep > step ? <FiCheckCircle className="w-5 h-5" /> : step}
-                        </div>
-                        {step < 3 && (
-                          <div className={`w-12 h-1 mx-2 rounded ${
-                            bookingStep > step ? 'bg-white' : 'bg-white/30'
-                          }`} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <button
+                    onClick={() => setShowBookingModal(false)}
+                    className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+                  >
+                    <FiX className="w-6 h-6" />
+                  </button>
                 </div>
 
-                {/* Modal Content */}
-                <div className="p-6">
-                  {/* Step 1: Booking Details */}
-                  {bookingStep === 1 && (
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                          Booking Details
-                        </h4>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Check-in Date *
-                            </label>
-                            <input
-                              type="date"
-                              name="checkInDate"
-                              value={bookingData.checkInDate}
-                              onChange={handleBookingInputChange}
-                              min={new Date().toISOString().split('T')[0]}
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Duration (months) *
-                            </label>
-                            <select
-                              name="duration"
-                              value={bookingData.duration}
-                              onChange={handleBookingInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                              required
-                            >
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(month => (
-                                <option key={month} value={month}>
-                                  {month} month{month > 1 ? 's' : ''}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                {/* Step Indicator */}
+                <div className="flex items-center mt-6 space-x-4">
+                  {[1, 2, 3].map((step) => (
+                    <div key={step} className="flex items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${bookingStep >= step
+                          ? 'bg-white text-orange-500'
+                          : 'bg-white/30 text-white'
+                        }`}>
+                        {bookingStep > step ? <FiCheckCircle className="w-5 h-5" /> : step}
+                      </div>
+                      {step < 3 && (
+                        <div className={`w-12 h-1 mx-2 rounded ${bookingStep > step ? 'bg-white' : 'bg-white/30'
+                          }`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                {/* Step 1: Booking Details */}
+                {bookingStep === 1 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                        Booking Details
+                      </h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Check-in Date *
+                          </label>
+                          <input
+                            type="date"
+                            name="checkInDate"
+                            value={bookingData.checkInDate}
+                            onChange={handleBookingInputChange}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                            required
+                          />
                         </div>
 
-                        {/* Price Calculation */}
-                        <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Duration (months) *
+                          </label>
+                          <select
+                            name="duration"
+                            value={bookingData.duration}
+                            onChange={handleBookingInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                            required
+                          >
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(month => (
+                              <option key={month} value={month}>
+                                {month} month{month > 1 ? 's' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Price Calculation */}
+                      <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Monthly Rent: ₹{(selectedRoom.rentPerMonth || selectedRoom.rent || 0).toLocaleString()}
+                          </span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Duration: {bookingData.duration} month{bookingData.duration > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="border-t border-orange-200 dark:border-orange-700 mt-2 pt-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-700 dark:text-gray-300">
-                              Monthly Rent: ₹{(selectedRoom.rentPerMonth || selectedRoom.rent || 0).toLocaleString()}
+                            <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                              Total Amount:
                             </span>
-                            <span className="text-gray-700 dark:text-gray-300">
-                              Duration: {bookingData.duration} month{bookingData.duration > 1 ? 's' : ''}
+                            <span className="text-xl font-bold text-orange-600">
+                              ₹{((selectedRoom.rentPerMonth || selectedRoom.rent || 0) * bookingData.duration).toLocaleString()}
                             </span>
                           </div>
-                          <div className="border-t border-orange-200 dark:border-orange-700 mt-2 pt-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                                Total Amount:
-                              </span>
-                              <span className="text-xl font-bold text-orange-600">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Personal Information */}
+                {bookingStep === 2 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                        Personal Information
+                      </h4>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Full Name *
+                          </label>
+                          <input
+                            type="text"
+                            name="name"
+                            value={bookingData.name}
+                            onChange={handleBookingInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Phone Number *
+                          </label>
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={bookingData.phone}
+                            onChange={handleBookingInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Email Address *
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={bookingData.email}
+                            onChange={handleBookingInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Occupation
+                          </label>
+                          <input
+                            type="text"
+                            name="occupation"
+                            value={bookingData.occupation}
+                            onChange={handleBookingInputChange}
+                            placeholder="Student, Working Professional, etc."
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Emergency Contact Number
+                          </label>
+                          <input
+                            type="tel"
+                            name="emergencyContact"
+                            value={bookingData.emergencyContact}
+                            onChange={handleBookingInputChange}
+                            placeholder="Parent/Guardian contact number"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Review & Submit */}
+                {bookingStep === 3 && (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                        Review & Submit
+                      </h4>
+
+                      {/* Booking Summary */}
+                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+                        <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Booking Summary</h5>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Room:</span>
+                            <span className="font-medium">{selectedRoom.title}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Check-in:</span>
+                            <span className="font-medium">{new Date(bookingData.checkInDate).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Duration:</span>
+                            <span className="font-medium">{bookingData.duration} month{bookingData.duration > 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Contact:</span>
+                            <span className="font-medium">{bookingData.name} - {bookingData.phone}</span>
+                          </div>
+                          <div className="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2">
+                            <div className="flex justify-between">
+                              <span className="font-semibold text-gray-800 dark:text-gray-200">Total Amount:</span>
+                              <span className="font-bold text-orange-600 text-lg">
                                 ₹{((selectedRoom.rentPerMonth || selectedRoom.rent || 0) * bookingData.duration).toLocaleString()}
                               </span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
 
-                  {/* Step 2: Personal Information */}
-                  {bookingStep === 2 && (
-                    <div className="space-y-6">
+                      {/* Special Requests */}
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                          Personal Information
-                        </h4>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Full Name *
-                            </label>
-                            <input
-                              type="text"
-                              name="name"
-                              value={bookingData.name}
-                              onChange={handleBookingInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Phone Number *
-                            </label>
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={bookingData.phone}
-                              onChange={handleBookingInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Email Address *
-                            </label>
-                            <input
-                              type="email"
-                              name="email"
-                              value={bookingData.email}
-                              onChange={handleBookingInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Occupation
-                            </label>
-                            <input
-                              type="text"
-                              name="occupation"
-                              value={bookingData.occupation}
-                              onChange={handleBookingInputChange}
-                              placeholder="Student, Working Professional, etc."
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                            />
-                          </div>
-                          
-                          <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Emergency Contact Number
-                            </label>
-                            <input
-                              type="tel"
-                              name="emergencyContact"
-                              value={bookingData.emergencyContact}
-                              onChange={handleBookingInputChange}
-                              placeholder="Parent/Guardian contact number"
-                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                            />
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Special Requests (Optional)
+                        </label>
+                        <textarea
+                          name="specialRequests"
+                          value={bookingData.specialRequests}
+                          onChange={handleBookingInputChange}
+                          rows={3}
+                          placeholder="Any special requirements or requests..."
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
+                        />
+                      </div>
+
+                      {/* Terms & Conditions */}
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <FiShield className="w-5 h-5 text-blue-600 mt-0.5" />
+                          <div className="text-sm text-blue-800 dark:text-blue-200">
+                            <p className="font-semibold mb-1">Important Notes:</p>
+                            <ul className="space-y-1 text-xs">
+                              <li>• Owner will contact you within 24 hours to confirm availability</li>
+                              <li>• Security deposit may be required as per owner's policy</li>
+                              <li>• Room visit can be arranged before final booking</li>
+                              <li>• Cancellation policy applies as per terms & conditions</li>
+                            </ul>
                           </div>
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Step 3: Review & Submit */}
-                  {bookingStep === 3 && (
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                          Review & Submit
-                        </h4>
-                        
-                        {/* Booking Summary */}
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-                          <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Booking Summary</h5>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Room:</span>
-                              <span className="font-medium">{selectedRoom.title}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Check-in:</span>
-                              <span className="font-medium">{new Date(bookingData.checkInDate).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Duration:</span>
-                              <span className="font-medium">{bookingData.duration} month{bookingData.duration > 1 ? 's' : ''}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Contact:</span>
-                              <span className="font-medium">{bookingData.name} - {bookingData.phone}</span>
-                            </div>
-                            <div className="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2">
-                              <div className="flex justify-between">
-                                <span className="font-semibold text-gray-800 dark:text-gray-200">Total Amount:</span>
-                                <span className="font-bold text-orange-600 text-lg">
-                                  ₹{((selectedRoom.rentPerMonth || selectedRoom.rent || 0) * bookingData.duration).toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Special Requests */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Special Requests (Optional)
-                          </label>
-                          <textarea
-                            name="specialRequests"
-                            value={bookingData.specialRequests}
-                            onChange={handleBookingInputChange}
-                            rows={3}
-                            placeholder="Any special requirements or requests..."
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
-                          />
-                        </div>
-
-                        {/* Terms & Conditions */}
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                          <div className="flex items-start gap-3">
-                            <FiShield className="w-5 h-5 text-blue-600 mt-0.5" />
-                            <div className="text-sm text-blue-800 dark:text-blue-200">
-                              <p className="font-semibold mb-1">Important Notes:</p>
-                              <ul className="space-y-1 text-xs">
-                                <li>• Owner will contact you within 24 hours to confirm availability</li>
-                                <li>• Security deposit may be required as per owner's policy</li>
-                                <li>• Room visit can be arranged before final booking</li>
-                                <li>• Cancellation policy applies as per terms & conditions</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Modal Footer */}
-                  <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
-                    <div className="flex items-center gap-4">
-                      {bookingStep > 1 && (
-                        <button
-                          onClick={handlePrevStep}
-                          className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors hover:scale-105"
-                        >
-                          <FiChevronRight className="w-4 h-4 rotate-180" />
-                          Previous
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
+                {/* Modal Footer */}
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center gap-4">
+                    {bookingStep > 1 && (
                       <button
-                        onClick={() => setShowBookingModal(false)}
-                        className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors hover:scale-105"
+                        onClick={handlePrevStep}
+                        className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors hover:scale-105"
                       >
-                        Cancel
+                        <FiChevronRight className="w-4 h-4 rotate-180" />
+                        Previous
                       </button>
+                    )}
+                  </div>
 
-                      {bookingStep < 3 ? (
-                        <button
-                          onClick={handleNextStep}
-                          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                        >
-                          Next
-                          <FiChevronRight className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleSubmitBooking}
-                          disabled={loading}
-                          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
-                        >
-                          {loading ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              Submitting...
-                            </>
-                          ) : (
-                            <>
-                              <FiCheckCircle className="w-4 h-4" />
-                              Submit Booking
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowBookingModal(false)}
+                      className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors hover:scale-105"
+                    >
+                      Cancel
+                    </button>
+
+                    {bookingStep < 3 ? (
+                      <button
+                        onClick={handleNextStep}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                      >
+                        Next
+                        <FiChevronRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSubmitBooking}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                      >
+                        {loading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <FiCheckCircle className="w-4 h-4" />
+                            Submit Booking
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
       </ResponsiveContainer>
     </div>
   );

@@ -16,6 +16,7 @@ console.log('=====================================\n');
 
 const testFiles = [
   'api/test-all-apis.js',
+  'api/test-profile-apis.js',
   'api/test-email-apis.js', 
   'api/test-sms-apis.js'
 ];

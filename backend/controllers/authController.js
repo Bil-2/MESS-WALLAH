@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const { createBruteForceProtector, handleFailedAttempt } = require('../middleware/advancedSecurity');
 const { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetSuccessEmail } = require('../services/notify');
+const AccountLinkingService = require('../services/accountLinkingService');
 
 // Password strength validation
 const validatePasswordStrength = (password) => {
@@ -91,146 +92,70 @@ const register = async (req, res) => {
       });
     }
 
-    // CRITICAL FIX: Check for existing users with unified account system
-    let phoneVariants = [];
-    if (phone) {
-      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-      phoneVariants = [
-        phone,
-        formattedPhone,
-        formattedPhone.replace('+91', ''),
-        formattedPhone.replace('+', '')
-      ];
-    }
+    // ENHANCED: Use comprehensive account linking service
+    console.log(`[INFO] UNIFIED REGISTRATION: Starting comprehensive account search...`);
+    const accountSearch = await AccountLinkingService.findExistingUser(email, phone);
 
-    let existingUser = await User.findOne({
-      $or: [
-        { email },
-        ...(phoneVariants.length > 0 ? [{ phone: { $in: phoneVariants } }] : [])
-      ]
+    console.log(`📊 ACCOUNT SEARCH RESULT:`, {
+      found: accountSearch.found,
+      canLink: accountSearch.canLink,
+      shouldLink: accountSearch.shouldLink,
+      linkingType: accountSearch.linkingType,
+      reason: accountSearch.reason,
+      confidence: accountSearch.confidence
     });
 
-    console.log(`🔍 REGISTRATION: Searching for existing user with email: ${email}, phone variants:`, phoneVariants);
-    console.log(`👤 EXISTING USER FOUND:`, existingUser ? {
-      id: existingUser._id,
-      email: existingUser.email,
-      phone: existingUser.phone,
-      hasPassword: !!existingUser.password,
-      registrationMethod: existingUser.registrationMethod,
-      accountType: existingUser.accountType
-    } : 'None');
+    // 🎯 ENHANCED: Handle account linking using comprehensive service
+    if (accountSearch.found) {
+      const existingUser = accountSearch.user;
 
-    // ADDITIONAL CHECK: Look for OTP-only accounts that can be linked
-    if (!existingUser && phone) {
-      // Format phone number consistently
-      let formattedPhone = phone;
-      if (phone && !phone.startsWith('+')) {
-        formattedPhone = `+91${phone}`;
-      }
-      
-      const phoneVariants = [
-        formattedPhone,
-        formattedPhone.replace('+91', ''),
-        formattedPhone.replace('+', ''),
-        phone
-      ];
-      
-      existingUser = await User.findOne({ 
-        phone: { $in: phoneVariants },
-        accountType: 'otp-only',
-        canLinkEmail: true
-      });
-      
-      if (existingUser) {
-        console.log(`🔗 LINKING OTP account ${existingUser.phone} with email ${email}`);
-      }
-    }
+      if (accountSearch.shouldLink && accountSearch.canLink) {
+        console.log(`[INFO] ACCOUNT LINKING: ${accountSearch.linkingType} - ${accountSearch.reason}`);
+        console.log(`📊 Confidence Level: ${accountSearch.confidence}`);
 
-    if (existingUser) {
-      // ENHANCED: Check if this is an OTP-created user that can be linked
-      const isOtpOnlyUser = (
-        // Primary check: OTP user without password
-        (!existingUser.password && existingUser.registrationMethod === 'otp') || 
-        // Secondary check: Explicitly marked as linkable
-        (existingUser.accountType === 'otp-only' && existingUser.canLinkEmail) ||
-        // CRITICAL FIX: Legacy OTP users without email
-        (!existingUser.email && existingUser.phone && existingUser.registrationMethod === 'otp') ||
-        // ADDITIONAL FIX: OTP users with phone but no complete profile
-        (existingUser.phone && !existingUser.email && existingUser.isPhoneVerified && !existingUser.profileCompleted)
-      );
-
-      console.log(`🔍 ACCOUNT LINKING CHECK:`, {
-        hasPassword: !!existingUser.password,
-        registrationMethod: existingUser.registrationMethod,
-        accountType: existingUser.accountType,
-        hasEmail: !!existingUser.email,
-        hasPhone: !!existingUser.phone,
-        isPhoneVerified: existingUser.isPhoneVerified,
-        profileCompleted: existingUser.profileCompleted,
-        canLinkEmail: existingUser.canLinkEmail,
-        isOtpOnlyUser: isOtpOnlyUser
-      });
-
-      if (isOtpOnlyUser) {
-        // ACCOUNT LINKING: Complete registration by adding email/password to existing OTP account
-        console.log(`🔗 LINKING ACCOUNTS: Completing registration for OTP user: ${existingUser.phone} -> ${email} from IP: ${req.ip}`);
-        console.log(`👤 Existing user details:`, {
-          id: existingUser._id,
-          phone: existingUser.phone,
-          hasEmail: !!existingUser.email,
-          hasPassword: !!existingUser.password,
-          registrationMethod: existingUser.registrationMethod,
-          accountType: existingUser.accountType
+        // Use the account linking service to perform the linking
+        const linkedUser = await AccountLinkingService.linkAccounts(existingUser, {
+          name, email, password, phone, role, college, course, year
         });
-        
-        // Update existing user with registration details
-        existingUser.name = name;
-        existingUser.email = email;
-        existingUser.password = password; // Will be hashed by pre-save hook
-        existingUser.role = role || 'student';
-        existingUser.college = college;
-        existingUser.course = course;
-        existingUser.year = year;
-        existingUser.registrationMethod = 'complete';
-        existingUser.accountType = 'unified'; // Mark as unified account
-        existingUser.canLinkEmail = false; // Prevent further linking
-        existingUser.isEmailVerified = false; // Email needs verification
-        existingUser.profileCompleted = true;
-        
-        // Ensure phone is in correct format
-        if (phone && !existingUser.phone.startsWith('+')) {
-          existingUser.phone = `+91${existingUser.phone.replace(/^\+?91/, '')}`;
-        }
-        
-        await existingUser.save();
-        
-        // Generate JWT token
+
+        // Generate JWT token for linked account
         const token = jwt.sign(
-          { 
-            userId: existingUser._id,
-            email: existingUser.email,
-            phone: existingUser.phone,
-            role: existingUser.role 
+          {
+            userId: linkedUser._id,
+            email: linkedUser.email,
+            phone: linkedUser.phone,
+            role: linkedUser.role
           },
           process.env.JWT_SECRET,
           { expiresIn: process.env.JWT_EXPIRE || '30d' }
         );
 
         // Remove password from response
-        const userResponse = existingUser.toObject();
+        const userResponse = linkedUser.toObject();
         delete userResponse.password;
 
         return res.status(200).json({
           success: true,
-          message: '🎉 Account linked successfully! Your phone and email are now connected.',
+          message: 'Account successfully linked! Your phone and email are now unified in one account.',
           token,
           user: userResponse,
-          accountLinked: true
+          accountLinked: true,
+          accountType: 'unified',
+          linkingDetails: {
+            previousAccountType: accountSearch.linkingType.split('-')[0],
+            newAccountType: 'unified',
+            linkedAt: new Date().toISOString(),
+            hasPhone: !!userResponse.phone,
+            hasEmail: !!userResponse.email,
+            isComplete: true,
+            confidence: accountSearch.confidence,
+            method: 'comprehensive-service'
+          }
         });
       } else {
-        // User already exists with complete registration
-        console.log(`❌ REGISTRATION BLOCKED: User already exists with complete profile: ${email} from IP: ${req.ip}`);
-        console.log(`👤 Existing user cannot be linked:`, {
+        // User already exists with complete registration - cannot link
+        console.log(`[WARNING] REGISTRATION BLOCKED: ${accountSearch.reason}`);
+        console.log(`[INFO] Existing user details:`, {
           id: existingUser._id,
           email: existingUser.email,
           phone: existingUser.phone,
@@ -243,9 +168,12 @@ const register = async (req, res) => {
         return res.status(409).json({
           success: false,
           message: 'User already exists with this email or phone number',
-          hint: existingUser.email ? 
+          hint: existingUser.email ?
             'An account with this email already exists. Try logging in instead.' :
-            'An account with this phone number already exists. Try logging in with OTP instead.'
+            'An account with this phone number already exists. Try logging in with OTP instead.',
+          existingAccountType: existingUser.accountType,
+          cannotLink: true,
+          reason: accountSearch.reason
         });
       }
     }
@@ -338,9 +266,9 @@ const register = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error during registration',
-      ...(process.env.NODE_ENV === 'development' && { 
+      ...(process.env.NODE_ENV === 'development' && {
         error: error.message,
-        details: error.stack 
+        details: error.stack
       })
     });
   }
@@ -361,8 +289,8 @@ const login = async (req, res) => {
     }
 
     // CRITICAL FIX: Find user by email OR phone (unified account system)
-    console.log(`🔍 LOGIN ATTEMPT: Searching for user with email: ${email}`);
-    
+    console.log(`[DEBUG] LOGIN ATTEMPT: Searching for user with email: ${email}`);
+
     const user = await User.findOne({
       $or: [
         { email: email.toLowerCase().trim() },
@@ -372,7 +300,7 @@ const login = async (req, res) => {
       ]
     }).select('+password +securityInfo +registrationMethod +accountType');
 
-    console.log(`👤 USER SEARCH RESULT:`, user ? {
+    console.log(`[DEBUG] USER SEARCH RESULT:`, user ? {
       id: user._id,
       email: user.email,
       phone: user.phone,
@@ -383,7 +311,7 @@ const login = async (req, res) => {
 
     if (!user) {
       req.authFailed = true;
-      console.log(`❌ LOGIN FAILED: No user found with email: ${email} from IP: ${req.ip}`);
+      console.log(`[WARNING] LOGIN FAILED: No user found with email: ${email} from IP: ${req.ip}`);
 
       return res.status(401).json({
         success: false,
@@ -393,8 +321,8 @@ const login = async (req, res) => {
 
     // ENHANCED: Check if user was created via OTP but hasn't set a password
     if (!user.password && (user.registrationMethod === 'otp' || user.accountType === 'otp-only')) {
-      console.log(`🔗 LOGIN ATTEMPT: OTP-only user trying email login: ${email} from IP: ${req.ip}`);
-      console.log(`👤 User details: ID=${user._id}, phone=${user.phone}, accountType=${user.accountType}`);
+      console.log(`[INFO] LOGIN ATTEMPT: OTP-only user trying email login: ${email} from IP: ${req.ip}`);
+      console.log(`[INFO] User details: ID=${user._id}, phone=${user.phone}, accountType=${user.accountType}`);
 
       return res.status(400).json({
         success: false,
@@ -434,14 +362,14 @@ const login = async (req, res) => {
       user.securityInfo.failedLoginAttempts = (user.securityInfo.failedLoginAttempts || 0) + 1;
       user.securityInfo.lastFailedLogin = new Date();
 
-      console.log(`❌ LOGIN FAILED: Invalid password for ${email}. Attempts: ${user.securityInfo.failedLoginAttempts}/5`);
+      console.log(`[WARNING] LOGIN FAILED: Invalid password for ${email}. Attempts: ${user.securityInfo.failedLoginAttempts}/5`);
 
       // Lock account after 5 failed attempts
       if (user.securityInfo.failedLoginAttempts >= 5) {
         user.securityInfo.accountLocked = true;
         user.securityInfo.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-        console.log(`🔒 ACCOUNT LOCKED: ${email} due to failed login attempts from IP: ${req.ip}`);
+        console.log(`[WARNING] ACCOUNT LOCKED: ${email} due to failed login attempts from IP: ${req.ip}`);
       }
 
       await user.save();
@@ -670,7 +598,7 @@ const forgotPassword = async (req, res) => {
 
     // Find user
     const user = await User.findOne({ email: email.toLowerCase().trim() });
-    
+
     // Always return success to prevent email enumeration attacks
     if (!user) {
       console.log(`Password reset requested for non-existent email: ${email} from IP: ${req.ip}`);
@@ -700,7 +628,7 @@ const forgotPassword = async (req, res) => {
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
       await user.save();
-      
+
       return res.status(500).json({
         success: false,
         message: 'Failed to send password reset email. Please try again.'
@@ -853,7 +781,7 @@ const checkUserExists = async (req, res) => {
 
     // User exists - check their account type
     const isOtpOnlyUser = (
-      (!user.password && user.registrationMethod === 'otp') || 
+      (!user.password && user.registrationMethod === 'otp') ||
       (user.accountType === 'otp-only') ||
       // CRITICAL FIX: Also check for OTP users without accountType field (legacy users)
       (!user.email && user.phone && user.registrationMethod === 'otp')

@@ -3,6 +3,7 @@ const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendMessWallahOTP, verifyMessWallahOTP, formatPhoneNumber } = require('../services/twilioVerifyService');
+const AccountLinkingService = require('../services/accountLinkingService');
 
 // Generate 6-digit OTP
 const generateOTP = () => {
@@ -42,21 +43,21 @@ const sendOtp = async (req, res) => {
 
     // REAL SMS OTP sending - sends actual SMS to your device
     let otpSendResult;
-    
-    console.log(`📱 Sending REAL SMS OTP to: ${formattedPhone}`);
-    
+
+    console.log(`[INFO] Sending REAL SMS OTP to: ${formattedPhone}`);
+
     try {
       // Force real SMS sending with proper Twilio configuration
-      console.log('🔧 Attempting to send REAL SMS via Twilio...');
+      console.log('[DEBUG] Attempting to send REAL SMS via Twilio...');
       otpSendResult = await sendMessWallahOTP(formattedPhone);
-      
+
       if (otpSendResult.success && !otpSendResult.sid.startsWith('FALLBACK_')) {
-        console.log(`✅ REAL SMS OTP sent successfully to ${formattedPhone}`);
-        console.log(`📱 Check your device for the OTP message!`);
-        console.log(`🔍 Twilio SID: ${otpSendResult.sid}`);
+        console.log(`[SUCCESS] REAL SMS OTP sent successfully to ${formattedPhone}`);
+        console.log(`[INFO] Check your device for the OTP message!`);
+        console.log(`[DEBUG] Twilio SID: ${otpSendResult.sid}`);
       } else {
-        console.log(`⚠️ Twilio SMS failed or fallback used: ${otpSendResult.error || 'Fallback mode'}`);
-        console.log('🔧 Using development mode instead');
+        console.log(`[WARNING] Twilio SMS failed or fallback used: ${otpSendResult.error || 'Fallback mode'}`);
+        console.log('[DEBUG] Using development mode instead');
         // Fallback to development mode
         otpSendResult = {
           success: true,
@@ -66,7 +67,7 @@ const sendOtp = async (req, res) => {
         };
       }
     } catch (error) {
-      console.log('❌ SMS sending failed, using development fallback:', error.message);
+      console.log('[ERROR] SMS sending failed, using development fallback:', error.message);
       otpSendResult = {
         success: true,
         sid: 'DEV_' + Date.now(),
@@ -87,8 +88,8 @@ const sendOtp = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: otpSendResult.sid.startsWith('DEV_') ? 
-        '' : 
+      message: otpSendResult.sid.startsWith('DEV_') ?
+        '' :
         'OTP sent to your device! Check your SMS messages.',
       data: {
         phone: formattedPhone,
@@ -97,17 +98,17 @@ const sendOtp = async (req, res) => {
         status: 'sent',
         sid: otpSendResult.sid,
         canResendAfter: 30,
-        note: otpSendResult.sid.startsWith('DEV_') ? 
-          'Development mode: Use 123456' : 
+        note: otpSendResult.sid.startsWith('DEV_') ?
+          'Development mode: Use 123456' :
           'Check your phone for SMS with 6-digit verification code',
-        quickTip: otpSendResult.sid.startsWith('DEV_') ? 
-          'Development OTP: 123456' : 
+        quickTip: otpSendResult.sid.startsWith('DEV_') ?
+          'Development OTP: 123456' :
           'Enter the exact 6-digit code from your SMS message'
       }
     });
 
   } catch (error) {
-    console.error('❌ Send OTP Error:', error);
+    console.error('[ERROR] Send OTP Error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to send OTP. Please try again.',
@@ -134,55 +135,55 @@ const verifyOtp = async (req, res) => {
 
     // REAL OTP verification - verifies the actual OTP you received
     let verificationSuccess = false;
-    
-    console.log(`🔍 Verifying REAL OTP for ${formattedPhone}: ${otp}`);
-    
+
+    console.log(`[DEBUG] Verifying REAL OTP for ${formattedPhone}: ${otp}`);
+
     try {
       // PRODUCTION-READY OTP VERIFICATION with fallback
-      console.log(`🔒 PRODUCTION OTP VERIFICATION for ${formattedPhone}: ${otp}`);
-      
+      console.log(`[INFO] PRODUCTION OTP VERIFICATION for ${formattedPhone}: ${otp}`);
+
       const verifyResult = await verifyMessWallahOTP(formattedPhone, otp);
-      
+
       if (verifyResult.success) {
         verificationSuccess = true;
-        console.log('✅ REAL SMS OTP verified successfully via Twilio');
-        console.log('🎉 The OTP from your SMS is correct and valid!');
+        console.log('[SUCCESS] REAL SMS OTP verified successfully via Twilio');
+        console.log('[SUCCESS] The OTP from your SMS is correct and valid!');
       } else {
         // Production fallback: Check if it's a development environment
         if (process.env.NODE_ENV === 'development' && otp === '123456') {
           verificationSuccess = true;
-          console.log('✅ Development OTP accepted for testing purposes');
+          console.log('[SUCCESS] Development OTP accepted for testing purposes');
         } else {
-          console.log(`❌ INVALID OTP: ${otp} - Not the real OTP from SMS`);
-          console.log('🚫 Rejecting invalid/fake OTP code');
-          
+          console.log(`[ERROR] INVALID OTP: ${otp} - Not the real OTP from SMS`);
+          console.log('[WARNING] Rejecting invalid/fake OTP code');
+
           return res.status(400).json({
             success: false,
             message: 'Invalid OTP. Please enter the exact 6-digit code you received via SMS.',
             error: 'OTP verification failed',
-            hint: process.env.NODE_ENV === 'development' ? 
-              'Use the real OTP from SMS or 123456 for development testing' : 
+            hint: process.env.NODE_ENV === 'development' ?
+              'Use the real OTP from SMS or 123456 for development testing' :
               'Only the real OTP sent to your phone will work. Check your SMS messages.',
             strict: true
           });
         }
       }
     } catch (error) {
-      console.log('❌ OTP verification error:', error.message);
-      
+      console.log('[ERROR] OTP verification error:', error.message);
+
       // Production fallback for development
       if (process.env.NODE_ENV === 'development' && otp === '123456') {
         verificationSuccess = true;
-        console.log('✅ Development fallback OTP accepted');
+        console.log('[SUCCESS] Development fallback OTP accepted');
       } else {
-        console.log(`🚫 Rejecting OTP ${otp} due to verification error`);
-        
+        console.log(`[WARNING] Rejecting OTP ${otp} due to verification error`);
+
         return res.status(400).json({
           success: false,
           message: 'Invalid OTP. Please enter the correct code from your SMS.',
           error: 'OTP verification failed',
-          hint: process.env.NODE_ENV === 'development' ? 
-            'Use 123456 for development or the real OTP from SMS' : 
+          hint: process.env.NODE_ENV === 'development' ?
+            'Use 123456 for development or the real OTP from SMS' :
             'Only the real OTP sent via SMS will be accepted'
         });
       }
@@ -202,87 +203,86 @@ const verifyOtp = async (req, res) => {
       await Otp.deleteOne({ _id: existingOtp._id });
     }
 
-    // OTP verification successful - find or create user with UNIFIED ACCOUNT SYSTEM
-    let user = await User.findOne({ phone: formattedPhone });
-    
-    if (!user) {
-      // CRITICAL FIX: Check if user exists with same phone in different format
-      const phoneVariants = [
-        formattedPhone,
-        formattedPhone.replace('+91', ''),
-        formattedPhone.replace('+', ''),
-        phone // Original input
-      ];
-      
-      user = await User.findOne({ 
-        phone: { $in: phoneVariants }
-      });
-      
-      if (!user) {
-        // Create new user with phone number - works for ALL numbers
-        try {
-          user = new User({
-            phone: formattedPhone,
-            name: `User${formattedPhone.slice(-4)}`, // Default name using last 4 digits
-            role: 'user',
-            isPhoneVerified: true,
-            registrationMethod: 'otp',
-            isActive: true,
-            createdAt: new Date(),
-            lastLogin: new Date(),
-            // CRITICAL: Mark as OTP-only account that can be linked later
-            accountType: 'otp-only',
-            canLinkEmail: true
-          });
-          await user.save();
-          console.log(`✅ NEW OTP-ONLY USER CREATED: ${formattedPhone} with name: ${user.name}`);
-        } catch (saveError) {
-          if (saveError.code === 11000) {
-            // Duplicate key error, try to find existing user
-            user = await User.findOne({ phone: formattedPhone });
-            if (!user) {
-              // If still no user, create with unique identifier
-              user = new User({
-                phone: formattedPhone,
-                name: `User${formattedPhone.slice(-4)}_${Date.now()}`,
-                role: 'user',
-                isPhoneVerified: true,
-                registrationMethod: 'otp',
-                isActive: true,
-                accountType: 'otp-only',
-                canLinkEmail: true
-              });
-              await user.save();
-            }
-          } else {
-            throw saveError;
-          }
-        }
-      } else {
-        // Update existing user's phone format if needed
-        if (user.phone !== formattedPhone) {
-          user.phone = formattedPhone;
-        }
-        user.isPhoneVerified = true;
-        user.lastLogin = new Date();
-        user.isActive = true;
-        await user.save();
-        console.log(`✅ EXISTING USER FOUND AND UPDATED: ${formattedPhone}`);
+    // OTP verification successful - find or create user using AccountLinkingService
+    // This prevents duplicate accounts by checking all phone variants and potential email links
+    console.log(`[DEBUG] Searching for existing user with phone: ${formattedPhone}`);
+    const accountSearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
+
+    let user;
+
+    if (accountSearch.found) {
+      user = accountSearch.user;
+      console.log(`[SUCCESS] Existing user found: ${user._id}`);
+
+      // Update user details
+      if (user.phone !== formattedPhone) {
+        user.phone = formattedPhone;
       }
-    } else {
-      // Update existing user
       user.isPhoneVerified = true;
       user.lastLogin = new Date();
       user.isActive = true;
+
+      // If this was an email-only account, it's now linked with phone
+      if (!user.registrationMethod || user.registrationMethod === 'email') {
+        // Don't change registrationMethod, but ensure accountType reflects capabilities
+        if (user.accountType === 'email-only') {
+          user.accountType = 'unified';
+        }
+      }
+
       await user.save();
-      console.log(`✅ EXISTING USER UPDATED: ${formattedPhone}`);
+    } else {
+      // Create new user with phone number
+      console.log(`[INFO] No existing user found. Creating new OTP-only account.`);
+      try {
+        user = new User({
+          phone: formattedPhone,
+          name: `User${formattedPhone.slice(-4)}`, // Default name using last 4 digits
+          role: 'user',
+          isPhoneVerified: true,
+          registrationMethod: 'otp',
+          isActive: true,
+          createdAt: new Date(),
+          lastLogin: new Date(),
+          // CRITICAL: Mark as OTP-only account that can be linked later
+          accountType: 'otp-only',
+          canLinkEmail: true,
+          profileCompleted: false
+        });
+        await user.save();
+        console.log(`[SUCCESS] New OTP-only user created: ${formattedPhone}`);
+      } catch (saveError) {
+        if (saveError.code === 11000) {
+          // Handle race condition - duplicate key error
+          console.log('[WARNING] Race condition detected, finding user again');
+          const retrySearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
+          if (retrySearch.found) {
+            user = retrySearch.user;
+          } else {
+            // Fallback with unique name if phone collision wasn't the issue (unlikely for phone index)
+            user = new User({
+              phone: formattedPhone,
+              name: `User${formattedPhone.slice(-4)}_${Date.now()}`,
+              role: 'user',
+              isPhoneVerified: true,
+              registrationMethod: 'otp',
+              isActive: true,
+              accountType: 'otp-only',
+              canLinkEmail: true
+            });
+            await user.save();
+          }
+        } else {
+          throw saveError;
+        }
+      }
     }
 
     // OTP record already cleaned up above
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
+      {
         userId: user._id,
         phone: user.phone,
         role: user.role
@@ -319,7 +319,7 @@ const verifyOtp = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Verify OTP Error:', error);
+    console.error('[ERROR] Verify OTP Error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to verify OTP. Please try again.',
@@ -360,7 +360,7 @@ const resendOtp = async (req, res) => {
     return sendOtp(req, res);
 
   } catch (error) {
-    console.error('❌ Resend OTP Error:', error);
+    console.error('[ERROR] Resend OTP Error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to resend OTP. Please try again.',

@@ -25,7 +25,7 @@ const createTransporter = () => {
     // Use console logging in development
     return {
       sendMail: async (mailOptions) => {
-        console.log('📧 [DEV EMAIL FALLBACK]', {
+        console.log('[INFO] [DEV EMAIL FALLBACK]', {
           to: mailOptions.to,
           subject: mailOptions.subject,
           text: mailOptions.text || 'No text content',
@@ -41,7 +41,7 @@ const createTransporter = () => {
 const sendEmail = async (options) => {
   try {
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: `"MESS WALLAH" <${process.env.GMAIL_USER}>`,
       to: options.to,
@@ -51,13 +51,13 @@ const sendEmail = async (options) => {
     };
 
     const result = await transporter.sendMail(mailOptions);
-    
-    console.log('✅ Email sent successfully:', {
+
+    console.log('[SUCCESS] Email sent successfully:', {
       to: options.to,
       subject: options.subject,
       messageId: result.messageId
     });
-    
+
     return result;
   } catch (error) {
     console.error('Email sending failed:', {

@@ -16,7 +16,9 @@ import {
   Clock,
   TrendingUp,
   UserCheck,
-  Home
+  Home,
+  Briefcase,
+  Code
 } from 'lucide-react';
 
 const About = () => {
@@ -91,25 +93,25 @@ const About = () => {
     {
       name: 'Priya Sharma',
       role: 'Founder & CEO',
-      image: '👩‍💼',
+      icon: Briefcase,
       description: 'Passionate about creating safe spaces for women with 10+ years in hospitality'
     },
     {
       name: 'Rahul Gupta',
       role: 'CTO',
-      image: '👨‍💻',
+      icon: Code,
       description: 'Technology leader focused on building secure and scalable platforms'
     },
     {
       name: 'Anjali Patel',
       role: 'Head of Safety',
-      image: '👩‍🔒',
+      icon: Shield,
       description: 'Former security consultant ensuring comprehensive safety protocols'
     },
     {
       name: 'Vikram Singh',
       role: 'Head of Operations',
-      image: '👨‍💼',
+      icon: Users,
       description: 'Operations expert managing property partnerships and quality standards'
     }
   ];
@@ -299,7 +301,11 @@ const About = () => {
                 transition={{ delay: 0.9 + index * 0.1 }}
                 className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/20 text-center"
               >
-                <div className="text-6xl mb-4">{member.image}</div>
+                <div className="flex justify-center mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-gray-700 dark:to-gray-600 rounded-full flex items-center justify-center">
+                    <member.icon className="w-10 h-10 text-orange-600 dark:text-orange-400" />
+                  </div>
+                </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   {member.name}
                 </h3>

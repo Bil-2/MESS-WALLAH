@@ -24,7 +24,7 @@ const getRooms = async (req, res) => {
 
     // Build filter object - make isAvailable optional for testing
     const filter = {};
-    
+
     // Only filter by isAvailable if it's explicitly set to false
     if (req.query.isAvailable === 'false') {
       filter.isAvailable = false;
@@ -36,7 +36,7 @@ const getRooms = async (req, res) => {
     if (search) {
       const searchQuery = createTextSearchQuery(search, [
         'title',
-        'description', 
+        'description',
         'address.city',
         'address.area'
       ]);
@@ -437,7 +437,7 @@ const seedSampleRooms = async () => {
         password: 'hashedpassword123' // In real app, this would be properly hashed
       });
       await sampleOwner.save();
-      console.log('✅ Sample owner created');
+      console.log('[SUCCESS] Sample owner created');
     }
 
     // Sample room data
@@ -518,10 +518,10 @@ const seedSampleRooms = async () => {
 
     // Insert sample rooms
     await Room.insertMany(sampleRooms);
-    console.log(`✅ Successfully seeded ${sampleRooms.length} sample rooms`);
+    console.log(`[SUCCESS] Successfully seeded ${sampleRooms.length} sample rooms`);
 
   } catch (error) {
-    console.error('❌ Error seeding rooms:', error);
+    console.error('[ERROR] Error seeding rooms:', error);
     throw error;
   }
 };

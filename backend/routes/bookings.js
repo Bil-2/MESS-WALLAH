@@ -192,7 +192,7 @@ router.post('/', [
       // Create or find a default owner for rooms without owners
       const User = require('../models/User');
       let defaultOwner = await User.findOne({ email: 'default.owner@messwallah.com' });
-      
+
       if (!defaultOwner) {
         const bcrypt = require('bcryptjs');
         const hashedPassword = await bcrypt.hash('DefaultOwner123!', 10);
@@ -206,11 +206,11 @@ router.post('/', [
           isActive: true
         });
       }
-      
+
       // Update the room with default owner
       await Room.updateOne({ _id: roomId }, { $set: { owner: defaultOwner._id } });
       roomOwner = defaultOwner;
-      console.log(`✅ Assigned default owner to room: ${room.title}`);
+      console.log(`[SUCCESS] Assigned default owner to room: ${room.title}`);
     }
 
     if (!room.isActive || !room.isAvailable) {
@@ -408,11 +408,11 @@ router.get('/:id', protect, async (req, res) => {
     }
 
     // Check if user is authorized to view this booking
-    console.log('🔍 Authorization check:');
+    console.log('[DEBUG] Authorization check:');
     console.log('   Booking userId:', booking.userId.toString());
     console.log('   Request user._id:', req.user._id.toString());
     console.log('   Booking ownerId:', booking.ownerId.toString());
-    
+
     const isAuthorized = booking.userId.toString() === req.user._id.toString() ||
       booking.ownerId.toString() === req.user._id.toString();
 

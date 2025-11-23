@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  MapPin, 
-  Star, 
-  Shield, 
-  Users, 
+import {
+  Search,
+  MapPin,
+  Star,
+  Shield,
+  Users,
   Home as HomeIcon,
   Mail,
-  Phone
-} from '../utils/iconMappings';
+  Phone,
+  Trophy,
+  Medal,
+  Building2,
+  Landmark,
+  GraduationCap,
+  Waves
+} from 'lucide-react';
 import SuccessStories from '../components/SuccessStories';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
@@ -40,7 +46,7 @@ const Home = () => {
           const transformedRooms = roomsData.data.rooms.slice(0, 6).map(room => ({
             id: room._id,
             title: room.title,
-            location: `${room.address.area}, ${room.address.city}` ,
+            location: `${room.address.area}, ${room.address.city}`,
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
             image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
@@ -49,7 +55,7 @@ const Home = () => {
           setFeaturedRooms(transformedRooms);
         }
       }
-      
+
       // Fetch real stats
       const statsResponse = await fetch('/api/rooms/stats');
       if (statsResponse.ok) {
@@ -82,14 +88,14 @@ const Home = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/rooms?search=${encodeURIComponent(searchQuery)}` );
+      navigate(`/rooms?search=${encodeURIComponent(searchQuery)}`);
     } else {
       navigate('/rooms');
     }
   };
 
   const handleQuickSearch = (city) => {
-    navigate(`/rooms?search=${encodeURIComponent(city)}` );
+    navigate(`/rooms?search=${encodeURIComponent(city)}`);
   };
 
   return (
@@ -109,23 +115,23 @@ const Home = () => {
               <div className="relative">
                 <Shield className="w-5 h-5 text-white" />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow- rounded-full flex items-center justify-center">
-                  
+
                 </div>
               </div>
               <span className="text-white font-extrabold tracking-wide">
-                 SAFE STUDENT HOUSING PLATFROM
+                SAFE STUDENT HOUSING PLATFROM
               </span>
               <div className="px-2 py-1 bg-white/20 rounded-full">
                 <span className="text-xs font-bold text-white">TRUSTED</span>
               </div>
             </div>
-            
+
             {/* Awards & Recognition Section */}
             <div className="max-w-4xl mx-auto mb-8">
               {/* Section Header */}
               <div className="text-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-100/80 to-orange-100/80 dark:bg-white/10 backdrop-blur-sm rounded-full border border-yellow-200/50 dark:border-white/20 mb-3 shadow-lg">
-                  <span className="text-yellow-500 dark:text-yellow-400 text-lg">🏆</span>
+                  <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                   <span className="text-orange-700 dark:text-white font-bold text-sm">Awards & Recognition</span>
                 </div>
               </div>
@@ -137,7 +143,7 @@ const Home = () => {
                   <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🏆</span>
+                        <Trophy className="w-6 h-6 text-yellow-500" />
                       </div>
                       <div className="flex-1">
                         <h4 className="text-lg font-black text-white">2024 MOST SEARCHED</h4>
@@ -155,7 +161,7 @@ const Home = () => {
                   <div className="bg-gradient-to-r from-slate-500 to-gray-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🥈</span>
+                        <Medal className="w-6 h-6 text-slate-500" />
                       </div>
                       <div className="flex-1">
                         <h4 className="text-lg font-black text-white">TOP 10 PLATFORMS</h4>
@@ -169,7 +175,7 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Main Hero Content */}
             <div className="text-center mb-8">
               {/* Hero Headline */}
@@ -185,9 +191,9 @@ const Home = () => {
 
               {/* Value Proposition */}
               <p className="text-xl sm:text-2xl text-gray-300 mb-6 max-w-4xl mx-auto font-medium leading-relaxed">
-                Discover <span className="text-orange-400 font-bold">verified</span>, 
-                <span className="text-pink-400 font-bold"> secure</span>, and 
-                <span className="text-purple-400 font-bold"> affordable</span> student housing 
+                Discover <span className="text-orange-400 font-bold">verified</span>,
+                <span className="text-pink-400 font-bold"> secure</span>, and
+                <span className="text-purple-400 font-bold"> affordable</span> student housing
                 with premium amenities and 24/7 safety for your peace of mind.
               </p>
 
@@ -214,13 +220,13 @@ const Home = () => {
 
             {/* Enhanced Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-              {/* Primary CTA */}
+              {/* Primary CTA - Decreased color intensity */}
               <button
                 type="button"
                 onClick={() => navigate('/rooms')}
-                className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-orange-400/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative flex items-center gap-3">
                   <Search className="w-6 h-6" />
                   <span>Find Student Housing</span>
@@ -228,14 +234,14 @@ const Home = () => {
                 </div>
               </button>
 
-              {/* Secondary CTA */}
+              {/* Secondary CTA - Improved colors */}
               <button
                 type="button"
                 onClick={() => navigate('/register')}
-                className="group px-10 py-5 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:bg-white/10 backdrop-blur-sm border-2 border-blue-200/60 dark:border-white/20 text-blue-700 dark:text-white rounded-2xl font-bold text-xl hover:from-blue-100/90 hover:to-purple-100/90 dark:hover:bg-white/20 hover:border-blue-300/80 dark:hover:border-white/40 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg"
+                className="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-emerald-500/25"
               >
                 <div className="flex items-center gap-3">
-                  <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <Users className="w-6 h-6 text-white" />
                   <span>Register Now</span>
                 </div>
               </button>
@@ -278,95 +284,98 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
             {[
-              { 
-                name: 'Kolkata', 
-                rooms: '2,500+', 
-                image: '🏙️', 
+              {
+                name: 'Kolkata',
+                rooms: '2,500+',
+                icon: Building2,
                 popular: 'Cultural Capital',
                 gradient: 'from-blue-500 to-cyan-500',
                 bgGradient: 'from-blue-500/20 to-cyan-500/20'
               },
-              { 
-                name: 'Bangalore', 
-                rooms: '3,200+', 
-                image: '🌆', 
+              {
+                name: 'Bangalore',
+                rooms: '3,200+',
+                icon: Building2,
                 popular: 'Silicon Valley',
                 gradient: 'from-orange-500 to-red-500',
                 bgGradient: 'from-orange-500/20 to-red-500/20'
               },
-              { 
-                name: 'Delhi', 
-                rooms: '2,800+', 
-                image: '🏛️', 
+              {
+                name: 'Delhi',
+                rooms: '2,800+',
+                icon: Landmark,
                 popular: 'Capital City',
                 gradient: 'from-purple-500 to-pink-500',
                 bgGradient: 'from-purple-500/20 to-pink-500/20'
               },
-              { 
-                name: 'Pune', 
-                rooms: '2,100+', 
-                image: '🎓', 
+              {
+                name: 'Pune',
+                rooms: '2,100+',
+                icon: GraduationCap,
                 popular: 'Education Hub',
                 gradient: 'from-green-500 to-teal-500',
                 bgGradient: 'from-green-500/20 to-teal-500/20'
               },
-              { 
-                name: 'Chennai', 
-                rooms: '1,900+', 
-                image: '🌊', 
+              {
+                name: 'Chennai',
+                rooms: '1,900+',
+                icon: Waves,
                 popular: 'Tech Center',
                 gradient: 'from-indigo-500 to-blue-500',
                 bgGradient: 'from-indigo-500/20 to-blue-500/20'
               }
-            ].map((city, index) => (
-              <div
-                key={city.name}
-                className="group relative stagger-item"
-                style={{animationDelay: `${index * 0.1}s` }}
-              >
+            ].map((city, index) => {
+              const CityIcon = city.icon;
+              return (
                 <div
-                  onClick={() => handleQuickSearch(city.name)}
-                  className={`group relative bg-gradient-to-br ${city.bgGradient} backdrop-blur-xl rounded-3xl p-8 text-center cursor-pointer hover:scale-105 hover:-translate-y-2 transition-all duration-200 shadow-2xl border border-white/10 hover:border-white/30 overflow-hidden` }
+                  key={city.name}
+                  className="group relative stagger-item"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -translate-y-10 translate-x-10"></div>
-                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full translate-y-8 -translate-x-8"></div>
-                  </div>
-
-                {/* City Icon */}
-                <div className="relative z-10 mb-6">
-                  <div className="text-6xl mb-4 transform group-hover:scale-105 transition-transform duration-200">
-                    {city.image}
-                  </div>
-                  <div className={`w-16 h-1 bg-gradient-to-r ${city.gradient} rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200` }></div>
-                </div>
-
-                {/* City Info */}
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-200 transition-all duration-300">
-                    {city.name}
-                  </h3>
-                  <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-bold text-lg mb-3 shadow-lg` }>
-                    <HomeIcon className="w-4 h-4 mr-2" />
-                    {city.rooms}
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-4">{city.popular}</p>
-                  
-                  {/* Action Button */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className={`inline-flex items-center px-6 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow duration-300` }>
-                      <Search className="w-4 h-4 mr-2" />
-                      Explore Rooms
+                  <div
+                    onClick={() => handleQuickSearch(city.name)}
+                    className={`group relative bg-gradient-to-br ${city.bgGradient} backdrop-blur-xl rounded-3xl p-8 text-center cursor-pointer hover:scale-105 hover:-translate-y-2 transition-all duration-200 shadow-2xl border border-white/10 hover:border-white/30 overflow-hidden`}
+                  >
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -translate-y-10 translate-x-10"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full translate-y-8 -translate-x-8"></div>
                     </div>
+
+                    {/* City Icon */}
+                    <div className="relative z-10 mb-6">
+                      <div className="flex justify-center mb-4 transform group-hover:scale-105 transition-transform duration-200">
+                        <CityIcon className="w-16 h-16 text-white drop-shadow-lg" />
+                      </div>
+                      <div className={`w-16 h-1 bg-gradient-to-r ${city.gradient} rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200`}></div>
+                    </div>
+
+                    {/* City Info */}
+                    <div className="relative z-10">
+                      <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-200 transition-all duration-300">
+                        {city.name}
+                      </h3>
+                      <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-bold text-lg mb-3 shadow-lg`}>
+                        <HomeIcon className="w-4 h-4 mr-2" />
+                        {city.rooms}
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-4">{city.popular}</p>
+
+                      {/* Action Button */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className={`inline-flex items-center px-6 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow duration-300`}>
+                          <Search className="w-4 h-4 mr-2" />
+                          Explore Rooms
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hover Glow Effect */}
+                    <div className={`absolute inset-0 bg-gradient-to-r ${city.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-3xl`}></div>
                   </div>
                 </div>
-
-                {/* Hover Glow Effect */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${city.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-3xl` }></div>
-              </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Additional Info */}
@@ -412,61 +421,61 @@ const Home = () => {
           {/* Enhanced Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { 
-                icon: Users, 
-                label: "Daily Visitors", 
-                value: "50,000+", 
+              {
+                icon: Users,
+                label: "Daily Visitors",
+                value: "50,000+",
                 color: "from-blue-500 to-cyan-500",
                 bgColor: "bg-blue-50 dark:bg-blue-900/20",
                 description: "Students explore daily"
               },
-              { 
-                icon: HomeIcon, 
-                label: "Rooms Booked", 
-                value: "6,500+", 
+              {
+                icon: HomeIcon,
+                label: "Rooms Booked",
+                value: "6,500+",
                 color: "from-green-500 to-emerald-500",
                 bgColor: "bg-green-50 dark:bg-green-900/20",
                 description: "Successfully booked daily"
               },
-              { 
-                icon: Shield, 
-                label: "Safety Score", 
-                value: "100%", 
+              {
+                icon: Shield,
+                label: "Safety Score",
+                value: "100%",
                 color: "from-purple-500 to-violet-500",
                 bgColor: "bg-purple-50 dark:bg-purple-900/20",
                 description: "Verified & secure"
               },
-              { 
-                icon: Shield, 
-                label: "Girls Safety", 
-                value: "Premium", 
+              {
+                icon: Shield,
+                label: "Girls Safety",
+                value: "Premium",
                 color: "from-pink-500 to-rose-500",
                 bgColor: "bg-pink-50 dark:bg-pink-900/20",
                 description: "Trusted & verified"
               }
             ].map((stat, index) => (
               <div key={index} className="group">
-                <div className={`relative ${stat.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/50` }>
+                <div className={`relative ${stat.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/50`}>
                   {/* Gradient Background Effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-500` }></div>
-                  
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-500`}></div>
+
                   {/* Content */}
                   <div className="relative z-10 text-center">
                     {/* Icon */}
-                    <div className={`w-16 h-16 mx-auto mb-6 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center shadow-lg` }>
+                    <div className={`w-16 h-16 mx-auto mb-6 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center shadow-lg`}>
                       <stat.icon className="w-8 h-8 text-white" />
                     </div>
-                    
+
                     {/* Value */}
-                    <div className={`text-4xl font-black mb-2 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent` }>
+                    <div className={`text-4xl font-black mb-2 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
                       {stat.value}
                     </div>
-                    
+
                     {/* Label */}
                     <div className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">
                       {stat.label}
                     </div>
-                    
+
                     {/* Description */}
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {stat.description}

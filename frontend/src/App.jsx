@@ -2,8 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './styles/animations.css';
 import './styles/preventAutoFill.css';
+import './styles/profile-animations.css';
 import { AuthProvider, ThemeProvider } from './context';
 import { Navbar, Footer, LoadingSpinner, MobileNavigation } from './components';
+import FaviconGenerator from './components/FaviconGenerator';
 
 // Lazy load components for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -45,6 +47,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <FaviconGenerator />
         <Router
           future={{
             v7_startTransition: true,

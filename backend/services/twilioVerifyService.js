@@ -11,21 +11,21 @@ let twilioClient = null;
 const initializeTwilioVerify = async () => {
   try {
     if (!accountSid || !authToken) {
-      console.log('⚠️ Twilio credentials missing, using fallback');
+      console.log('[WARNING] Twilio credentials missing, using fallback');
       return false;
     }
 
     twilioClient = twilio(accountSid, authToken);
-    
+
     // Try to find or create a Verify service
     try {
       // First, try to list existing services
       const services = await twilioClient.verify.v2.services.list({ limit: 10 });
-      
+
       if (services.length > 0) {
         // Use the first available service
         verifyServiceSid = services[0].sid;
-        console.log('✅ Using existing Verify service:', verifyServiceSid);
+        console.log('[SUCCESS] Using existing Verify service:', verifyServiceSid);
       } else {
         // Create a new Verify service
         const service = await twilioClient.verify.v2.services.create({
@@ -33,18 +33,18 @@ const initializeTwilioVerify = async () => {
           codeLength: 6
         });
         verifyServiceSid = service.sid;
-        console.log('✅ Created new Verify service:', verifyServiceSid);
+        console.log('[SUCCESS] Created new Verify service:', verifyServiceSid);
       }
     } catch (serviceError) {
-      console.log('⚠️ Verify service error, trying direct SMS:', serviceError.message);
+      console.log('[WARNING] Verify service error, trying direct SMS:', serviceError.message);
       // If Verify service fails, we'll use direct SMS
       verifyServiceSid = null;
     }
-    
-    console.log('✅ Twilio service initialized');
+
+    console.log('[SUCCESS] Twilio service initialized');
     return true;
   } catch (error) {
-    console.error('❌ Failed to initialize Twilio:', error.message);
+    console.error('[ERROR] Failed to initialize Twilio:', error.message);
     return false;
   }
 };
@@ -54,7 +54,7 @@ let isInitialized = false;
 initializeTwilioVerify().then(result => {
   isInitialized = result;
   if (result) {
-    console.log('✅ Twilio Verify service ready for real SMS');
+    console.log('[SUCCESS] Twilio Verify service ready for real SMS');
   }
 }).catch(error => {
   console.error('Failed to initialize Twilio Verify on startup:', error);
@@ -70,7 +70,7 @@ initializeTwilioVerify().then(result => {
 const sendVerificationOTP = async (phoneNumber, channel = 'sms') => {
   try {
     if (!isInitialized || !twilioClient) {
-      console.log('📱 Twilio not initialized, using development OTP');
+      console.log('[INFO] Twilio not initialized, using development OTP');
       return {
         success: true,
         sid: 'DEV_' + Date.now(),
@@ -92,7 +92,7 @@ const sendVerificationOTP = async (phoneNumber, channel = 'sms') => {
             channel: channel
           });
 
-        console.log('✅ Verification OTP sent via Verify service:', {
+        console.log('[SUCCESS] Verification OTP sent via Verify service:', {
           sid: verification.sid,
           to: phoneNumber,
           status: verification.status
@@ -108,7 +108,7 @@ const sendVerificationOTP = async (phoneNumber, channel = 'sms') => {
           message: 'OTP sent successfully via Verify service'
         };
       } catch (verifyError) {
-        console.log('⚠️ Verify service failed, trying direct SMS:', verifyError.message);
+        console.log('[WARNING] Verify service failed, trying direct SMS:', verifyError.message);
       }
     }
 
@@ -120,7 +120,7 @@ const sendVerificationOTP = async (phoneNumber, channel = 'sms') => {
       to: phoneNumber
     });
 
-    console.log('✅ Direct SMS sent successfully:', {
+    console.log('[SUCCESS] Direct SMS sent successfully:', {
       sid: message.sid,
       to: phoneNumber,
       otp: otp
@@ -144,7 +144,7 @@ const sendVerificationOTP = async (phoneNumber, channel = 'sms') => {
     };
 
   } catch (error) {
-    console.error('❌ All OTP methods failed:', {
+    console.error('[ERROR] All OTP methods failed:', {
       error: error.message,
       code: error.code,
       to: phoneNumber
@@ -168,7 +168,7 @@ const sendVerificationOTP = async (phoneNumber, channel = 'sms') => {
 const verifyOTPCode = async (phoneNumber, code) => {
   try {
     if (!isInitialized || !twilioClient) {
-      console.log('📱 Twilio not initialized - STRICT MODE: No fallback OTP');
+      console.log('[INFO] Twilio not initialized - STRICT MODE: No fallback OTP');
       console.log('🚫 Rejecting all OTP codes when Twilio is not available');
       return {
         success: false,
@@ -189,7 +189,7 @@ const verifyOTPCode = async (phoneNumber, code) => {
             code: code
           });
 
-        console.log('✅ Verify service verification result:', {
+        console.log('[SUCCESS] Verify service verification result:', {
           sid: verificationCheck.sid,
           to: phoneNumber,
           status: verificationCheck.status,
@@ -204,18 +204,18 @@ const verifyOTPCode = async (phoneNumber, code) => {
           to: verificationCheck.to,
           channel: verificationCheck.channel,
           dateCreated: verificationCheck.dateCreated,
-          message: verificationCheck.status === 'approved' ? 
+          message: verificationCheck.status === 'approved' ?
             'Code verified successfully' : 'Invalid or expired code'
         };
       } catch (verifyError) {
-        console.log('⚠️ Verify service check failed, trying direct verification:', verifyError.message);
+        console.log('[WARNING] Verify service check failed, trying direct verification:', verifyError.message);
       }
     }
 
     // STRICT MODE: No fallback OTP verification
     console.log('🚫 STRICT MODE: No fallback OTP verification allowed');
-    console.log('🔒 Only Twilio Verify service OTP codes are accepted');
-    
+    console.log('[INFO] Only Twilio Verify service OTP codes are accepted');
+
     return {
       success: false,
       status: 'failed',
@@ -224,7 +224,7 @@ const verifyOTPCode = async (phoneNumber, code) => {
     };
 
   } catch (error) {
-    console.error('❌ OTP verification failed:', {
+    console.error('[ERROR] OTP verification failed:', {
       error: error.message,
       code: error.code,
       to: phoneNumber
@@ -247,11 +247,11 @@ const verifyOTPCode = async (phoneNumber, code) => {
  */
 const sendMessWallahOTP = async (phoneNumber) => {
   console.log(`🔐 Sending MESS WALLAH OTP to: ${phoneNumber}`);
-  
+
   // Try to create a custom verification with better message
   try {
     if (!isInitialized || !twilioClient) {
-      console.log('📱 Twilio Verify not initialized, using fallback');
+      console.log('[INFO] Twilio Verify not initialized, using fallback');
       return {
         success: true,
         sid: 'FALLBACK_' + Date.now(),
@@ -271,7 +271,7 @@ const sendMessWallahOTP = async (phoneNumber) => {
         channel: 'sms'
       });
 
-    console.log('✅ MESS WALLAH OTP sent successfully:', {
+    console.log('[SUCCESS] MESS WALLAH OTP sent successfully:', {
       sid: verification.sid,
       to: phoneNumber,
       status: verification.status,
@@ -289,7 +289,7 @@ const sendMessWallahOTP = async (phoneNumber) => {
     };
 
   } catch (error) {
-    console.error(`❌ Failed to send MESS WALLAH OTP to ${phoneNumber}:`, error.message);
+    console.error(`[ERROR] Failed to send MESS WALLAH OTP to ${phoneNumber}:`, error.message);
     return {
       success: false,
       error: error.message,
@@ -305,16 +305,16 @@ const sendMessWallahOTP = async (phoneNumber) => {
  * @returns {Promise<Object>} - Verification result
  */
 const verifyMessWallahOTP = async (phoneNumber, otpCode) => {
-  console.log(`🔍 Verifying MESS WALLAH OTP for: ${phoneNumber}`);
-  
+  console.log(`[DEBUG] Verifying MESS WALLAH OTP for: ${phoneNumber}`);
+
   const result = await verifyOTPCode(phoneNumber, otpCode);
-  
+
   if (result.success) {
-    console.log(`✅ MESS WALLAH OTP verified for ${phoneNumber}`);
+    console.log(`[SUCCESS] MESS WALLAH OTP verified for ${phoneNumber}`);
   } else {
-    console.error(`❌ MESS WALLAH OTP verification failed for ${phoneNumber}:`, result.error);
+    console.error(`[ERROR] MESS WALLAH OTP verification failed for ${phoneNumber}:`, result.error);
   }
-  
+
   return result;
 };
 
@@ -327,17 +327,17 @@ const verifyMessWallahOTP = async (phoneNumber, otpCode) => {
 const formatPhoneNumber = (phoneNumber, countryCode = '+91') => {
   // Remove any non-digit characters
   const cleanNumber = phoneNumber.replace(/\D/g, '');
-  
+
   // If number already starts with country code, return as is
   if (phoneNumber.startsWith('+')) {
     return phoneNumber;
   }
-  
+
   // For Indian numbers, remove leading 0 if present
   if (countryCode === '+91' && cleanNumber.startsWith('0')) {
     return countryCode + cleanNumber.substring(1);
   }
-  
+
   // Add country code
   return countryCode + cleanNumber;
 };
@@ -352,8 +352,8 @@ const getVerifyServiceStatus = () => {
     accountSid: accountSid ? 'Set' : 'Not set',
     authToken: authToken ? 'Set' : 'Not set',
     verifyServiceSid: verifyServiceSid ? 'Set' : 'Not set',
-    message: isInitialized ? 
-      'Twilio Verify service is ready' : 
+    message: isInitialized ?
+      'Twilio Verify service is ready' :
       'Twilio Verify service not initialized'
   };
 };

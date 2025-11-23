@@ -17,10 +17,10 @@ const ensureDatabaseConnection = async () => {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       });
-      console.log('✅ Database reconnected successfully');
+      console.log('[SUCCESS] Database reconnected successfully');
       return true;
     } catch (error) {
-      console.error('❌ Database reconnection failed:', error.message);
+      console.error('[ERROR] Database reconnection failed:', error.message);
       return false;
     }
   }
@@ -49,12 +49,12 @@ const gracefulErrorRecovery = async (error, req, res, next) => {
   // Database connection errors - Auto recovery
   if (error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
     console.log('🔄 Database error detected. Attempting recovery...');
-    
+
     const reconnected = await ensureDatabaseConnection();
-    
+
     if (reconnected) {
       // Retry the original request
-      console.log('✅ Database recovered. Retrying request...');
+      console.log('[SUCCESS] Database recovered. Retrying request...');
       return res.status(200).json({
         success: true,
         message: 'Request processed successfully after recovery',
@@ -82,7 +82,7 @@ const gracefulErrorRecovery = async (error, req, res, next) => {
       value: e.value,
       kind: e.kind
     }));
-    
+
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
@@ -96,7 +96,7 @@ const gracefulErrorRecovery = async (error, req, res, next) => {
   if (error.code === 11000) {
     const field = Object.keys(error.keyValue)[0];
     const value = error.keyValue[field];
-    
+
     return res.status(400).json({
       success: false,
       message: `${field.charAt(0).toUpperCase() + field.slice(1)} '${value}' already exists`,
@@ -192,7 +192,7 @@ const gracefulErrorRecovery = async (error, req, res, next) => {
 
   // Default error response - Always return success for unknown errors
   const statusCode = error.statusCode || error.status || 500;
-  
+
   // For production, always try to return a successful response when possible
   if (process.env.NODE_ENV === 'production' && statusCode >= 500) {
     return res.status(200).json({
@@ -212,7 +212,7 @@ const gracefulErrorRecovery = async (error, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
     type: error.name || 'ServerError',
     timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === 'development' && { 
+    ...(process.env.NODE_ENV === 'development' && {
       stack: error.stack,
       details: {
         url: req.originalUrl,
@@ -285,7 +285,7 @@ const requestTimeout = (timeout = 30000) => {
 const memoryMonitor = (req, res, next) => {
   const used = process.memoryUsage();
   const memoryUsageMB = Math.round(used.heapUsed / 1024 / 1024);
-  
+
   // Log high memory usage
   if (memoryUsageMB > 500) {
     logger.warn('High memory usage detected', {
@@ -295,13 +295,13 @@ const memoryMonitor = (req, res, next) => {
       method: req.method
     });
   }
-  
+
   // Force garbage collection if memory is very high
   if (memoryUsageMB > 800 && global.gc) {
     global.gc();
     logger.info('Garbage collection triggered due to high memory usage');
   }
-  
+
   next();
 };
 

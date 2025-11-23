@@ -6,9 +6,9 @@ const Room = require('./models/Room');
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('[SUCCESS] Connected to MongoDB');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('[ERROR] MongoDB connection error:', error);
     process.exit(1);
   }
 };
@@ -297,7 +297,7 @@ const createDefaultOwner = async () => {
   try {
     const existingOwner = await User.findOne({ email: 'owner@messwallah.com' });
     if (existingOwner) {
-      console.log('✅ Default owner already exists');
+      console.log('[INFO] Default owner already exists');
       return existingOwner._id;
     }
 
@@ -311,10 +311,10 @@ const createDefaultOwner = async () => {
     });
 
     const savedOwner = await defaultOwner.save();
-    console.log('✅ Created default owner user');
+    console.log('[SUCCESS] Created default owner user');
     return savedOwner._id;
   } catch (error) {
-    console.error('❌ Error creating default owner:', error);
+    console.error('[ERROR] Error creating default owner:', error);
     throw error;
   }
 };
@@ -389,7 +389,7 @@ const seedDatabase = async () => {
 
     // Clear existing rooms
     await Room.deleteMany({});
-    console.log('🗑️ Cleared existing rooms');
+    console.log('[INFO] Cleared existing rooms');
 
     // Generate rooms for each city
     const rooms = indianCities.reduce((acc, city) => acc.concat(generateRoomsForCity(city, ownerId)), []);
@@ -397,14 +397,14 @@ const seedDatabase = async () => {
     // Create rooms
     const createdRooms = await Room.insertMany(rooms);
 
-    console.log('\n🎉 Database seeded successfully!');
+    console.log('\n[SUCCESS] Database seeded successfully!');
     console.log('Sample rooms created:');
     createdRooms.forEach((room, index) => {
       console.log(`${index + 1}. ${room.title} - ${room.address.city}`);
     });
 
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error('[ERROR] Error seeding database:', error);
     throw error;
   }
 };
@@ -414,10 +414,10 @@ const runSeed = async () => {
   try {
     await connectDB();
     await seedDatabase();
-    console.log('\n✅ Seeding completed successfully!');
+    console.log('\n[SUCCESS] Seeding completed successfully!');
     process.exit(0);
   } catch (error) {
-    console.error('\n❌ Seeding failed:', error);
+    console.error('\n[ERROR] Seeding failed:', error);
     process.exit(1);
   }
 };

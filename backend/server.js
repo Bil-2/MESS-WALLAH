@@ -114,8 +114,8 @@ const connectDB = async () => {
       useUnifiedTopology: true,
     });
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}:${conn.connection.port}`);
-    console.log(`🗄️  Database: ${conn.connection.name}`);
+    console.log(`[SUCCESS] MongoDB Connected: ${conn.connection.host}:${conn.connection.port}`);
+    console.log(`[INFO] Database: ${conn.connection.name}`);
 
     // Check if database has rooms
     const Room = require('./models/Room');
@@ -128,15 +128,15 @@ const connectDB = async () => {
       try {
         const { seedSampleRooms } = require('./controllers/roomController');
         await seedSampleRooms();
-        console.log('✅ Auto-seeding completed successfully');
+        console.log('[SUCCESS] Auto-seeding completed successfully');
       } catch (seedError) {
-        console.error('❌ Auto-seeding failed:', seedError.message);
+        console.error('[ERROR] Auto-seeding failed:', seedError.message);
       }
     }
 
     return conn;
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
+    console.error('[ERROR] MongoDB connection failed:', error.message);
     console.error('🔧 Troubleshooting steps:');
     console.error('   1. Make sure MongoDB is running: npm run mongo:start');
     console.error('   2. Check MongoDB status: npm run mongo:status');
@@ -155,7 +155,7 @@ const startServer = async () => {
     app.get('/health', asyncErrorHandler(async (req, res) => {
       const healthReport = healthMonitor.getHealthReport();
       const healthMetrics = healthMonitor.getHealthMetrics();
-      
+
       res.status(200).json({
         status: 'OK',
         message: 'MESS WALLAH API is running',
@@ -168,13 +168,13 @@ const startServer = async () => {
         version: '1.0.0'
       });
     }));
-    
+
     // Detailed health monitoring endpoint
     app.get('/health/detailed', asyncErrorHandler(async (req, res) => {
       const healthReport = healthMonitor.getHealthReport();
       res.status(200).json(healthReport);
     }));
-    
+
     // Health metrics endpoint for monitoring tools
     app.get('/health/metrics', asyncErrorHandler(async (req, res) => {
       const metrics = healthMonitor.getHealthMetrics();
@@ -185,11 +185,11 @@ const startServer = async () => {
     app.get('/api/test', asyncErrorHandler(async (req, res) => {
       // Test database connectivity
       const dbStatus = mongoose.connection.readyState === 1;
-      
+
       // Test memory usage
       const memUsage = process.memoryUsage();
       const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
-      
+
       res.json({
         success: true,
         message: 'API is working correctly',
@@ -213,7 +213,7 @@ const startServer = async () => {
       app.use('/api/auth', authRoutes);
       console.log('   ✓ /api/auth routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/auth routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/auth routes:', error.message);
       // Create fallback auth routes to prevent 404 errors
       app.use('/api/auth/*', (req, res) => {
         res.status(503).json({
@@ -230,58 +230,58 @@ const startServer = async () => {
       app.use('/api/users', require('./routes/users'));
       console.log('   ✓ /api/users routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/users routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/users routes:', error.message);
     }
 
     try {
       app.use('/api/rooms', require('./routes/rooms'));
       console.log('   ✓ /api/rooms routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/rooms routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/rooms routes:', error.message);
     }
 
     try {
       app.use('/api/bookings', require('./routes/bookings'));
       console.log('   ✓ /api/bookings routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/bookings routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/bookings routes:', error.message);
     }
 
     try {
       app.use('/api/search', require('./routes/search'));
       console.log('   ✓ /api/search routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/search routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/search routes:', error.message);
     }
 
     try {
       app.use('/api/payments', require('./routes/simplePaymentRoutes'));
       console.log('   ✓ /api/payments routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/payments routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/payments routes:', error.message);
     }
 
     try {
       app.use('/api/test-sms', require('./routes/testSMS'));
       console.log('   ✓ /api/test-sms routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/test-sms routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/test-sms routes:', error.message);
     }
 
     try {
       app.use('/api/analytics', require('./routes/analytics'));
       console.log('   ✓ /api/analytics routes registered');
     } catch (error) {
-      console.error('   ❌ Failed to register /api/analytics routes:', error.message);
+      console.error('   [ERROR] Failed to register /api/analytics routes:', error.message);
     }
 
     // Start health monitoring system
     healthMonitor.startMonitoring(30000); // Check every 30 seconds
-    console.log('✅ Health monitoring system started');
-    
+    console.log('[SUCCESS] Health monitoring system started');
+
     // Production-ready global error handling middleware
     app.use(gracefulErrorRecovery);
-    
+
     // Fallback error handler
     app.use((err, req, res, next) => {
       console.error('🚨 Global Error Handler:', {
@@ -375,7 +375,7 @@ const startServer = async () => {
       // Default error response
       const statusCode = err.statusCode || err.status || 500;
       const message = err.message || 'Internal Server Error';
-      
+
       res.status(statusCode).json({
         success: false,
         message: statusCode === 500 ? 'Internal Server Error' : message,
@@ -398,10 +398,10 @@ const startServer = async () => {
     const PORT = process.env.PORT || 5001;
 
     const server = app.listen(PORT, () => {
-      console.log(`🚀 MESS WALLAH Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-      console.log(`📅 Started at: ${new Date().toISOString()}`);
-      console.log(`🔗 Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
+      console.log(`[SUCCESS] MESS WALLAH Server running on port ${PORT}`);
+      console.log(`[INFO] Environment: ${process.env.NODE_ENV}`);
+      console.log(`[INFO] Client URL: ${process.env.CLIENT_URL}`);
+      console.log(`[INFO] Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
       console.log(`🧪 Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
     });
 
@@ -427,7 +427,7 @@ const startServer = async () => {
     });
 
   } catch (error) {
-    console.error('❌ Server initialization failed:', error.message);
+    console.error('[ERROR] Server initialization failed:', error.message);
     process.exit(1);
   }
 };

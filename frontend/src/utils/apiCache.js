@@ -8,7 +8,7 @@ class APICache {
     this.pendingRequests = new Map();
     this.CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
     this.requestCount = 0;
-    
+
     // Debug logging
     this.debug = true;
     this.log = (message, data = '') => {
@@ -44,10 +44,10 @@ class APICache {
   get(url, params = {}) {
     const key = this.generateKey(url, params);
     if (this.isValid(key)) {
-      this.log(`✅ Cache HIT: ${key}`);
+      this.log(`Cache HIT: ${key}`);
       return this.cache.get(key);
     }
-    this.log(`❌ Cache MISS: ${key}`);
+    this.log(`Cache MISS: ${key}`);
     return null;
   }
 
@@ -56,8 +56,8 @@ class APICache {
     const key = this.generateKey(url, params);
     this.cache.set(key, data);
     this.timestamps.set(key, Date.now());
-    this.log(`💾 Cached: ${key}`);
-    
+    this.log(`Cached: ${key}`);
+
     // Cleanup old entries if cache gets too large
     if (this.cache.size > 100) {
       this.cleanup();
@@ -71,7 +71,7 @@ class APICache {
       if (now - timestamp > this.CACHE_DURATION) {
         this.cache.delete(key);
         this.timestamps.delete(key);
-        this.log(`🗑️ Cleaned up expired: ${key}`);
+        this.log(`Cleaned up expired: ${key}`);
       }
     }
   }
@@ -81,7 +81,7 @@ class APICache {
     this.cache.clear();
     this.timestamps.clear();
     this.pendingRequests.clear();
-    this.log('🧹 All cache cleared');
+    this.log('All cache cleared');
   }
 
   // Get cache statistics
@@ -101,7 +101,7 @@ const apiCache = new APICache();
 export const cachedFetch = async (url, options = {}) => {
   const { params = {}, bypassCache = false, ...fetchOptions } = options;
   const key = apiCache.generateKey(url, params);
-  
+
   // Check cache first (unless bypassed)
   if (!bypassCache) {
     const cachedData = apiCache.get(url, params);
@@ -116,7 +116,7 @@ export const cachedFetch = async (url, options = {}) => {
 
   // Check if request is already pending (deduplication)
   if (apiCache.pendingRequests.has(key)) {
-    apiCache.log(`🔄 Request already pending, waiting: ${key}`);
+    apiCache.log(`Request already pending, waiting: ${key}`);
     return apiCache.pendingRequests.get(key);
   }
 
@@ -129,7 +129,7 @@ export const cachedFetch = async (url, options = {}) => {
       }
     });
 
-    apiCache.log(`🚀 Making request: ${urlWithParams.toString()}`);
+    apiCache.log(`Making request: ${urlWithParams.toString()}`);
     apiCache.requestCount++;
 
     // Create the request promise
@@ -154,11 +154,11 @@ export const cachedFetch = async (url, options = {}) => {
 
     // Store as pending request
     apiCache.pendingRequests.set(key, requestPromise);
-    
+
     return requestPromise;
 
   } catch (error) {
-    apiCache.log(`❌ Request failed: ${url}`, error.message);
+    apiCache.log(`Request failed: ${url}`, error.message);
     apiCache.pendingRequests.delete(key);
     throw error;
   }
@@ -167,21 +167,21 @@ export const cachedFetch = async (url, options = {}) => {
 // Debounced fetch with additional throttling
 export const debouncedFetch = (() => {
   const debounceMap = new Map();
-  
+
   return async (url, options = {}) => {
     const key = apiCache.generateKey(url, options.params || {});
-    
+
     // Clear existing timeout for this key
     if (debounceMap.has(key)) {
       clearTimeout(debounceMap.get(key).timeout);
     }
-    
+
     // Return existing promise if available
     if (debounceMap.has(key) && debounceMap.get(key).promise) {
-      apiCache.log(`⏳ Using debounced promise: ${key}`);
+      apiCache.log(`Using debounced promise: ${key}`);
       return debounceMap.get(key).promise;
     }
-    
+
     // Create new debounced promise
     const promise = new Promise((resolve, reject) => {
       const timeout = setTimeout(async () => {
@@ -194,13 +194,13 @@ export const debouncedFetch = (() => {
           reject(error);
         }
       }, 100); // 100ms debounce
-      
+
       debounceMap.set(key, { timeout, promise: null });
     });
-    
+
     // Store the promise
     debounceMap.get(key).promise = promise;
-    
+
     return promise;
   };
 })();
@@ -209,14 +209,14 @@ export const debouncedFetch = (() => {
 export const throttledFetch = (() => {
   const lastRequestTime = new Map();
   const MIN_INTERVAL = 1000; // 1 second minimum between same requests
-  
+
   return async (url, options = {}) => {
     const key = apiCache.generateKey(url, options.params || {});
     const now = Date.now();
     const lastTime = lastRequestTime.get(key) || 0;
-    
+
     if (now - lastTime < MIN_INTERVAL) {
-      apiCache.log(`🚫 Request throttled: ${key}`);
+      apiCache.log(`Request throttled: ${key}`);
       // Return cached data if available
       const cached = apiCache.get(url, options.params);
       if (cached) {
@@ -229,7 +229,7 @@ export const throttledFetch = (() => {
       // Wait for minimum interval
       await new Promise(resolve => setTimeout(resolve, MIN_INTERVAL - (now - lastTime)));
     }
-    
+
     lastRequestTime.set(key, Date.now());
     return cachedFetch(url, options);
   };

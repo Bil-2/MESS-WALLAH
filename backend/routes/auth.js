@@ -132,10 +132,10 @@ router.post('/send-otp-email', [
     }
 
     const { email } = req.body;
-    
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Save OTP to database
     const otpRecord = new Otp({
       email: email.toLowerCase(),
@@ -150,7 +150,7 @@ router.post('/send-otp-email', [
     const { sendOTPEmail } = require('../services/notify');
     await sendOTPEmail(email, otp);
 
-    console.log(`✅ OTP email sent to: ${email}`);
+    console.log(`[SUCCESS] OTP email sent to: ${email}`);
 
     res.status(200).json({
       success: true,
@@ -164,7 +164,7 @@ router.post('/send-otp-email', [
     });
 
   } catch (error) {
-    console.error('❌ Send OTP Email Error:', error);
+    console.error('[ERROR] Send OTP Email Error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to send OTP email. Please try again.',
@@ -200,7 +200,7 @@ router.post('/verify-otp-email', [
     const normalizedEmail = email.toLowerCase();
 
     // Find OTP record
-    const otpRecord = await Otp.findOne({ 
+    const otpRecord = await Otp.findOne({
       email: normalizedEmail,
       method: 'email',
       expiresAt: { $gt: new Date() }
@@ -216,7 +216,7 @@ router.post('/verify-otp-email', [
 
     // Verify OTP
     const isValidOTP = await bcrypt.compare(otp, otpRecord.codeHash);
-    
+
     if (!isValidOTP) {
       // Increment attempts
       otpRecord.attempts += 1;
@@ -244,7 +244,7 @@ router.post('/verify-otp-email', [
 
     // Find or create user
     let user = await User.findOne({ email: normalizedEmail });
-    
+
     if (!user) {
       // Create new user with email
       user = new User({
@@ -256,18 +256,18 @@ router.post('/verify-otp-email', [
         isActive: true
       });
       await user.save();
-      console.log(`✅ NEW USER CREATED via Email OTP: ${normalizedEmail}`);
+      console.log(`[SUCCESS] NEW USER CREATED via Email OTP: ${normalizedEmail}`);
     } else {
       // Update existing user
       user.isEmailVerified = true;
       user.lastLogin = new Date();
       await user.save();
-      console.log(`✅ EXISTING USER VERIFIED via Email OTP: ${normalizedEmail}`);
+      console.log(`[SUCCESS] EXISTING USER VERIFIED via Email OTP: ${normalizedEmail}`);
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
+      {
         userId: user._id,
         email: user.email,
         role: user.role
@@ -295,7 +295,7 @@ router.post('/verify-otp-email', [
     });
 
   } catch (error) {
-    console.error('❌ Verify Email OTP Error:', error);
+    console.error('[ERROR] Verify Email OTP Error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to verify email OTP. Please try again.',

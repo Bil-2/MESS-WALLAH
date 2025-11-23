@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useVirtualScroll, useIntersectionObserver } from '../hooks/usePerformance';
 import RocketRoomCard from './RocketRoomCard';
+import { FiHome } from 'react-icons/fi';
 
 const ITEM_HEIGHT = 400; // Approximate height of each room card
 const CONTAINER_HEIGHT = 800; // Height of the scrollable container
@@ -30,18 +31,18 @@ const VirtualizedRoomList = memo(({
     const columns = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
     const itemsPerRow = columns;
     const rowHeight = ITEM_HEIGHT + 32; // Include gap
-    
+
     return { columns, itemsPerRow, rowHeight };
   }, []);
 
   // Load more when scrolling near bottom
   const handleScrollWithLoadMore = useCallback((e) => {
     handleScroll(e);
-    
+
     if (hasMore && onLoadMore) {
       const { scrollTop, scrollHeight, clientHeight } = e.target;
       const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-      
+
       if (scrollPercentage > 0.8) {
         onLoadMore();
       }
@@ -68,7 +69,9 @@ const VirtualizedRoomList = memo(({
   if (rooms.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="text-6xl mb-4">🏠</div>
+        <div className="flex justify-center mb-4">
+          <FiHome className="w-16 h-16 text-gray-400" />
+        </div>
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           No rooms found
         </h3>
@@ -130,7 +133,7 @@ const VirtualizedRoomList = memo(({
             </div>
           ))}
         </div>
-        
+
         {/* Loading indicator for infinite scroll */}
         {isLoading && (
           <div className="flex justify-center py-8">
@@ -140,7 +143,7 @@ const VirtualizedRoomList = memo(({
           </div>
         )}
       </div>
-      
+
       {/* Scroll indicator */}
       {isVisible && rooms.length > 12 && (
         <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">

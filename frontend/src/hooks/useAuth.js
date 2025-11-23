@@ -37,10 +37,10 @@ const useAuth = () => {
 
       if (response.data.success) {
         console.log(`OTP sent to +91${phone}`);
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: response.data.message,
-          data: response.data.data 
+          data: response.data.data
         };
       } else {
         console.error(response.data.message || 'Failed to send OTP');
@@ -63,10 +63,10 @@ const useAuth = () => {
 
       if (response.data.success) {
         console.log('OTP resent successfully!');
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: response.data.message,
-          data: response.data.data 
+          data: response.data.data
         };
       } else {
         console.error(response.data.message || 'Failed to resend OTP');
@@ -81,30 +81,46 @@ const useAuth = () => {
     }
   };
 
-  // Verify OTP and login
+  // ENHANCED: OTP verification with account linking awareness
   const verifyOtp = async (phone, otp) => {
     setLoading(true);
     try {
+      console.log('OTP VERIFICATION: Verifying OTP for phone:', phone);
+
       const response = await api.post('/auth/verify-otp', { phone, otp });
 
       if (response.data.success) {
         const { token, user: userData } = response.data.data;
 
-        // Store auth data
+        console.log('OTP VERIFICATION SUCCESSFUL:', {
+          userId: userData.id,
+          name: userData.name,
+          phone: userData.phone,
+          email: userData.email,
+          accountType: userData.accountType || 'otp-only',
+          isNewUser: userData.isNewUser,
+          canLinkEmail: !userData.email
+        });
+
+        // Store OTP account data (may be linkable later)
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
-
         setUser(userData);
-        console.log('Login successful!');
 
-        return { success: true, user: userData };
+        return {
+          success: true,
+          user: userData,
+          accountType: userData.accountType || 'otp-only',
+          canLinkEmail: !userData.email, // Can link if no email
+          isNewUser: userData.isNewUser
+        };
       } else {
-        console.error(response.data.message || 'Invalid OTP');
+        console.error('OTP verification failed:', response.data.message);
         return { success: false, message: response.data.message };
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Invalid OTP';
-      console.error(message);
+      console.error('OTP verification error:', message);
       return { success: false, message };
     } finally {
       setLoading(false);
@@ -208,90 +224,150 @@ const useAuth = () => {
     }
   };
 
-  // Register function
+  // ENHANCED: Unified registration with account linking support
   const register = async (userData) => {
     setLoading(true);
     try {
+      console.log('UNIFIED REGISTRATION: Starting registration process...', {
+        hasEmail: !!userData.email,
+        hasPhone: !!userData.phone,
+        hasPassword: !!userData.password
+      });
+
       const response = await api.post('/auth/register', userData);
 
       if (response.data.success) {
-        console.log('Account created/linked successfully!');
-        
-        // CRITICAL FIX: Handle account linking
+        console.log('Registration API call successful');
+
+        // CRITICAL: Handle unified account linking
         if (response.data.accountLinked) {
-          // Store auth data for linked account
+          console.log('ACCOUNT LINKING DETECTED: Unifying existing OTP account with email');
+          console.log('Linking details:', response.data.linkingDetails);
+
+          // Store unified account data
           const { token, user } = response.data;
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
           setUser(user);
-          
-          return { 
-            success: true, 
-            message: response.data.message,
+
+          console.log('UNIFIED ACCOUNT CREATED:', {
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            accountType: response.data.accountType,
+            hasUnifiedAuth: true
+          });
+
+          return {
+            success: true,
+            message: response.data.message || 'Account successfully linked! Your phone and email are now unified.',
             accountLinked: true,
+            accountType: 'unified',
             user: user,
-            token: token
+            token: token,
+            linkingDetails: response.data.linkingDetails
           };
+        } else {
+          // New account created (not linked)
+          console.log('NEW ACCOUNT CREATED: Fresh registration');
+
+          // Check if we got token and user data for immediate login
+          if (response.data.token && response.data.user) {
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            setUser(user);
+
+            return {
+              success: true,
+              message: response.data.message || 'Account created successfully!',
+              accountLinked: false,
+              user: user,
+              token: token
+            };
+          }
         }
-        
-        return { success: true, message: response.data.message };
+
+        return {
+          success: true,
+          message: response.data.message || 'Registration successful!'
+        };
       } else {
-        console.error(response.data.message || 'Registration failed');
+        console.error('Registration failed:', response.data.message);
         return { success: false, message: response.data.message };
       }
     } catch (error) {
       const errorData = error.response?.data;
       const message = errorData?.message || error.message || 'Registration failed';
-      console.error('Registration error:', message);
-      
-      return { 
-        success: false, 
+      console.error('Registration error:', message, errorData);
+
+      return {
+        success: false,
         message,
-        accountLinked: errorData?.accountLinked || false
+        accountLinked: errorData?.accountLinked || false,
+        hint: errorData?.hint
       };
     } finally {
       setLoading(false);
     }
   };
 
-  // Login function
+  // ENHANCED: Unified login with account linking detection
   const login = async (email, password) => {
     setLoading(true);
     try {
+      console.log('UNIFIED LOGIN: Attempting login for:', email);
+
       const response = await api.post('/auth/login', { email, password });
 
       if (response.data.success) {
         const { token, user: userData } = response.data;
 
-        // Store auth data
+        console.log('LOGIN SUCCESSFUL:', {
+          userId: userData.id,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          accountType: userData.accountType,
+          registrationMethod: userData.registrationMethod
+        });
+
+        // Store unified account data
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
-
         setUser(userData);
-        console.log('Login successful!');
 
-        return { success: true, user: userData };
+        return {
+          success: true,
+          user: userData,
+          accountType: userData.accountType || 'unified'
+        };
       } else {
-        console.error(response.data.message || 'Login failed');
-        return { 
-          success: false, 
+        console.error('Login failed:', response.data.message);
+        return {
+          success: false,
           message: response.data.message,
           attemptsRemaining: response.data.attemptsRemaining,
           hint: response.data.hint
         };
       }
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error('Login error:', error);
       const errorData = error.response?.data;
 
-      // Handle specific error cases
+      // ENHANCED: Handle account linking scenarios
       if (errorData?.action === 'complete_registration') {
+        console.log('ACCOUNT LINKING REQUIRED: OTP account needs email completion');
         return {
           success: false,
-          message: errorData.message,
+          message: errorData.message || 'Account found but needs completion. Please register to link your accounts.',
           action: 'complete_registration',
-          hint: errorData.hint,
-          needsPasswordSetup: true
+          hint: errorData.hint || 'Go to Register page to complete your profile with email and password.',
+          needsPasswordSetup: true,
+          phone: errorData.phone,
+          userId: errorData.userId,
+          canLink: true
         };
       } else if (errorData?.message?.includes('Invalid')) {
         return {
@@ -301,14 +377,63 @@ const useAuth = () => {
           hint: errorData.hint
         };
       } else {
-        return { 
-          success: false, 
-          message: errorData?.message || error.message || 'Login failed' 
+        return {
+          success: false,
+          message: errorData?.message || error.message || 'Login failed'
         };
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  // ENHANCED: Check if current user can link accounts
+  const canLinkAccounts = () => {
+    if (!user) return false;
+
+    // Can link if user has phone but no email (OTP-only account)
+    const hasPhoneOnly = user.phone && !user.email;
+    const isOtpOnly = user.accountType === 'otp-only';
+    const canLink = user.canLinkEmail !== false;
+
+    return hasPhoneOnly || isOtpOnly || canLink;
+  };
+
+  // ENHANCED: Get account status for UI display
+  const getAccountStatus = () => {
+    if (!user) return { type: 'none', message: 'Not logged in' };
+
+    if (user.accountType === 'unified') {
+      return {
+        type: 'unified',
+        message: 'Complete account with phone and email',
+        hasPhone: !!user.phone,
+        hasEmail: !!user.email
+      };
+    } else if (user.accountType === 'otp-only' || (user.phone && !user.email)) {
+      return {
+        type: 'otp-only',
+        message: 'Phone-only account. Add email to complete profile.',
+        hasPhone: !!user.phone,
+        hasEmail: false,
+        canLink: true
+      };
+    } else if (user.email && !user.phone) {
+      return {
+        type: 'email-only',
+        message: 'Email-only account. Add phone for better security.',
+        hasPhone: false,
+        hasEmail: !!user.email,
+        canLink: true
+      };
+    }
+
+    return {
+      type: 'unknown',
+      message: 'Account status unclear',
+      hasPhone: !!user.phone,
+      hasEmail: !!user.email
+    };
   };
 
   return {
@@ -326,7 +451,10 @@ const useAuth = () => {
     logout,
     isAuthenticated,
     hasRole,
-    isVerified
+    isVerified,
+    // ENHANCED: Account linking utilities
+    canLinkAccounts,
+    getAccountStatus
   };
 };
 

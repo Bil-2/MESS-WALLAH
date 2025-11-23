@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight, Home, Key, BedDouble } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import toast from 'react-hot-toast';
 
@@ -141,13 +141,13 @@ const Login = () => {
       } else {
         // Handle different error scenarios
         if (result.action === 'complete_registration') {
-          setErrors({ 
+          setErrors({
             email: result.message,
             action: 'complete_registration'
           });
           toast.error('Please complete your registration first');
         } else if (result.attemptsRemaining !== undefined) {
-          setErrors({ 
+          setErrors({
             email: result.message,
             password: `${result.attemptsRemaining} attempts remaining`
           });
@@ -198,14 +198,14 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center py-6 px-4 relative overflow-hidden fade-in">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 text-6xl opacity-10 pulse">
-          🏠
+        <div className="absolute top-20 left-10 text-orange-200 opacity-20 pulse">
+          <Home className="w-24 h-24" />
         </div>
-        <div className="absolute top-40 right-20 text-4xl opacity-10 pulse" style={{ animationDelay: '1s' }}>
-          🔑
+        <div className="absolute top-40 right-20 text-pink-200 opacity-20 pulse" style={{ animationDelay: '1s' }}>
+          <Key className="w-16 h-16" />
         </div>
-        <div className="absolute bottom-32 left-20 text-5xl opacity-10 pulse" style={{ animationDelay: '2s' }}>
-          🛏️
+        <div className="absolute bottom-32 left-20 text-purple-200 opacity-20 pulse" style={{ animationDelay: '2s' }}>
+          <BedDouble className="w-20 h-20" />
         </div>
       </div>
 

@@ -62,15 +62,15 @@ const mockAuth = {
   async sendOtp(phone) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     if (!phone || phone.length !== 10) {
       throw new Error('Please enter a valid 10-digit phone number');
     }
-    
+
     return {
       success: true,
       message: 'OTP sent successfully',
-      data: { 
+      data: {
         phone,
         expiresIn: 5,
         method: 'SMS',
@@ -82,15 +82,15 @@ const mockAuth = {
   async resendOtp(phone) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     if (!phone || phone.length !== 10) {
       throw new Error('Please enter a valid 10-digit phone number');
     }
-    
+
     return {
       success: true,
       message: 'OTP resent successfully',
-      data: { 
+      data: {
         phone,
         expiresIn: 5,
         method: 'SMS',
@@ -102,11 +102,11 @@ const mockAuth = {
   async verifyOtp(phone, otp) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     if (!otp || otp.length !== 6) {
       throw new Error('Please enter a valid 6-digit OTP');
     }
-    
+
     // Accept any 6-digit OTP for demo
     const mockUser = {
       _id: 'demo-user-' + Date.now(),
@@ -116,13 +116,13 @@ const mockAuth = {
       role: 'student',
       verified: true
     };
-    
+
     const mockToken = 'demo-token-' + Date.now();
-    
+
     // Store in localStorage
     localStorage.setItem('token', mockToken);
     localStorage.setItem('user', JSON.stringify(mockUser));
-    
+
     return {
       success: true,
       message: 'OTP verified successfully',
@@ -136,15 +136,15 @@ const mockAuth = {
   async login(email, password) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     if (!email || !password) {
       throw new Error('Email and password are required');
     }
-    
+
     if (password.length < 6) {
       throw new Error('Password must be at least 6 characters');
     }
-    
+
     const mockUser = {
       _id: 'demo-user-' + Date.now(),
       name: 'Demo User',
@@ -153,13 +153,13 @@ const mockAuth = {
       role: 'student',
       verified: true
     };
-    
+
     const mockToken = 'demo-token-' + Date.now();
-    
+
     // Store in localStorage
     localStorage.setItem('token', mockToken);
     localStorage.setItem('user', JSON.stringify(mockUser));
-    
+
     return {
       success: true,
       message: 'Login successful',
@@ -173,13 +173,13 @@ const mockAuth = {
   async register(userData) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     const { name, email, phone, password, role } = userData;
-    
+
     if (!name || !email || !phone || !password) {
       throw new Error('All fields are required');
     }
-    
+
     const mockUser = {
       _id: 'demo-user-' + Date.now(),
       name: name,
@@ -188,7 +188,7 @@ const mockAuth = {
       role: role || 'student',
       verified: true
     };
-    
+
     return {
       success: true,
       message: 'Account created successfully',
@@ -201,24 +201,24 @@ const mockAuth = {
   async forgotPassword(email) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     if (!email) {
       throw new Error('Email is required');
     }
-    
+
     // Simulate email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error('Please enter a valid email address');
     }
-    
+
     // 🚨 DEMO MODE: This is a simulation
     // To send real emails, replace this with actual backend API call:
     // const response = await api.post('/auth/forgot-password', { email });
     // return response.data;
-    
-    console.log(`📧 DEMO: Would send password reset email to: ${email}`);
-    
+
+    console.log(`DEMO: Would send password reset email to: ${email}`);
+
     return {
       success: true,
       message: 'Password reset link sent to your email (Demo Mode)',
@@ -258,13 +258,13 @@ export const apiHelpers = {
   async verifyOtp(phone, otp) {
     try {
       const response = await api.post('/auth/verify-otp', { phone, otp });
-      
+
       // Store token and user data if verification successful
       if (response.data.success && response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Verify OTP API error:', error);
@@ -275,13 +275,13 @@ export const apiHelpers = {
   async login(email, password) {
     try {
       const response = await api.post('/auth/login', { email, password });
-      
+
       // Store token and user data
       if (response.data.success && response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Login API error:', error);
@@ -436,15 +436,15 @@ export const apiHelpers = {
   },
 
   async getSearchSuggestions(query, limit = 10) {
-    const response = await api.get('/search/suggestions', { 
-      params: { query, limit } 
+    const response = await api.get('/search/suggestions', {
+      params: { query, limit }
     });
     return response.data;
   },
 
   async getNearbyProperties(latitude, longitude, radius = 5, limit = 20) {
-    const response = await api.get('/search/nearby', { 
-      params: { latitude, longitude, radius, limit } 
+    const response = await api.get('/search/nearby', {
+      params: { latitude, longitude, radius, limit }
     });
     return response.data;
   },
