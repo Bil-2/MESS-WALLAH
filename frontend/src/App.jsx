@@ -4,7 +4,7 @@ import './styles/animations.css';
 import './styles/preventAutoFill.css';
 import './styles/profile-animations.css';
 import { AuthProvider, ThemeProvider } from './context';
-import { Navbar, Footer, LoadingSpinner, MobileNavigation } from './components';
+import { Navbar, Footer, LoadingSpinner, MobileNavigation, ProtectedRoute, RoleBasedRedirect } from './components';
 import FaviconGenerator from './components/FaviconGenerator';
 
 // Lazy load components for better performance
@@ -33,6 +33,11 @@ const Favorites = lazy(() => import('./pages/Favorites'));
 const GoogleAuthSuccess = lazy(() => import('./pages/GoogleAuthSuccess'));
 const FirebaseTest = lazy(() => import('./pages/FirebaseTest'));
 const FirebaseLogin = lazy(() => import('./pages/FirebaseLogin'));
+// Owner Pages
+const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
+const AddRoom = lazy(() => import('./pages/owner/AddRoom'));
+const ManageRooms = lazy(() => import('./pages/owner/ManageRooms'));
+const OwnerBookings = lazy(() => import('./pages/owner/OwnerBookings'));
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
@@ -62,9 +67,58 @@ function App() {
             <main className="smooth-transition pt-16 pb-20 md:pb-8">
               <Suspense fallback={<PageLoadingFallback />}>
                 <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/rooms" element={<Rooms />} />
-                  <Route path="/rooms/:id" element={<RoomDetails />} />
+                  {/* Homepage with role-based redirect */}
+                  <Route path="/" element={
+                    <RoleBasedRedirect>
+                      <Home />
+                    </RoleBasedRedirect>
+                  } />
+
+                  {/* Tenant Routes - Block owners from accessing */}
+                  <Route path="/rooms" element={
+                    <ProtectedRoute allowedRoles={['user', 'student']} requireAuth={false}>
+                      <Rooms />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/rooms/:id" element={
+                    <ProtectedRoute allowedRoles={['user', 'student']} requireAuth={false}>
+                      <RoomDetails />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/favorites" element={
+                    <ProtectedRoute allowedRoles={['user', 'student']} requireAuth={true}>
+                      <Favorites />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/bookings" element={
+                    <ProtectedRoute allowedRoles={['user', 'student']} requireAuth={true}>
+                      <Bookings />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Owner Routes */}
+                  <Route path="/owner-dashboard" element={
+                    <ProtectedRoute allowedRoles={['owner']} requireAuth={true}>
+                      <OwnerDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/owner/rooms/new" element={
+                    <ProtectedRoute allowedRoles={['owner']} requireAuth={true}>
+                      <AddRoom />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/owner/rooms" element={
+                    <ProtectedRoute allowedRoles={['owner']} requireAuth={true}>
+                      <ManageRooms />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/owner/bookings" element={
+                    <ProtectedRoute allowedRoles={['owner']} requireAuth={true}>
+                      <OwnerBookings />
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Public/Shared Routes */}
                   <Route path="/search" element={<Navigate to="/rooms" replace />} />
                   <Route path="/search-results" element={<SearchResults />} />
                   <Route path="/login" element={<Login />} />
@@ -75,7 +129,6 @@ function App() {
                   <Route path="/sms-test" element={<SMSTest />} />
                   <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
                   <Route path="/profile" element={<Profile />} />
-                  <Route path="/bookings" element={<Bookings />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/safety" element={<Safety />} />
@@ -86,7 +139,6 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/report" element={<Report />} />
                   <Route path="/menu" element={<Menu />} />
-                  <Route path="/favorites" element={<Favorites />} />
                   <Route path="/firebase-test" element={<FirebaseTest />} />
                   <Route path="/firebase-login" element={<FirebaseLogin />} />
                 </Routes>

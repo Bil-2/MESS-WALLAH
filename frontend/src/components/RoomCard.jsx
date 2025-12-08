@@ -63,7 +63,7 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
           {room.photos && room.photos.length > 0 && !imageError ? (
             <>
               <img
-                src={room.photos[currentImageIndex]}
+                src={room.photos[currentImageIndex]?.url || room.photos[currentImageIndex]}
                 alt={room.title}
                 className="w-full h-full object-cover"
                 onError={handleImageError}
@@ -131,8 +131,8 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
           {/* Availability Badge */}
           <div className="absolute top-3 left-3">
             <span className={`px-2 py-1 text-xs font-medium rounded-full ${room.isAvailable
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
               }`}>
               {room.isAvailable ? 'Available' : 'Not Available'}
             </span>

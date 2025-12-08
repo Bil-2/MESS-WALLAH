@@ -50,3 +50,6 @@ firestore-debug.log
 # Misc
 coverage/
 .cache/
+backend/.mongo-data/
+backend/logs/
+*.log

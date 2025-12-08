@@ -278,6 +278,14 @@ const startServer = async () => {
       console.error('   [ERROR] Failed to register /api/analytics routes:', error.message);
     }
 
+    try {
+      app.use('/api/owner', require('./routes/owner'));
+      console.log('   ✓ /api/owner routes registered');
+    } catch (error) {
+      console.error('   [ERROR] Failed to register /api/owner routes:', error.message);
+    }
+
+
     // Start health monitoring system
     healthMonitor.startMonitoring(30000); // Check every 30 seconds
     console.log('[SUCCESS] Health monitoring system started');

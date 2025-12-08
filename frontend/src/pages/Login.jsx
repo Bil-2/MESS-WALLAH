@@ -20,7 +20,16 @@ const Login = () => {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
-  const { sendOtp, verifyOtp, login } = useAuthContext();
+  const { sendOtp, verifyOtp, login, user, loading: authLoading } = useAuthContext();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    // Wait for auth to initialize before checking
+    if (!authLoading && user) {
+      console.log('User already logged in, redirecting to home...', user);
+      navigate('/', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   // Clear form data on component mount to prevent auto-fill issues
   useEffect(() => {
@@ -33,6 +42,15 @@ const Login = () => {
     setOtpSent(false);
     setOtp('');
   }, []);
+
+  // Show loading while checking auth status
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600" />
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,11 +79,13 @@ const Login = () => {
 
     if (!formData.phone) {
       setErrors({ phone: 'Phone number is required' });
+      toast.error('Phone number is required');
       return;
     }
 
     if (formData.phone.length !== 10) {
       setErrors({ phone: 'Please enter a valid 10-digit phone number' });
+      toast.error('Please enter a valid 10-digit phone number');
       return;
     }
 
@@ -78,14 +98,18 @@ const Login = () => {
       if (result && result.success) {
         console.log('✅ OTP sent successfully, showing input field');
         setOtpSent(true);
-        toast.success('OTP sent successfully! Enter the 6-digit code.');
+        toast.success('OTP sent successfully! Use 123456 for testing');
       } else {
         console.error('❌ OTP send failed:', result);
-        setErrors({ phone: result?.message || 'Failed to send OTP' });
+        const errorMsg = result?.message || 'Failed to send OTP';
+        setErrors({ phone: errorMsg });
+        toast.error(errorMsg);
       }
     } catch (error) {
       console.error('💥 Error sending OTP:', error);
-      setErrors({ phone: error.message || 'Failed to send OTP' });
+      const errorMsg = error.message || 'Failed to send OTP';
+      setErrors({ phone: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -106,13 +130,22 @@ const Login = () => {
 
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/profile');
+
+        // Check user role and redirect accordingly
+        const userRole = result.user?.role || result.role || 'user';
+        if (userRole === 'owner') {
+          window.location.href = '/owner-dashboard';
+        } else {
+          window.location.href = '/';
+        }
       } else {
         setErrors({ otp: result.message || 'Invalid OTP' });
+        toast.error(result.message || 'Invalid OTP');
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setErrors({ otp: error.message || 'Invalid OTP' });
+      toast.error(error.message || 'Invalid OTP');
     } finally {
       setVerifyingOtp(false);
     }
@@ -138,7 +171,14 @@ const Login = () => {
 
       if (result.success) {
         toast.success('Login successful!');
-        navigate('/profile');
+
+        // Check user role and redirect accordingly
+        const userRole = result.user?.role || result.role || 'user';
+        if (userRole === 'owner') {
+          window.location.href = '/owner-dashboard';
+        } else {
+          window.location.href = '/';
+        }
       } else {
         // Handle different error scenarios
         if (result.action === 'complete_registration') {

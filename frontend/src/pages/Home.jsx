@@ -49,6 +49,7 @@ const Home = () => {
             location: `${room.address.area}, ${room.address.city}`,
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
+            photos: room.photos || [], // Pass the entire photos array
             image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
             amenities: room.amenities ? room.amenities.slice(0, 3) : ['WiFi', 'AC', 'Food']
           }));

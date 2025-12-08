@@ -10,6 +10,27 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+// Helper to get logged in user from request if present
+const getLoggedInUser = async (req) => {
+  try {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) return null;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || (!decoded.userId && !decoded.id)) return null;
+
+    return await User.findById(decoded.userId || decoded.id);
+  } catch (error) {
+    return null;
+  }
+};
+
 // Send OTP to mobile number
 const sendOtp = async (req, res) => {
   try {
@@ -203,77 +224,128 @@ const verifyOtp = async (req, res) => {
       await Otp.deleteOne({ _id: existingOtp._id });
     }
 
-    // OTP verification successful - find or create user using AccountLinkingService
-    // This prevents duplicate accounts by checking all phone variants and potential email links
-    console.log(`[DEBUG] Searching for existing user with phone: ${formattedPhone}`);
-    const accountSearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
+    // OTP verification successful - Handle Account Linking
 
+    // CRITICAL FIX: Check if there is a logged-in user verifying their phone
+    const loggedInUser = await getLoggedInUser(req);
     let user;
 
-    if (accountSearch.found) {
-      user = accountSearch.user;
-      console.log(`[SUCCESS] Existing user found: ${user._id}`);
+    if (loggedInUser) {
+      console.log(`[INFO] Authenticated user ${loggedInUser._id} verifying phone ${formattedPhone}`);
 
-      // Update user details
-      if (user.phone !== formattedPhone) {
-        user.phone = formattedPhone;
-      }
-      user.isPhoneVerified = true;
-      user.lastLogin = new Date();
-      user.isActive = true;
+      // Check if phone number is already in use
+      const accountSearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
 
-      // If this was an email-only account, it's now linked with phone
-      if (!user.registrationMethod || user.registrationMethod === 'email') {
-        // Don't change registrationMethod, but ensure accountType reflects capabilities
-        if (user.accountType === 'email-only') {
-          user.accountType = 'unified';
-        }
-      }
+      if (accountSearch.found) {
+        const existingUserWithPhone = accountSearch.user;
 
-      await user.save();
-    } else {
-      // Create new user with phone number
-      console.log(`[INFO] No existing user found. Creating new OTP-only account.`);
-      try {
-        user = new User({
-          phone: formattedPhone,
-          name: `User${formattedPhone.slice(-4)}`, // Default name using last 4 digits
-          role: 'user',
-          isPhoneVerified: true,
-          registrationMethod: 'otp',
-          isActive: true,
-          createdAt: new Date(),
-          lastLogin: new Date(),
-          // CRITICAL: Mark as OTP-only account that can be linked later
-          accountType: 'otp-only',
-          canLinkEmail: true,
-          profileCompleted: false
-        });
-        await user.save();
-        console.log(`[SUCCESS] New OTP-only user created: ${formattedPhone}`);
-      } catch (saveError) {
-        if (saveError.code === 11000) {
-          // Handle race condition - duplicate key error
-          console.log('[WARNING] Race condition detected, finding user again');
-          const retrySearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
-          if (retrySearch.found) {
-            user = retrySearch.user;
-          } else {
-            // Fallback with unique name if phone collision wasn't the issue (unlikely for phone index)
-            user = new User({
-              phone: formattedPhone,
-              name: `User${formattedPhone.slice(-4)}_${Date.now()}`,
-              role: 'user',
-              isPhoneVerified: true,
-              registrationMethod: 'otp',
-              isActive: true,
-              accountType: 'otp-only',
-              canLinkEmail: true
-            });
+        // If it's the same user, just double check verified status
+        if (existingUserWithPhone._id.toString() === loggedInUser._id.toString()) {
+          console.log(`[INFO] Phone already assigned to current user`);
+          user = loggedInUser;
+          if (!user.isPhoneVerified) {
+            user.isPhoneVerified = true;
             await user.save();
           }
         } else {
-          throw saveError;
+          // Phone used by ANOTHER user. Check if we can merge (e.g. old OTP account)
+          const linkingAnalysis = AccountLinkingService.analyzeLinkingPossibilities(existingUserWithPhone, null, null);
+
+          if (linkingAnalysis.canLink) {
+            // Merge the old OTP account INTO the current logged-in account
+            console.log(`[INFO] Merging duplicate OTP account into current user profile...`);
+            user = await AccountLinkingService.mergeAccounts(loggedInUser, existingUserWithPhone);
+          } else {
+            // Cannot merge - phone is securely owned by someone else
+            return res.status(409).json({
+              success: false,
+              message: 'This phone number is already linked to another complete account.'
+            });
+          }
+        }
+      } else {
+        // Phone not used by anyone - link to current user
+        console.log(`[INFO] Linking new phone number to current user`);
+        user = loggedInUser;
+        user.phone = formattedPhone;
+        user.isPhoneVerified = true;
+        if (user.accountType === 'email-only') {
+          user.accountType = 'unified';
+        }
+        await user.save();
+      }
+
+    } else {
+      // NO LOGGED IN USER - Standard Login/Register Flow
+      // This prevents duplicate accounts by checking all phone variants and potential email links
+      console.log(`[DEBUG] Searching for existing user with phone: ${formattedPhone}`);
+      const accountSearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
+
+      if (accountSearch.found) {
+        user = accountSearch.user;
+        console.log(`[SUCCESS] Existing user found: ${user._id}`);
+
+        // Update user details
+        if (user.phone !== formattedPhone) {
+          user.phone = formattedPhone;
+        }
+        user.isPhoneVerified = true;
+        user.lastLogin = new Date();
+        user.isActive = true;
+
+        // If this was an email-only account, it's now linked with phone
+        if (!user.registrationMethod || user.registrationMethod === 'email') {
+          // Don't change registrationMethod, but ensure accountType reflects capabilities
+          if (user.accountType === 'email-only') {
+            user.accountType = 'unified';
+          }
+        }
+
+        await user.save();
+      } else {
+        // Create new user with phone number
+        console.log(`[INFO] No existing user found. Creating new OTP-only account.`);
+        try {
+          user = new User({
+            phone: formattedPhone,
+            name: `User${formattedPhone.slice(-4)}`, // Default name using last 4 digits
+            role: 'user',
+            isPhoneVerified: true,
+            registrationMethod: 'otp',
+            isActive: true,
+            createdAt: new Date(),
+            lastLogin: new Date(),
+            // CRITICAL: Mark as OTP-only account that can be linked later
+            accountType: 'otp-only',
+            canLinkEmail: true,
+            profileCompleted: false
+          });
+          await user.save();
+          console.log(`[SUCCESS] New OTP-only user created: ${formattedPhone}`);
+        } catch (saveError) {
+          if (saveError.code === 11000) {
+            // Handle race condition - duplicate key error
+            console.log('[WARNING] Race condition detected, finding user again');
+            const retrySearch = await AccountLinkingService.findExistingUser(null, formattedPhone);
+            if (retrySearch.found) {
+              user = retrySearch.user;
+            } else {
+              // Fallback with unique name if phone collision wasn't the issue (unlikely for phone index)
+              user = new User({
+                phone: formattedPhone,
+                name: `User${formattedPhone.slice(-4)}_${Date.now()}`,
+                role: 'user',
+                isPhoneVerified: true,
+                registrationMethod: 'otp',
+                isActive: true,
+                accountType: 'otp-only',
+                canLinkEmail: true
+              });
+              await user.save();
+            }
+          } else {
+            throw saveError;
+          }
         }
       }
     }

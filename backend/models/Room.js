@@ -98,6 +98,18 @@ const RoomSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  views: {
+    type: Number,
+    default: 0
+  },
+  isOccupied: {
+    type: Boolean,
+    default: false
+  },
+  gender: {
+    type: Boolean,
+    default: false
+  },
   isAvailable: {
     type: Boolean,
     default: true
@@ -106,20 +118,17 @@ const RoomSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  views: {
-    type: Number,
-    default: 0
-  },
+},
   rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
-  },
+  type: Number,
+  default: 0,
+  min: 0,
+  max: 5
+},
   totalReviews: {
-    type: Number,
-    default: 0
-  },
+  type: Number,
+  default: 0
+},
   reviews: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -143,14 +152,14 @@ const RoomSchema = new mongoose.Schema({
     }
   }],
   verified: {
-    type: Boolean,
-    default: false
-  },
+  type: Boolean,
+  default: false
+},
   verificationDate: Date,
   lastUpdated: {
-    type: Date,
-    default: Date.now
-  }
+  type: Date,
+  default: Date.now
+}
 }, {
   timestamps: true
 });

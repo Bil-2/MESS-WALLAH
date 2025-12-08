@@ -59,7 +59,7 @@ const ResponsiveRoomCard = ({
               </div>
             )}
             <img
-              src={room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop'}
+              src={room.image || room.photos?.[0]?.url || room.photos?.[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop'}
               alt={room.title}
               className={`w-full h-full object-cover transition-all duration-300 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                 } hover:scale-105`}
@@ -87,8 +87,8 @@ const ResponsiveRoomCard = ({
         >
           <Heart
             className={`w-4 h-4 transition-colors duration-200 ${isFavorite
-                ? 'text-red-500 fill-current'
-                : 'text-gray-600 dark:text-gray-300'
+              ? 'text-red-500 fill-current'
+              : 'text-gray-600 dark:text-gray-300'
               }`}
           />
         </button>

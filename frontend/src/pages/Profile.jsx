@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import api from '../utils/api';
 import { 
   User, Mail, Phone, MapPin, Edit3, Save, X, Camera,
   Shield, Key, Star, Home, CreditCard, Heart, 
@@ -270,13 +271,22 @@ const Profile = () => {
 
     setLoading(true);
     try {
-      // Simulate API call for demo
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('Password changed successfully!');
-      setShowPasswordChange(false);
+      // Call the actual API to change password
+      const response = await api.put('/auth/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+
+      if (response.data.success) {
+        toast.success('Password changed successfully!');
+        setShowPasswordChange(false);
+      } else {
+        toast.error(response.data.message || 'Failed to change password');
+      }
     } catch (error) {
       console.error('Password change error:', error);
-      toast.error('Failed to change password');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to change password';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

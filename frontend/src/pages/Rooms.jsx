@@ -95,6 +95,7 @@ const Rooms = () => {
             ownerPhone: room.owner?.phone || '+91 9876543210',
             verified: true,
             amenities: room.amenities || ['wifi', 'security'],
+            photos: room.photos || [], // Pass the entire photos array
             image: room.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
             roomType: room.roomType || 'single',
             reviews: room.totalReviews || 25,
@@ -1112,8 +1113,8 @@ const Rooms = () => {
                   {[1, 2, 3].map((step) => (
                     <div key={step} className="flex items-center">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${bookingStep >= step
-                          ? 'bg-white text-orange-500'
-                          : 'bg-white/30 text-white'
+                        ? 'bg-white text-orange-500'
+                        : 'bg-white/30 text-white'
                         }`}>
                         {bookingStep > step ? <FiCheckCircle className="w-5 h-5" /> : step}
                       </div>
