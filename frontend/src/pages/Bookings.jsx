@@ -5,6 +5,7 @@ import {
 import { useAuthContext } from '../context/AuthContext.jsx';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const Bookings = () => {
@@ -166,61 +167,68 @@ const Bookings = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            My Bookings
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage and track all your accommodation bookings
-          </p>
-        </div>
+        <ScrollReveal animation="fade-up">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              My Bookings
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Manage and track all your accommodation bookings
+            </p>
+          </div>
+        </ScrollReveal>
 
         {/* Search and Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-200">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search bookings by property, location, or booking ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
-              />
+        <ScrollReveal animation="fade-up" delay={100}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-200">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search bookings by property, location, or booking ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                />
+              </div>
+              <button className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                <Filter className="w-4 h-4 mr-2" />
+                More Filters
+              </button>
             </div>
-            <button className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-              <Filter className="w-4 h-4 mr-2" />
-              More Filters
-            </button>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Tabs */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6 transition-colors duration-200">
-          <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center px-6 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
-                  ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-              >
-                <span>{tab.label}</span>
-                <span className="ml-2 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-full">
-                  {tab.count}
-                </span>
-              </button>
-            ))}
+        <ScrollReveal animation="fade-up" delay={150}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6 transition-colors duration-200">
+            <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center px-6 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
+                    ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className="ml-2 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-full">
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Bookings List */}
         {filteredBookings.length > 0 ? (
           <div className="space-y-6">
-            {filteredBookings.map((booking) => (
-              <div key={booking._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-200">
+            {filteredBookings.map((booking, index) => (
+              <ScrollReveal key={booking._id} animation="fade-up" delay={index * 50}>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-200">
                 <div className="flex flex-col lg:flex-row">
                   {/* Property Image */}
                   <div className="lg:w-64 h-48 lg:h-auto">
@@ -335,29 +343,32 @@ const Bookings = () => {
                   </div>
                 </div>
               </div>
+              </ScrollReveal>
             ))}
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center transition-colors duration-200">
-            <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No bookings found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {searchTerm
-                ? `No bookings match your search "${searchTerm}"`
-                : activeTab === 'all'
-                  ? "You haven't made any bookings yet"
-                  : `No ${activeTab} bookings found`
-              }
-            </p>
-            <button
-              onClick={() => window.location.href = '/rooms'}
-              className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-            >
-              Browse Rooms
-            </button>
-          </div>
+          <ScrollReveal animation="fade-up">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center transition-colors duration-200">
+              <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No bookings found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {searchTerm
+                  ? `No bookings match your search "${searchTerm}"`
+                  : activeTab === 'all'
+                    ? "You haven't made any bookings yet"
+                    : `No ${activeTab} bookings found`
+                }
+              </p>
+              <button
+                onClick={() => window.location.href = '/rooms'}
+                className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+              >
+                Browse Rooms
+              </button>
+            </div>
+          </ScrollReveal>
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@ import { FiHeart, FiSearch, FiTrash2, FiEye } from 'react-icons/fi';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
 import { useAuthContext } from '../context/AuthContext';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Favorites = () => {
   const { user } = useAuthContext();

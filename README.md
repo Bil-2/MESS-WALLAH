@@ -29,7 +29,7 @@ _Making student accommodation hunting simple, safe, and reliable across India_
 
 ### **🎯 Why MESS WALLAH?**
 
-- **🏠 970+ Verified Rooms** across 90+ cities in India
+- **🏠 4,500+ Verified Rooms** across 1,500+ cities in India
 - **🔐 Dual Authentication** - SMS & Email OTP with real-time verification
 - **📱 Mobile-First Design** - Perfect responsive experience across all devices
 - **🛡️ Safety-Focused** - Special emphasis on girls' safety and security
@@ -260,7 +260,7 @@ npm run dev
 
 #### **2. 🏠 Room Discovery**
 
-- **970+ Real Rooms** across 90+ Indian cities
+- **4,500+ Real Rooms** across 1,500+ Indian cities
 - **Advanced Filters**: Location, price range, amenities, room type
 - **Search Suggestions**: Auto-complete for cities and areas
 - **Featured Rooms**: Premium highlighted accommodations
@@ -761,7 +761,7 @@ VITE_API_BASE=https://your-backend-url.com/api
 - **🎯 Solves Real Problem** - Student accommodation crisis in India
 - **📈 Scalable Solution** - Built to handle thousands of users
 - **💰 Revenue Model** - Commission-based booking system
-- **🌍 Market Ready** - 970+ rooms across 90+ cities
+- **🌍 Market Ready** - 4,500+ rooms across 1,500+ cities
 - **📊 Data-Driven** - Analytics for business insights
 - **🛡️ Safety-First** - Special focus on girls' safety and security
 
@@ -879,7 +879,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 #### **🚀 Business-Ready Features**
 
-- ✅ **970+ Real Rooms** - Comprehensive database across 90+ Indian cities
+- ✅ **4,500+ Real Rooms** - Comprehensive database across 1,500+ Indian cities
 - ✅ **Complete Booking System** - End-to-end booking lifecycle with payments
 - ✅ **Admin Dashboard** - Real-time analytics and management tools
 - ✅ **Safety Features** - Special emphasis on girls' safety and security

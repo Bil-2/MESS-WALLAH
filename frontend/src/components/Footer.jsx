@@ -276,7 +276,7 @@ const Footer = () => {
               <div className="flex-1">
                 <h3 className="text-white font-black text-xl mb-3 flex items-center gap-2">
                   <FiShield className="w-5 h-5 text-white" />
-                  🚨 CRITICAL SAFETY WARNING FOR GIRLS 🚨
+                  CRITICAL SAFETY WARNING FOR GIRLS
                 </h3>
                 <div className="space-y-2 text-white/95 font-semibold">
                   <p className="flex items-center gap-2">
@@ -339,7 +339,7 @@ const Footer = () => {
                 © 2024 MESS WALLAH. All rights reserved.
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                Made with ❤️ for safe student housing
+                Made with care for safe student housing
               </p>
             </div>
             

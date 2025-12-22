@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -252,7 +252,7 @@ const Register = () => {
               className="mb-8"
             >
               <label className="block text-base font-semibold text-gray-800 dark:text-gray-200 mb-4 text-center">
-                👋 What brings you to MESS WALLAH?
+                What brings you to MESS WALLAH?
               </label>
 
               <div className="grid grid-cols-1 gap-4">

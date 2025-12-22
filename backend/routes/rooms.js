@@ -27,8 +27,8 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 10
+    fileSize: 5 * 1024 * 1024, // 5MB limit per file
+    files: 15 // Allow up to 15 photos
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -64,7 +64,7 @@ router.post(
   '/',
   protect,
   authorize('owner'),
-  upload.array('photos', 10),
+  upload.array('photos', 15), // Allow up to 15 photos
   roomValidation,
   createRoom
 );

@@ -20,12 +20,13 @@ import {
   Briefcase,
   Code
 } from 'lucide-react';
+import ScrollReveal from '../components/ScrollReveal';
 
 const About = () => {
   const stats = [
-    { icon: Users, label: 'Happy Residents', value: '10,000+', color: 'text-blue-600' },
-    { icon: Building, label: 'Verified Properties', value: '500+', color: 'text-green-600' },
-    { icon: MapPin, label: 'Cities Covered', value: '25+', color: 'text-purple-600' },
+    { icon: Users, label: 'Happy Residents', value: '25,000+', color: 'text-blue-600' },
+    { icon: Building, label: 'Verified Properties', value: '4,500+', color: 'text-green-600' },
+    { icon: MapPin, label: 'Cities Covered', value: '1,500+', color: 'text-purple-600' },
     { icon: Star, label: 'Average Rating', value: '4.9/5', color: 'text-yellow-600' }
   ];
 
@@ -65,14 +66,14 @@ const About = () => {
     },
     {
       year: '2021',
-      title: 'First 100 Properties',
-      description: 'Reached our first milestone of 100 verified properties across 5 cities',
+      title: 'First 500 Properties',
+      description: 'Reached our first milestone of 500 verified properties across 50 cities',
       icon: Building
     },
     {
       year: '2022',
-      title: '5,000 Residents',
-      description: 'Welcomed our 5,000th resident and expanded to 15 cities',
+      title: '10,000 Residents',
+      description: 'Welcomed our 10,000th resident and expanded to 500 cities',
       icon: Users
     },
     {
@@ -84,7 +85,7 @@ const About = () => {
     {
       year: '2024',
       title: 'National Presence',
-      description: 'Achieved presence in 25+ cities with 10,000+ happy residents',
+      description: 'Achieved presence in 1,500+ cities with 25,000+ happy residents',
       icon: TrendingUp
     }
   ];

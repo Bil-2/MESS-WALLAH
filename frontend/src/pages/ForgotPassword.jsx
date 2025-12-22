@@ -4,6 +4,7 @@ import {
   Mail, ArrowLeft, Shield, CheckCircle, AlertCircle 
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
+import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const ForgotPassword = () => {
@@ -69,7 +70,8 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center pt-24 pb-6 px-4 relative overflow-hidden fade-in">
-      <div className="w-full max-w-md slide-in-up">
+      <ScrollReveal animation="fade-up">
+        <div className="w-full max-w-md slide-in-up">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
@@ -221,7 +223,7 @@ const ForgotPassword = () => {
             </a>
           </p>
         </div>
-      </div>
+      </ScrollReveal>
     </div>
   );
 };

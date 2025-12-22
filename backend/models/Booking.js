@@ -23,13 +23,30 @@ const BookingSchema = new mongoose.Schema({
   },
   checkInDate: {
     type: Date,
-    required: [true, 'Check-in date is required']
+    required: [true, 'Check-in date is required'],
+    validate: {
+      validator: function(value) {
+        // FIXED: Add validation for past dates
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return value >= today;
+      },
+      message: 'Check-in date cannot be in the past'
+    }
   },
   duration: {
     type: Number,
     required: [true, 'Duration in months is required'],
     min: [1, 'Duration must be at least 1 month'],
-    max: [24, 'Duration cannot exceed 24 months']
+    max: [24, 'Duration cannot exceed 24 months'],
+    validate: {
+      validator: function(value) {
+        // FIXED: Add business logic validation
+        // Don't allow unrealistic durations
+        return Number.isInteger(value) && value >= 1 && value <= 24;
+      },
+      message: 'Duration must be a whole number between 1 and 24 months'
+    }
   },
   bookingId: {
     type: String,
@@ -98,6 +115,7 @@ const BookingSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  // FIXED: Consolidated payment fields - removed redundant paymentDetails.paymentStatus
   paymentDetails: {
     paymentMethod: {
       type: String,
@@ -105,11 +123,6 @@ const BookingSchema = new mongoose.Schema({
       default: 'razorpay'
     },
     transactionId: String,
-    paymentStatus: {
-      type: String,
-      enum: ['pending', 'initiated', 'completed', 'failed', 'refunded'],
-      default: 'pending'
-    },
     paidAmount: {
       type: Number,
       default: 0

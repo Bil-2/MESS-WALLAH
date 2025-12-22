@@ -246,7 +246,7 @@ const verifyOTPCode = async (phoneNumber, code) => {
  * @returns {Promise<Object>} - Send result
  */
 const sendMessWallahOTP = async (phoneNumber) => {
-  console.log(`🔐 Sending MESS WALLAH OTP to: ${phoneNumber}`);
+  console.log(`[AUTH] Sending MESS WALLAH OTP to: ${phoneNumber}`);
 
   // Try to create a custom verification with better message
   try {

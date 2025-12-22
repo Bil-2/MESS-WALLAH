@@ -4,13 +4,26 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const { sendEmail } = require('../services/notify');
-const { rateLimiters, csrfProtection } = require('../middleware/advancedSecurity');
+const { 
+  sendEmail, 
+  sendBookingConfirmationToCustomer, 
+  sendBookingNotificationToOwner,
+  sendBookingCancellation,
+  sendBookingStatusUpdate 
+} = require('../services/notify');
+const { 
+  rateLimiters, 
+  csrfProtection,
+  sanitizeInput,
+  preventInjection 
+} = require('../middleware/advancedSecurity');
 
 const router = express.Router();
 
-// Apply rate limiting to all booking routes
-router.use(rateLimiters.general);
+// Apply security middleware to all booking routes
+router.use(sanitizeInput);
+router.use(preventInjection);
+router.use(rateLimiters.booking);
 
 // @desc    Get user's own bookings
 // @route   GET /api/bookings
@@ -42,8 +55,8 @@ router.get('/', [
 
     // Get bookings with pagination
     const bookings = await Booking.find(query)
-      .populate('user', 'name email phone role')
-      .populate('room', 'title location price roomType')
+      .populate('userId', 'name email phone role')
+      .populate('roomId', 'title location price roomType')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -119,8 +132,8 @@ router.get('/admin', [
 
     // Get all bookings with pagination
     const bookings = await Booking.find(query)
-      .populate('user', 'name email phone role')
-      .populate('room', 'title location price roomType')
+      .populate('userId', 'name email phone role')
+      .populate('roomId', 'title location price roomType')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -154,7 +167,7 @@ router.get('/admin', [
 // @access  Private (Authenticated users)
 router.post('/', [
   protect,
-  // csrfProtection, // Temporarily disabled for API testing
+  csrfProtection, // SECURITY: CSRF protection enabled
   body('roomId').isMongoId().withMessage('Invalid room ID'),
   body('checkInDate').isISO8601().withMessage('Invalid check-in date'),
   body('duration').isInt({ min: 1, max: 24 }).withMessage('Duration must be between 1-24 months'),
@@ -213,7 +226,8 @@ router.post('/', [
       console.log(`[SUCCESS] Assigned default owner to room: ${room.title}`);
     }
 
-    if (!room.isActive || !room.isAvailable) {
+    // FIXED: Check isAvailable instead of non-existent isActive field
+    if (!room.isAvailable) {
       return res.status(400).json({
         success: false,
         message: 'Room is not available for booking'
@@ -281,7 +295,7 @@ router.post('/', [
 
     // Send email notifications
     try {
-      // Email to room owner
+      // Email to room owner about new booking request
       await sendEmail(roomOwner.email, `New Booking Request - ${booking.bookingId}`, `
         <h2>New Booking Request</h2>
         <p>Hi ${roomOwner.name},</p>
@@ -301,6 +315,26 @@ router.post('/', [
       `);
     } catch (emailError) {
       console.error('Email notification failed:', emailError);
+    }
+
+    // Create in-app notification for owner
+    try {
+      const Notification = require('../models/Notification');
+      await Notification.createNotification({
+        userId: roomOwner._id,
+        type: 'booking_request',
+        title: '📋 New Booking Request',
+        message: `${seekerInfo.name} requested to book ${room.title} for ${duration} months starting ${checkIn.toLocaleDateString('en-IN')}`,
+        data: {
+          bookingId: booking._id,
+          roomId: room._id,
+          amount: totalAmount,
+          actionUrl: '/owner/bookings'
+        },
+        priority: 'high'
+      });
+    } catch (notifyError) {
+      console.error('In-app notification failed:', notifyError);
     }
 
     res.status(201).json({
@@ -518,35 +552,45 @@ router.patch('/:id/status', [
       }
     }
 
-    // Send email notification to seeker
+    // Send notifications to seeker
     try {
-      if (status === 'confirmed') {
-        await sendEmail(booking.userId.email, `Booking Confirmed - ${booking.bookingId}`, `
-          <h2>Booking Confirmed</h2>
-          <p>Hi ${booking.userId.name},</p>
-          <p>Your booking request for "${booking.roomId.title}" has been confirmed!</p>
-          <p><strong>Booking Details:</strong></p>
-          <ul>
-            <li>Booking ID: ${booking.bookingId}</li>
-            <li>Check-in Date: ${booking.checkInDate.toLocaleDateString('en-IN')}</li>
-            <li>Duration: ${booking.duration} months</li>
-            <li>Total Amount: ₹${booking.pricing.totalAmount.toLocaleString('en-IN')}</li>
-          </ul>
-          <p>Owner Contact: ${booking.ownerId.name} - ${booking.ownerId.phone}</p>
-          <p>Best regards,<br>MESS WALLAH Team</p>
-        `);
-      } else {
-        await sendEmail(booking.userId.email, `Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)} - ${booking.bookingId}`, `
-          <h2>Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)}</h2>
-          <p>Hi ${booking.userId.name},</p>
-          <p>Your booking request for "${booking.roomId.title}" has been ${status}.</p>
-          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-          <p>Booking ID: ${booking.bookingId}</p>
-          <p>Best regards,<br>MESS WALLAH Team</p>
-        `);
-      }
-    } catch (emailError) {
-      console.error('Email notification failed:', emailError);
+      const statusMessage = status === 'confirmed' 
+        ? 'Your booking has been confirmed! Please proceed with payment.'
+        : `Your booking has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
+
+      await sendBookingStatusUpdate(
+        booking.userId.email,
+        booking.userId.phone,
+        {
+          bookingId: booking.bookingId,
+          roomTitle: booking.roomId.title,
+          status,
+          message: statusMessage
+        }
+      );
+    } catch (notifyError) {
+      console.error('Status update notification failed:', notifyError);
+    }
+
+    // Create in-app notification
+    try {
+      const Notification = require('../models/Notification');
+      await Notification.createNotification({
+        userId: booking.userId._id,
+        type: status === 'confirmed' ? 'booking_confirmed' : 'booking_rejected',
+        title: status === 'confirmed' ? '✅ Booking Confirmed!' : '❌ Booking Rejected',
+        message: status === 'confirmed' 
+          ? `Great news! Your booking for ${booking.roomId.title} has been confirmed. Please complete the payment.`
+          : `Your booking request for ${booking.roomId.title} was rejected.${reason ? ` Reason: ${reason}` : ''}`,
+        data: {
+          bookingId: booking._id,
+          roomId: booking.roomId._id,
+          actionUrl: `/bookings/${booking._id}`
+        },
+        priority: 'high'
+      });
+    } catch (notifyError) {
+      console.error('In-app notification failed:', notifyError);
     }
 
     res.status(200).json({
@@ -576,9 +620,9 @@ router.patch('/:id/cancel', [
     const { reason } = req.body;
 
     const booking = await Booking.findById(req.params.id)
-      .populate('roomId')
-      .populate('userId', 'name email')
-      .populate('ownerId', 'name email');
+      .populate('roomId', 'title')
+      .populate('userId', 'name email phone')
+      .populate('ownerId', 'name email phone');
 
     if (!booking) {
       return res.status(404).json({
@@ -587,9 +631,11 @@ router.patch('/:id/cancel', [
       });
     }
 
-    // Check authorization
-    const isAuthorized = booking.userId.toString() === req.user.id ||
-      booking.ownerId.toString() === req.user.id;
+    // Check authorization - handle populated objects
+    const userId = booking.userId._id ? booking.userId._id.toString() : booking.userId.toString();
+    const ownerId = booking.ownerId._id ? booking.ownerId._id.toString() : booking.ownerId.toString();
+    
+    const isAuthorized = userId === req.user.id || ownerId === req.user.id;
 
     if (!isAuthorized) {
       return res.status(403).json({
@@ -606,6 +652,8 @@ router.patch('/:id/cancel', [
       });
     }
 
+    const wasConfirmed = booking.status === 'confirmed';
+
     // Update booking status
     booking.status = 'cancelled';
     booking.statusHistory.push({
@@ -618,7 +666,7 @@ router.patch('/:id/cancel', [
     await booking.save();
 
     // If booking was confirmed, make room available again
-    if (booking.status === 'confirmed') {
+    if (wasConfirmed) {
       try {
         await Room.findByIdAndUpdate(booking.roomId._id, { isAvailable: true });
       } catch (roomError) {
@@ -627,20 +675,43 @@ router.patch('/:id/cancel', [
     }
 
     // Send notification to the other party
-    const notifyUser = booking.userId.toString() === req.user.id ? booking.ownerId : booking.userId;
-    const cancelledBy = booking.userId.toString() === req.user.id ? 'seeker' : 'owner';
+    const cancelledByUser = userId === req.user.id;
+    const notifyUser = cancelledByUser ? booking.ownerId : booking.userId;
+    const cancelledBy = cancelledByUser ? 'guest' : 'owner';
 
+    // Send cancellation notifications
     try {
-      await sendEmail(notifyUser.email, `Booking Cancelled - ${booking.bookingId}`, `
-        <h2>Booking Cancelled</h2>
-        <p>Hi ${notifyUser.name},</p>
-        <p>The booking for "${booking.roomId.title}" has been cancelled by the ${cancelledBy}.</p>
-        ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-        <p>Booking ID: ${booking.bookingId}</p>
-        <p>Best regards,<br>MESS WALLAH Team</p>
-      `);
-    } catch (emailError) {
-      console.error('Cancellation email failed:', emailError);
+      await sendBookingCancellation(
+        notifyUser.email,
+        notifyUser.phone,
+        {
+          bookingId: booking.bookingId,
+          roomTitle: booking.roomId.title,
+          reason,
+          refundAmount: wasConfirmed ? booking.pricing.totalAmount : null
+        }
+      );
+    } catch (notifyError) {
+      console.error('Cancellation notification failed:', notifyError);
+    }
+
+    // Create in-app notification
+    try {
+      const Notification = require('../models/Notification');
+      await Notification.createNotification({
+        userId: notifyUser._id,
+        type: 'booking_cancelled',
+        title: '❌ Booking Cancelled',
+        message: `Booking ${booking.bookingId} for ${booking.roomId.title} has been cancelled by the ${cancelledBy}.${reason ? ` Reason: ${reason}` : ''}`,
+        data: {
+          bookingId: booking._id,
+          roomId: booking.roomId._id,
+          actionUrl: cancelledByUser ? '/owner/bookings' : '/bookings'
+        },
+        priority: 'high'
+      });
+    } catch (notifyError) {
+      console.error('In-app notification failed:', notifyError);
     }
 
     res.status(200).json({

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const GoogleAuthSuccess = () => {
@@ -45,15 +46,17 @@ const GoogleAuthSuccess = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mx-auto mb-4"></div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Completing Sign In...
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Please wait while we set up your account
-        </p>
-      </div>
+      <ScrollReveal animation="fade-up">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Completing Sign In...
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Please wait while we set up your account
+          </p>
+        </div>
+      </ScrollReveal>
     </div>
   );
 };

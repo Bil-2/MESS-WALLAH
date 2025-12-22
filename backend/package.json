@@ -14,7 +14,9 @@
     "mongo:status": "brew services list | grep mongodb",
     "dev:mongo": "npm run mongo:start && npm run dev",
     "start:mongo": "npm run mongo:start && npm start",
-    "health:check": "curl -f http://localhost:5001/health || exit 1"
+    "health:check": "curl -f http://localhost:5001/health || exit 1",
+    "security:audit": "node scripts/runSecurityAudit.js",
+    "security:check": "npm run security:audit"
   },
   "keywords": [
     "room-booking",
@@ -46,7 +48,7 @@
     "nodemailer": "^7.0.6",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "razorpay": "^2.9.2",
+    "razorpay": "^2.9.6",
     "twilio": "^4.23.0",
     "winston": "^3.10.0",
     "xss-clean": "^0.1.4"

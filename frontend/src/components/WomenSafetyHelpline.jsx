@@ -308,7 +308,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                 </div>
                 
                 <p className="text-sm text-center text-gray-600 dark:text-gray-400 mt-4 font-medium">
-                  🛡️ Your safety is our priority. Don't hesitate to reach out for help anytime.
+                  Your safety is our priority. Don't hesitate to reach out for help anytime.
                 </p>
               </div>
             </motion.div>

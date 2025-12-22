@@ -14,6 +14,7 @@ import {
   FiStar as Star, 
   FiHeart as Heart 
 } from 'react-icons/fi';
+import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const Contact = () => {

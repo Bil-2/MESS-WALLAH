@@ -27,21 +27,15 @@ const Login = () => {
     // Wait for auth to initialize before checking
     if (!authLoading && user) {
       console.log('User already logged in, redirecting to home...', user);
-      navigate('/', { replace: true });
+      // Use window.location.href for full page reload to ensure proper state initialization
+      const userRole = user?.role || 'user';
+      if (userRole === 'owner') {
+        window.location.href = '/owner-dashboard';
+      } else {
+        window.location.href = '/';
+      }
     }
-  }, [user, authLoading, navigate]);
-
-  // Clear form data on component mount to prevent auto-fill issues
-  useEffect(() => {
-    setFormData({
-      email: '',
-      password: '',
-      phone: ''
-    });
-    setErrors({});
-    setOtpSent(false);
-    setOtp('');
-  }, []);
+  }, [user, authLoading]);
 
   // Show loading while checking auth status
   if (authLoading) {
@@ -91,22 +85,22 @@ const Login = () => {
 
     try {
       setLoading(true);
-      console.log('🔄 Sending OTP to:', formData.phone);
+      console.log('[OTP] Sending OTP to:', formData.phone);
       const result = await sendOtp(formData.phone);
-      console.log('📱 OTP Send Result:', result);
+      console.log('[OTP] OTP Send Result:', result);
 
       if (result && result.success) {
-        console.log('✅ OTP sent successfully, showing input field');
+        console.log('[SUCCESS] OTP sent successfully, showing input field');
         setOtpSent(true);
-        toast.success('OTP sent successfully! Use 123456 for testing');
+        toast.success('OTP sent successfully! Check your phone.');
       } else {
-        console.error('❌ OTP send failed:', result);
+        console.error('[ERROR] OTP send failed:', result);
         const errorMsg = result?.message || 'Failed to send OTP';
         setErrors({ phone: errorMsg });
         toast.error(errorMsg);
       }
     } catch (error) {
-      console.error('💥 Error sending OTP:', error);
+      console.error('[ERROR] Error sending OTP:', error);
       const errorMsg = error.message || 'Failed to send OTP';
       setErrors({ phone: errorMsg });
       toast.error(errorMsg);
@@ -131,24 +125,28 @@ const Login = () => {
       if (result.success) {
         toast.success('Login successful!');
 
-        // Check user role and redirect accordingly
+        // CRITICAL: Don't reset verifyingOtp state - redirect immediately
+        // The page will unmount anyway, and resetting state can cause re-render issues
         const userRole = result.user?.role || result.role || 'user';
         if (userRole === 'owner') {
           window.location.href = '/owner-dashboard';
         } else {
           window.location.href = '/';
         }
+        // Don't return or do anything after redirect - let it complete
+        return;
       } else {
         setErrors({ otp: result.message || 'Invalid OTP' });
         toast.error(result.message || 'Invalid OTP');
+        setVerifyingOtp(false);
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setErrors({ otp: error.message || 'Invalid OTP' });
       toast.error(error.message || 'Invalid OTP');
-    } finally {
       setVerifyingOtp(false);
     }
+    // NOTE: No finally block - state reset only on error, not on success
   };
 
   const handlePasswordLogin = async (e) => {
@@ -172,15 +170,17 @@ const Login = () => {
       if (result.success) {
         toast.success('Login successful!');
 
-        // Check user role and redirect accordingly
+        // CRITICAL: Don't reset loading state - redirect immediately
         const userRole = result.user?.role || result.role || 'user';
         if (userRole === 'owner') {
           window.location.href = '/owner-dashboard';
         } else {
           window.location.href = '/';
         }
+        return; // Don't do anything after redirect
       } else {
         // Handle different error scenarios
+        setLoading(false);
         if (result.action === 'complete_registration') {
           setErrors({
             email: result.message,
@@ -201,6 +201,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Error logging in:', error);
+      setLoading(false);
 
       // Handle specific error cases
       if (error.message.includes('complete your registration')) {
@@ -222,9 +223,8 @@ const Login = () => {
       } else {
         setErrors({ email: error.message || 'Login failed' });
       }
-    } finally {
-      setLoading(false);
     }
+    // NOTE: No finally block - state reset only on error, not on success
   };
 
   const handleOtpChange = (e) => {

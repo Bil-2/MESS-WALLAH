@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Users, FileText, AlertCircle, HelpCircle } from 'lucide-react';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Terms = () => {
   const sections = [
@@ -71,110 +72,124 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-24 pb-12 px-4">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <FileText className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Terms of Service
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Please read these terms and conditions carefully before using our service.
-            </p>
-            <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-              Last updated: January 15, 2024
+      <ScrollReveal animation="fade-up">
+        <div className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center">
+              <FileText className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Terms of Service
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Please read these terms and conditions carefully before using our service.
+              </p>
+              <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                Last updated: January 15, 2024
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Introduction */}
-        <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-6 mb-8 transition-colors duration-200">
-          <div className="flex items-start">
-            <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1 mr-3 flex-shrink-0" />
-            <div>
-              <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                Important Notice
-              </h2>
-              <p className="text-blue-800 dark:text-blue-200">
-                These Terms of Service constitute a legally binding agreement between you and MESS WALLAH.
-                By using our platform, you acknowledge that you have read, understood, and agree to be bound by these terms.
-              </p>
+        <ScrollReveal animation="fade-up" delay={100}>
+          <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-6 mb-8 transition-colors duration-200">
+            <div className="flex items-start">
+              <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1 mr-3 flex-shrink-0" />
+              <div>
+                <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  Important Notice
+                </h2>
+                <p className="text-blue-800 dark:text-blue-200">
+                  These Terms of Service constitute a legally binding agreement between you and MESS WALLAH.
+                  By using our platform, you acknowledge that you have read, understood, and agree to be bound by these terms.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Terms Sections */}
         <div className="space-y-8">
           {sections.map((section, index) => (
-            <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm transition-colors duration-200">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                {section.title}
-              </h2>
-              <div className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
-                {section.content}
+            <ScrollReveal key={index} animation="fade-up" delay={index * 50}>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm transition-colors duration-200">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  {section.title}
+                </h2>
+                <div className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
+                  {section.content}
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
 
         {/* Contact Information */}
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 mt-12 transition-colors duration-200">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Contact Us
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            If you have any questions about these Terms of Service, please contact us:
-          </p>
-          <div className="space-y-2 text-gray-600 dark:text-gray-400">
-            <div>Email: legal@messwallah.com</div>
-            <div>Phone: +91 1800-123-4567</div>
-            <div>Address: MESS WALLAH Legal Department, Bangalore, India</div>
+        <ScrollReveal animation="fade-up">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 mt-12 transition-colors duration-200">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Contact Us
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              If you have any questions about these Terms of Service, please contact us:
+            </p>
+            <div className="space-y-2 text-gray-600 dark:text-gray-400">
+              <div>Email: legal@messwallah.com</div>
+              <div>Phone: +91 1800-123-4567</div>
+              <div>Address: MESS WALLAH Legal Department, Bangalore, India</div>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
-            <Shield className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Privacy Policy
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-              Learn how we protect your personal information
-            </p>
-            <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-              Read Privacy Policy
-            </button>
-          </div>
+          <ScrollReveal animation="fade-up" delay={0}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
+              <Shield className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Privacy Policy
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                Learn how we protect your personal information
+              </p>
+              <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                Read Privacy Policy
+              </button>
+            </div>
+          </ScrollReveal>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
-            <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Community Guidelines
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-              Guidelines for respectful community interaction
-            </p>
-            <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-              View Guidelines
-            </button>
-          </div>
+          <ScrollReveal animation="fade-up" delay={100}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
+              <Users className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Community Guidelines
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                Guidelines for respectful community interaction
+              </p>
+              <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                View Guidelines
+              </button>
+            </div>
+          </ScrollReveal>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
-            <HelpCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Help & Support
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-              Get answers to frequently asked questions
-            </p>
-            <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-              Get Help
-            </button>
-          </div>
+          <ScrollReveal animation="fade-up" delay={200}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm text-center transition-colors duration-200">
+              <HelpCircle className="w-8 h-8 text-purple-600 dark:text-purple-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Help & Support
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                Get answers to frequently asked questions
+              </p>
+              <button type="button" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                Get Help
+              </button>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
     </div>

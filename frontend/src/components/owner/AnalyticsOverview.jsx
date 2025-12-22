@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../utils/api';
 import { TrendingUp, TrendingDown, Eye, DollarSign, Home, Users } from 'lucide-react';
 
 const AnalyticsOverview = () => {
@@ -20,12 +20,7 @@ const AnalyticsOverview = () => {
         return;
       }
 
-      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/owner/analytics`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.get('/owner/analytics');
 
       if (response.data.success) {
         setAnalytics(response.data.data);
@@ -56,7 +51,7 @@ const AnalyticsOverview = () => {
   if (error) {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 mb-8">
-        <p className="text-red-700 dark:text-red-400">⚠️ {error}</p>
+        <p className="text-red-700 dark:text-red-400">{error}</p>
       </div>
     );
   }
@@ -143,7 +138,7 @@ const AnalyticsOverview = () => {
       {overview.totalRooms === 0 && (
         <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
           <p className="text-blue-700 dark:text-blue-300 text-sm">
-            💡 <strong>Get started:</strong> Add your first room to see analytics and start earning!
+            <strong>Get started:</strong> Add your first room to see analytics and start earning!
           </p>
         </div>
       )}

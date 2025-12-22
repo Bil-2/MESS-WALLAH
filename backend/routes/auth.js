@@ -6,11 +6,14 @@ const Otp = require('../models/Otp');
 const User = require('../models/User');
 const { sendSms } = require('../services/notify');
 const { sendEmail } = require('../utils/email');
-const { protect } = require('../middleware/auth');
+const { protect, blacklistToken } = require('../middleware/auth');
 const {
   rateLimiters,
   createBruteForceProtector,
-  csrfProtection
+  csrfProtection,
+  handleFailedAttempt,
+  handleSuccessfulAttempt,
+  sanitizeInput
 } = require('../middleware/advancedSecurity');
 
 // Import enhanced OTP controller
@@ -20,6 +23,9 @@ const { sendOtp, verifyOtp, resendOtp } = require('../controllers/otpController'
 const { register, login, forgotPassword, resetPassword, changePassword, getProfile, logout, checkUserExists } = require('../controllers/authController');
 
 const router = express.Router();
+
+// Apply security middleware to all auth routes
+router.use(sanitizeInput);
 
 // Apply rate limiting to all auth routes
 router.use(rateLimiters.auth);
@@ -56,8 +62,8 @@ router.post('/login', [
     .normalizeEmail()
     .withMessage('Please provide a valid email address'),
   body('password')
-    .notEmpty()
-    .withMessage('Password is required')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
 ], login);
 
 // @desc    Send OTP to phone number
@@ -417,8 +423,6 @@ router.post('/reset-password', [
   body('newPassword')
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
 ], resetPassword);
 
 // @desc    Change password
@@ -433,18 +437,25 @@ router.post('/change-password', [
   body('newPassword')
     .isLength({ min: 8 })
     .withMessage('New password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
 ], changePassword);
 
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private
 router.post('/logout', [protect, csrfProtection], (req, res) => {
+  // Blacklist the current token
+  if (req.token) {
+    blacklistToken(req.token);
+  }
+
   res.cookie('token', '', {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
     expires: new Date(0)
   });
+
+  console.log(`[AUTH] User logged out: ${req.user?.email}`);
 
   res.status(200).json({
     success: true,

@@ -406,10 +406,6 @@ const toggleFavourite = async (req, res) => {
 // @access  Private
 const getFavourites = async (req, res) => {
   try {
-    console.log('[DEBUG] getFavourites - Starting...');
-    console.log('[DEBUG] getFavourites - req.user exists:', !!req.user);
-    console.log('[DEBUG] getFavourites - req.user._id:', req.user?._id);
-
     const { page = 1, limit = 12 } = req.query;
 
     // Ensure user exists
@@ -422,15 +418,12 @@ const getFavourites = async (req, res) => {
 
     // Initialize favourites array if it doesn't exist
     let favourites = req.user.favourites || [];
-    console.log('[DEBUG] getFavourites - favourites length:', favourites.length);
 
     // Return empty favourites for now to test the basic flow
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const favouriteRooms = [];  // Empty for now
     const totalFavourites = 0;  // Empty for now
     const totalPages = 0;       // Empty for now
-
-    console.log('[SUCCESS] getFavourites - Returning success response');
 
     res.status(200).json({
       success: true,
@@ -447,8 +440,7 @@ const getFavourites = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[ERROR] Get favourites error:', error);
-    console.error('[ERROR] Error stack:', error.stack);
+    console.error('Get favourites error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch favorites',

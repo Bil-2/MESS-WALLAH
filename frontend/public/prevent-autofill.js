@@ -4,7 +4,7 @@
 (function() {
   'use strict';
   
-  console.log('🛡️ Auto-fill prevention v3.0 loaded - Error-free version');
+  console.log('[SECURITY] Auto-fill prevention v3.0 loaded - Error-free version');
   
   // Simple function to disable autofill on forms
   function disableAutofill() {
@@ -51,7 +51,7 @@
     
     if (runCount >= maxRuns) {
       clearInterval(intervalId);
-      console.log('✅ Auto-fill prevention completed');
+      console.log('[SUCCESS] Auto-fill prevention completed');
     }
   }, 500);
   

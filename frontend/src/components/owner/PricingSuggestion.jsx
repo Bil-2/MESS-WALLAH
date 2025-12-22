@@ -61,7 +61,7 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
       <div className="flex items-start justify-between mb-3">
         <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <BarChart3 className="w-5 h-5" />
-          💡 Smart Pricing Insights
+          Smart Pricing Insights
         </h4>
         {isPriceIncrease && <TrendingUp className="w-5 h-5 text-green-600" />}
         {isPriceDecrease && <TrendingDown className="w-5 h-5 text-orange-600" />}
@@ -105,7 +105,7 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
           </p>
           {suggestion.seasonReason && suggestion.seasonalFactor !== 1 && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              🌟 {suggestion.seasonReason}
+              {suggestion.seasonReason}
             </p>
           )}
         </div>
@@ -137,7 +137,7 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
         {suggestion.potentialRevenue && isPriceIncrease && (
           <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
             <p className="text-xs text-green-700 dark:text-green-400 font-medium">
-              💰 Potential additional revenue: {suggestion.potentialRevenue}
+              Potential additional revenue: {suggestion.potentialRevenue}
             </p>
           </div>
         )}

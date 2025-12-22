@@ -43,12 +43,18 @@ const {
   securityMiddleware,
   rateLimiters,
   csrfProtection,
-  createBruteForceProtector
+  createBruteForceProtector,
+  sanitizeInput,
+  preventInjection,
+  validateRequest,
+  securityAuditLog,
+  sessionSecurity
 } = require('./middleware/advancedSecurity');
 
-// CORS configuration
+// CORS configuration - PRODUCTION GRADE
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
@@ -61,10 +67,20 @@ const corsOptions = {
       process.env.CLIENT_URL
     ].filter(Boolean);
 
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
-      callback(null, true);
+    // In production, be strict about origins
+    if (process.env.NODE_ENV === 'production') {
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log(`[SECURITY] CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // In development, allow all origins but log
+      if (!allowedOrigins.includes(origin)) {
+        console.log(`[SECURITY] Non-whitelisted origin in dev: ${origin}`);
+      }
+      callback(null, true);
     }
   },
   credentials: true,
@@ -76,15 +92,30 @@ const corsOptions = {
     'Accept',
     'Authorization',
     'Cache-Control',
-    'X-Requested-With'
+    'X-CSRF-Token',
+    'X-Idempotency-Key',
+    'X-Request-ID'
   ],
-  exposedHeaders: ['set-cookie']
+  exposedHeaders: ['set-cookie', 'X-CSRF-Token'],
+  maxAge: 86400, // 24 hours
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
 
-// Enhanced security middleware
+// Enhanced security middleware - ORDER MATTERS
 app.use(securityMiddleware);
+
+// Request validation and sanitization
+app.use(validateRequest);
+app.use(sanitizeInput);
+app.use(preventInjection);
+
+// Security audit logging
+app.use(securityAuditLog);
+
+// Session security
+app.use(sessionSecurity);
 
 // Production-ready middleware
 app.use(requestTimeout(30000)); // 30 second timeout
@@ -102,12 +133,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Database connection
 const connectDB = async () => {
   try {
-    console.log('🔄 Connecting to MongoDB...');
+    console.log('[DB] Connecting to MongoDB...');
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah';
-    console.log(`📍 MongoDB URI: ${mongoURI}`);
+    console.log(`[DB] MongoDB URI: ${mongoURI}`);
 
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
@@ -120,11 +154,11 @@ const connectDB = async () => {
     // Check if database has rooms
     const Room = require('./models/Room');
     const roomCount = await Room.countDocuments();
-    console.log(`📊 Total rooms in database: ${roomCount}`);
+    console.log(`[INFO] Total rooms in database: ${roomCount}`);
 
     // Auto-seed if database is empty
     if (roomCount === 0) {
-      console.log('🌱 Database is empty. Running auto-seeding...');
+      console.log('[INFO] Database is empty. Running auto-seeding...');
       try {
         const { seedSampleRooms } = require('./controllers/roomController');
         await seedSampleRooms();
@@ -137,7 +171,7 @@ const connectDB = async () => {
     return conn;
   } catch (error) {
     console.error('[ERROR] MongoDB connection failed:', error.message);
-    console.error('🔧 Troubleshooting steps:');
+    console.error('[HELP] Troubleshooting steps:');
     console.error('   1. Make sure MongoDB is running: npm run mongo:start');
     console.error('   2. Check MongoDB status: npm run mongo:status');
     console.error('   3. Verify connection string in .env file');
@@ -206,15 +240,15 @@ const startServer = async () => {
     }));
 
     // Register API routes
-    console.log('📋 Registering API routes...');
+    console.log('[INIT] Registering API routes...');
 
     try {
       const authRoutes = require('./routes/auth');
       const googleAuthRoutes = require('./routes/googleAuth');
       app.use('/api/auth', authRoutes);
       app.use('/api/auth', googleAuthRoutes);
-      console.log('   ✓ /api/auth routes registered');
-      console.log('   ✓ /api/auth/google routes registered');
+      console.log('   [OK] /api/auth routes registered');
+      console.log('   [OK] /api/auth/google routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/auth routes:', error.message);
       // Create fallback auth routes to prevent 404 errors
@@ -231,58 +265,75 @@ const startServer = async () => {
 
     try {
       app.use('/api/users', require('./routes/users'));
-      console.log('   ✓ /api/users routes registered');
+      console.log('   [OK] /api/users routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/users routes:', error.message);
     }
 
     try {
       app.use('/api/rooms', require('./routes/rooms'));
-      console.log('   ✓ /api/rooms routes registered');
+      console.log('   [OK] /api/rooms routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/rooms routes:', error.message);
     }
 
     try {
       app.use('/api/bookings', require('./routes/bookings'));
-      console.log('   ✓ /api/bookings routes registered');
+      console.log('   [OK] /api/bookings routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/bookings routes:', error.message);
     }
 
     try {
       app.use('/api/search', require('./routes/search'));
-      console.log('   ✓ /api/search routes registered');
+      console.log('   [OK] /api/search routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/search routes:', error.message);
     }
 
     try {
-      app.use('/api/payments', require('./routes/simplePaymentRoutes'));
-      console.log('   ✓ /api/payments routes registered');
+      // Use the new secure payment routes
+      app.use('/api/payments', require('./routes/paymentRoutes'));
+      console.log('   [OK] /api/payments routes registered (SECURE)');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/payments routes:', error.message);
+      // Fallback to simple routes if new routes fail
+      try {
+        app.use('/api/payments', require('./routes/simplePaymentRoutes'));
+        console.log('   [OK] /api/payments fallback routes registered');
+      } catch (fallbackError) {
+        console.error('   [ERROR] Payment routes completely failed');
+      }
     }
 
-    try {
-      app.use('/api/test-sms', require('./routes/testSMS'));
-      console.log('   ✓ /api/test-sms routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/test-sms routes:', error.message);
-    }
+
 
     try {
       app.use('/api/analytics', require('./routes/analytics'));
-      console.log('   ✓ /api/analytics routes registered');
+      console.log('   [OK] /api/analytics routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/analytics routes:', error.message);
     }
 
     try {
       app.use('/api/owner', require('./routes/owner'));
-      console.log('   ✓ /api/owner routes registered');
+      console.log('   [OK] /api/owner routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/owner routes:', error.message);
+    }
+
+    try {
+      app.use('/api/admin', require('./routes/admin'));
+      console.log('   [OK] /api/admin routes registered');
+    } catch (error) {
+      console.error('   [ERROR] Failed to register /api/admin routes:', error.message);
+    }
+
+    try {
+      app.use('/api/notifications', require('./routes/notifications'));
+      console.log('   [OK] /api/notifications routes registered');
+    } catch (error) {
+      console.error('   [ERROR] Failed to register /api/notifications routes:', error.message);
     }
 
 
@@ -295,7 +346,7 @@ const startServer = async () => {
 
     // Fallback error handler
     app.use((err, req, res, next) => {
-      console.error('🚨 Global Error Handler:', {
+      console.error('[ERROR] Global Error Handler:', {
         message: err.message,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
         url: req.url,
@@ -413,7 +464,7 @@ const startServer = async () => {
       console.log(`[INFO] Environment: ${process.env.NODE_ENV}`);
       console.log(`[INFO] Client URL: ${process.env.CLIENT_URL}`);
       console.log(`[INFO] Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
-      console.log(`🧪 Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
+      console.log(`[TEST] Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
     });
 
     // Graceful shutdown

@@ -19,15 +19,16 @@ import {
 import SuccessStories from '../components/SuccessStories';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredRooms, setFeaturedRooms] = useState([]);
   const [stats, setStats] = useState({
-    totalRooms: 970,
-    happyUsers: 12500,
-    cities: 90,
+    totalRooms: 4500,
+    happyUsers: 25000,
+    cities: 1500,
     rating: 4.8
   });
 
@@ -63,9 +64,9 @@ const Home = () => {
         const statsData = await statsResponse.json();
         if (statsData.success && statsData.data) {
           setStats({
-            totalRooms: statsData.data.totalRooms || 970,
-            happyUsers: 10000,
-            cities: statsData.data.totalCities || 90,
+            totalRooms: statsData.data.totalRooms || 4500,
+            happyUsers: 25000,
+            cities: statsData.data.totalCities || 1500,
             rating: 4.8
           });
         }
@@ -102,7 +103,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
       {/* Hero Section */}
-      <section className="relative pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden slide-in-up">
+      <section className="relative pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-orange-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse"></div>
@@ -112,6 +113,7 @@ const Home = () => {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="mb-8">
+            <ScrollReveal animation="fade-down" duration={800}>
             <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl text-base font-bold mb-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-white/20">
               <div className="relative">
                 <Shield className="w-5 h-5 text-white" />
@@ -126,8 +128,10 @@ const Home = () => {
                 <span className="text-xs font-bold text-white">TRUSTED</span>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Awards & Recognition Section */}
+            <ScrollReveal animation="fade-up" delay={200}>
             <div className="max-w-4xl mx-auto mb-8">
               {/* Section Header */}
               <div className="text-center mb-6">
@@ -176,8 +180,10 @@ const Home = () => {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Main Hero Content */}
+            <ScrollReveal animation="zoom" delay={400}>
             <div className="text-center mb-8">
               {/* Hero Headline */}
               <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-4 leading-tight">
@@ -218,8 +224,10 @@ const Home = () => {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Enhanced Action Buttons */}
+            <ScrollReveal animation="fade-up" delay={600}>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               {/* Primary CTA - Decreased color intensity */}
               <button
@@ -247,19 +255,21 @@ const Home = () => {
                 </div>
               </button>
             </div>
+            </ScrollReveal>
 
             {/* Trust Indicators */}
+            <ScrollReveal animation="fade-up" delay={800}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
               <div className="text-center">
-                <div className="text-3xl font-black text-orange-400 mb-1">10K+</div>
+                <div className="text-3xl font-black text-orange-400 mb-1">25K+</div>
                 <div className="text-sm text-gray-400 font-semibold">Happy Students</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-black text-pink-400 mb-1">970+</div>
+                <div className="text-3xl font-black text-pink-400 mb-1">4,500+</div>
                 <div className="text-sm text-gray-400 font-semibold">Verified Rooms</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-black text-purple-400 mb-1">300+</div>
+                <div className="text-3xl font-black text-purple-400 mb-1">1,500+</div>
                 <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
               </div>
               <div className="text-center">
@@ -267,6 +277,7 @@ const Home = () => {
                 <div className="text-sm text-gray-400 font-semibold">Safety Rating</div>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -274,20 +285,22 @@ const Home = () => {
       {/* Top 5 Cities Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-900/30 via-purple-900/30 to-pink-900/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
+          <ScrollReveal animation="fade-up">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Student Housing</span>
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto slide-in-up">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Discover premium student accommodations in India's top educational and professional hubs
             </p>
           </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
             {[
               {
                 name: 'Kolkata',
-                rooms: '2,500+',
+                rooms: '850+',
                 icon: Building2,
                 popular: 'Cultural Capital',
                 gradient: 'from-blue-500 to-cyan-500',
@@ -295,7 +308,7 @@ const Home = () => {
               },
               {
                 name: 'Bangalore',
-                rooms: '3,200+',
+                rooms: '1,200+',
                 icon: Building2,
                 popular: 'Silicon Valley',
                 gradient: 'from-orange-500 to-red-500',
@@ -303,7 +316,7 @@ const Home = () => {
               },
               {
                 name: 'Delhi',
-                rooms: '2,800+',
+                rooms: '950+',
                 icon: Landmark,
                 popular: 'Capital City',
                 gradient: 'from-purple-500 to-pink-500',
@@ -311,7 +324,7 @@ const Home = () => {
               },
               {
                 name: 'Pune',
-                rooms: '2,100+',
+                rooms: '780+',
                 icon: GraduationCap,
                 popular: 'Education Hub',
                 gradient: 'from-green-500 to-teal-500',
@@ -319,7 +332,7 @@ const Home = () => {
               },
               {
                 name: 'Chennai',
-                rooms: '1,900+',
+                rooms: '720+',
                 icon: Waves,
                 popular: 'Tech Center',
                 gradient: 'from-indigo-500 to-blue-500',
@@ -380,7 +393,8 @@ const Home = () => {
           </div>
 
           {/* Additional Info */}
-          <div className="text-center mt-12 fade-in">
+          <ScrollReveal animation="fade-up" delay={600}>
+          <div className="text-center mt-12">
             <p className="text-gray-600 dark:text-gray-400 text-lg">
               Click on any city to explore available student housing and PG accommodations
             </p>
@@ -396,6 +410,7 @@ const Home = () => {
               </div>
             </div>
           </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -404,6 +419,7 @@ const Home = () => {
       <section className="py-24 px-4 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
+          <ScrollReveal animation="fade-up">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full text-sm font-bold mb-6 shadow-lg">
               <Star className="w-4 h-4" />
@@ -418,6 +434,7 @@ const Home = () => {
               Join thousands of students who have found their perfect, safe accommodation through our platform
             </p>
           </div>
+          </ScrollReveal>
 
           {/* Enhanced Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -496,7 +513,7 @@ const Home = () => {
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full border-2 border-white"></div>
               </div>
               <span className="text-gray-700 dark:text-gray-300 font-semibold text-sm ml-2">
-                Join 10,000+ happy students
+                Join 25,000+ happy students
               </span>
             </div>
           </div>

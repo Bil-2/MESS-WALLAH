@@ -6,6 +6,7 @@ import {
   CheckCircle, X
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Menu = () => {
   const { user, logout } = useAuthContext();
@@ -163,7 +164,7 @@ const Menu = () => {
               
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                  <div className="text-lg font-bold text-orange-600">970+</div>
+                  <div className="text-lg font-bold text-orange-600">4,500+</div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Rooms Available</div>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">

@@ -193,17 +193,19 @@ router.post('/track', protect, async (req, res) => {
 
 // @desc    Get analytics summary (public endpoint for basic stats)
 // @route   GET /api/analytics/summary
-// @access  Public
+// @access  Public (limited data only)
 router.get('/summary', async (req, res) => {
   try {
-    // Get basic public statistics
-    const totalRooms = await Room.countDocuments({ isActive: true });
-    const availableRooms = await Room.countDocuments({ isAvailable: true, isActive: true });
-    const totalUsers = await User.countDocuments({ isActive: true });
+    // Get basic public statistics - SECURITY: Only expose aggregate counts, no user data
+    const totalRooms = await Room.countDocuments({ isAvailable: true });
+    const availableRooms = await Room.countDocuments({ isAvailable: true });
     
-    // Get room statistics by type
+    // SECURITY: Don't expose exact user count to public
+    const hasUsers = await User.countDocuments({ isVerified: true }) > 0;
+    
+    // Get room statistics by type (public data)
     const roomsByType = await Room.aggregate([
-      { $match: { isActive: true } },
+      { $match: { isAvailable: true } },
       {
         $group: {
           _id: '$roomType',
@@ -213,18 +215,18 @@ router.get('/summary', async (req, res) => {
       }
     ]);
 
-    // Get top locations (public data)
+    // Get top locations (public data - limited)
     const topLocations = await Room.aggregate([
-      { $match: { isActive: true } },
+      { $match: { isAvailable: true } },
       {
         $group: {
           _id: '$address.city',
-          count: { $sum: 1 },
-          avgPrice: { $avg: '$rentPerMonth' }
+          count: { $sum: 1 }
         }
       },
       { $sort: { count: -1 } },
-      { $limit: 5 }
+      { $limit: 5 },
+      { $project: { _id: 1, count: 1 } } // Don't expose avgPrice publicly
     ]);
 
     res.json({
@@ -235,7 +237,7 @@ router.get('/summary', async (req, res) => {
           totalRooms,
           availableRooms,
           occupiedRooms: totalRooms - availableRooms,
-          totalUsers,
+          hasActiveUsers: hasUsers, // Boolean only, not count
           occupancyRate: totalRooms > 0 ? ((totalRooms - availableRooms) / totalRooms * 100).toFixed(1) : 0
         },
         roomsByType,

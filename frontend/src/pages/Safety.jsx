@@ -17,6 +17,7 @@ import {
   FiHeadphones as Headphones,
   FiFileText as FileCheck
 } from 'react-icons/fi';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Safety = () => {
   const safetyFeatures = [
@@ -137,8 +138,8 @@ const Safety = () => {
   ];
 
   const safetyStats = [
-    { icon: Users, label: 'Safe Residents', value: '10,000+', color: 'text-green-600' },
-    { icon: Shield, label: 'Verified Properties', value: '500+', color: 'text-blue-600' },
+    { icon: Users, label: 'Safe Residents', value: '25,000+', color: 'text-green-600' },
+    { icon: Shield, label: 'Verified Properties', value: '4,500+', color: 'text-blue-600' },
     { icon: Star, label: 'Safety Rating', value: '4.9/5', color: 'text-yellow-600' },
     { icon: Clock, label: 'Response Time', value: '<5 min', color: 'text-red-600' }
   ];

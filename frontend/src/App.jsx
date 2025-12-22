@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './styles/animations.css';
 import './styles/preventAutoFill.css';
 import './styles/profile-animations.css';
+import './styles/scroll-animations.css';
 import { AuthProvider, ThemeProvider } from './context';
 import { Navbar, Footer, LoadingSpinner, MobileNavigation, ProtectedRoute, RoleBasedRedirect } from './components';
 import FaviconGenerator from './components/FaviconGenerator';
@@ -15,7 +16,6 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const SMSTest = lazy(() => import('./pages/SMSTest'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Bookings = lazy(() => import('./pages/Bookings'));
 const About = lazy(() => import('./pages/About'));
@@ -31,13 +31,15 @@ const SearchResults = lazy(() => import('./pages/SearchResults'));
 const Menu = lazy(() => import('./pages/Menu'));
 const Favorites = lazy(() => import('./pages/Favorites'));
 const GoogleAuthSuccess = lazy(() => import('./pages/GoogleAuthSuccess'));
-const FirebaseTest = lazy(() => import('./pages/FirebaseTest'));
-const FirebaseLogin = lazy(() => import('./pages/FirebaseLogin'));
+
 // Owner Pages
 const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
 const AddRoom = lazy(() => import('./pages/owner/AddRoom'));
 const ManageRooms = lazy(() => import('./pages/owner/ManageRooms'));
 const OwnerBookings = lazy(() => import('./pages/owner/OwnerBookings'));
+
+// Notifications
+const Notifications = lazy(() => import('./pages/Notifications'));
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
@@ -126,7 +128,6 @@ function App() {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
-                  <Route path="/sms-test" element={<SMSTest />} />
                   <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/about" element={<About />} />
@@ -139,8 +140,11 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/report" element={<Report />} />
                   <Route path="/menu" element={<Menu />} />
-                  <Route path="/firebase-test" element={<FirebaseTest />} />
-                  <Route path="/firebase-login" element={<FirebaseLogin />} />
+                  <Route path="/notifications" element={
+                    <ProtectedRoute requireAuth={true}>
+                      <Notifications />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </Suspense>
             </main>

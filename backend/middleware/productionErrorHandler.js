@@ -11,7 +11,7 @@ const logger = require('../utils/productionLogger');
  */
 const ensureDatabaseConnection = async () => {
   if (mongoose.connection.readyState !== 1) {
-    console.log('🔄 Database connection lost. Attempting reconnection...');
+    console.log('[DB] Database connection lost. Attempting reconnection...');
     try {
       await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah', {
         useNewUrlParser: true,
@@ -48,7 +48,7 @@ const gracefulErrorRecovery = async (error, req, res, next) => {
 
   // Database connection errors - Auto recovery
   if (error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
-    console.log('🔄 Database error detected. Attempting recovery...');
+    console.log('[DB] Database error detected. Attempting recovery...');
 
     const reconnected = await ensureDatabaseConnection();
 

@@ -27,16 +27,12 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    minlength: [6, 'Password must be at least 6 characters']
+    minlength: [8, 'Password must be at least 8 characters']
   },
   role: {
     type: String,
     enum: ['user', 'student', 'owner', 'admin'],
     default: 'user'
-  },
-  verified: {
-    type: Boolean,
-    default: false
   },
   isVerified: {
     type: Boolean,
@@ -221,7 +217,7 @@ UserSchema.index({ phone: 1 });
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ 'profile.city': 1 });
-UserSchema.index({ verified: 1 });
+UserSchema.index({ isVerified: 1 });
 UserSchema.index({ isActive: 1 });
 
 // Pre-save middleware to hash password

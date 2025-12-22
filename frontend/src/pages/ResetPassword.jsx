@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { 
   Eye, EyeOff, Lock, CheckCircle, AlertCircle, ArrowLeft 
 } from '../utils/iconMappings';
+import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 
@@ -191,7 +192,8 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center pt-24 pb-6 px-4 relative overflow-hidden fade-in">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+      <ScrollReveal animation="fade-up">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
             <Lock className="w-8 h-8 text-orange-600 dark:text-orange-400" />
@@ -330,6 +332,7 @@ const ResetPassword = () => {
           </Link>
         </div>
       </div>
+      </ScrollReveal>
     </div>
   );
 };

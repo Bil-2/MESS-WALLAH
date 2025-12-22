@@ -63,8 +63,8 @@ const RoomSchema = new mongoose.Schema({
     type: String,
     enum: [
       'wifi', 'ac', 'parking', 'laundry', 'kitchen', 'balcony',
-      'furnished', 'gym', 'security', 'elevator', 'water_supply',
-      'power_backup', 'tv', 'fridge', 'washing_machine', 'mess'
+      'furnished', 'gym', 'security', 'elevator', 'waterSupply',
+      'powerBackup', 'tv', 'fridge', 'washingMachine', 'mess'
     ]
   }],
   photos: [{
@@ -78,6 +78,29 @@ const RoomSchema = new mongoose.Schema({
     },
     caption: String,
     isPrimary: {
+      type: Boolean,
+      default: false
+    },
+    // Security & Anti-Scam Features
+    uploadType: {
+      type: String,
+      enum: ['camera', 'gallery', 'uploaded'],
+      default: 'uploaded'
+    },
+    uploadedFrom: {
+      ipAddress: String,
+      userAgent: String,
+      device: String,
+      location: {
+        latitude: Number,
+        longitude: Number
+      }
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    },
+    verified: {
       type: Boolean,
       default: false
     }
@@ -118,17 +141,16 @@ const RoomSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-},
   rating: {
-  type: Number,
-  default: 0,
-  min: 0,
-  max: 5
-},
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
+  },
   totalReviews: {
-  type: Number,
-  default: 0
-},
+    type: Number,
+    default: 0
+  },
   reviews: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -169,14 +191,17 @@ RoomSchema.virtual('ownerName').get(function () {
   return this.owner?.name || 'Unknown';
 });
 
-// Virtual for location string
-RoomSchema.virtual('location').get(function () {
-  return `${this.address.area}, ${this.address.city}`;
+// FIXED: Remove conflicting virtual fields to avoid confusion
+// Use actual schema fields: address.city for location, rentPerMonth for rent
+// Virtual for full address string
+RoomSchema.virtual('fullAddress').get(function () {
+  const addr = this.address;
+  return `${addr.street}, ${addr.area}, ${addr.city}, ${addr.state} - ${addr.pincode}`;
 });
 
-// Virtual for rent (alias for rentPerMonth)
-RoomSchema.virtual('rent').get(function () {
-  return this.rentPerMonth;
+// Virtual for display location (area, city)
+RoomSchema.virtual('displayLocation').get(function () {
+  return `${this.address.area}, ${this.address.city}`;
 });
 
 // Ensure virtuals are included in JSON output
@@ -222,28 +247,26 @@ RoomSchema.methods.incrementViews = function () {
   return this.save();
 };
 
-// Create indexes for better query performance - Production Optimized
-RoomSchema.index({ location: 1, city: 1 }); // Location-based searches
-RoomSchema.index({ price: 1 }); // Price filtering
+// FIXED: Optimized indexes with correct field names and no duplicates
+// Basic indexes for common queries
+RoomSchema.index({ owner: 1 }); // Owner-based queries
 RoomSchema.index({ roomType: 1 }); // Room type filtering
 RoomSchema.index({ isAvailable: 1 }); // Availability filtering
-RoomSchema.index({ owner: 1 }); // Owner-based queries
-RoomSchema.index({ createdAt: -1 }); // Sorting by creation date
+RoomSchema.index({ featured: 1 }); // Featured rooms
+RoomSchema.index({ rentPerMonth: 1 }); // Price filtering (FIXED: was 'price')
+RoomSchema.index({ 'address.city': 1 }); // City-based searches (FIXED: was 'city')
+RoomSchema.index({ 'address.area': 1 }); // Area-based searches
+RoomSchema.index({ rating: -1 }); // Rating sorting
+RoomSchema.index({ views: -1 }); // Views sorting
+RoomSchema.index({ createdAt: -1 }); // Creation date sorting
+RoomSchema.index({ amenities: 1 }); // Amenities filtering
+RoomSchema.index({ maxOccupancy: 1 }); // Occupancy filtering
 
 // Compound indexes for common query patterns
-RoomSchema.index({ isAvailable: 1, city: 1, price: 1 }); // Search with availability, location, and price
+RoomSchema.index({ isAvailable: 1, 'address.city': 1, rentPerMonth: 1 }); // Search with availability, location, and price
 RoomSchema.index({ roomType: 1, isAvailable: 1 }); // Room type with availability
-RoomSchema.index({ location: 'text', city: 'text', title: 'text', description: 'text' }); // Text search
-RoomSchema.index({ 'amenities': 1 }); // Amenities filtering
-RoomSchema.index({ maxOccupancy: 1 }); // Occupancy filtering
-RoomSchema.index({ featured: 1 });
-RoomSchema.index({ createdAt: -1 });
-RoomSchema.index({ rating: -1 });
-RoomSchema.index({ views: -1 });
-
-RoomSchema.index({ 'address.city': 1, roomType: 1, isActive: 1 });
-RoomSchema.index({ rentPerMonth: 1, 'address.city': 1, isActive: 1 });
-RoomSchema.index({ isActive: 1, isAvailable: 1, featured: 1 });
+RoomSchema.index({ 'address.city': 1, roomType: 1, isAvailable: 1 }); // City + type + availability
+RoomSchema.index({ isAvailable: 1, featured: 1 }); // Available featured rooms
 
 // Text index for search functionality
 RoomSchema.index({

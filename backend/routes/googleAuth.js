@@ -30,11 +30,11 @@ router.get('/google/callback',
       const user = req.user;
 
       if (!user) {
-        console.error('❌ No user found after Google authentication');
+        console.error('[ERROR] No user found after Google authentication');
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
       }
 
-      console.log('✅ Google authentication successful for:', user.email);
+      console.log('[SUCCESS] Google authentication successful for:', user.email);
 
       // Generate JWT token
       const token = jwt.sign(
@@ -60,13 +60,36 @@ router.get('/google/callback',
         registrationMethod: user.registrationMethod || 'google'
       };
 
-      // Redirect to frontend with token and user data
-      const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/success?token=${token}&user=${encodeURIComponent(JSON.stringify(userData))}`;
+      // SECURITY: Don't pass sensitive data in URL - use secure cookie instead
+      // Set token in HTTP-only cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', // Allow redirect
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
+      // Store minimal user data in a separate cookie (non-sensitive only)
+      const publicUserData = {
+        id: user._id,
+        name: user.name,
+        role: user.role
+      };
+      
+      res.cookie('user_data', JSON.stringify(publicUserData), {
+        httpOnly: false, // Readable by JS
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+
+      // Redirect to frontend success page (no sensitive data in URL)
+      const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/success`;
       
       res.redirect(redirectUrl);
 
     } catch (error) {
-      console.error('❌ Error in Google callback:', error);
+      console.error('[ERROR] Error in Google callback:', error);
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=server_error`);
     }
   }

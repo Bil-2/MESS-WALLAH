@@ -27,3 +27,4 @@ export { default as SuccessStories } from './SuccessStories';
 export { default as ThemeToggle } from './ThemeToggle';
 export { default as VirtualizedRoomList } from './VirtualizedRoomList';
 export { default as WomenSafetyHelpline } from './WomenSafetyHelpline';
+export { default as ScrollReveal, ScrollRevealGroup } from './ScrollReveal';

@@ -83,7 +83,8 @@ const useAuth = () => {
 
   // ENHANCED: OTP verification with account linking awareness
   const verifyOtp = async (phone, otp) => {
-    setLoading(true);
+    // Don't set loading here - let the component handle its own loading state
+    // This prevents race conditions with redirects
     try {
       console.log('OTP VERIFICATION: Verifying OTP for phone:', phone);
 
@@ -103,15 +104,19 @@ const useAuth = () => {
         });
 
         // Store OTP account data (may be linkable later)
+        // CRITICAL: Store in localStorage BEFORE setting state to ensure persistence
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
+        
+        // Don't call setUser here - let the redirect happen first
+        // The new page will read from localStorage on mount
 
         return {
           success: true,
           user: userData,
+          role: userData.role,
           accountType: userData.accountType || 'otp-only',
-          canLinkEmail: !userData.email, // Can link if no email
+          canLinkEmail: !userData.email,
           isNewUser: userData.isNewUser
         };
       } else {
@@ -122,8 +127,6 @@ const useAuth = () => {
       const message = error.response?.data?.message || 'Invalid OTP';
       console.error('OTP verification error:', message);
       return { success: false, message };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -314,6 +317,7 @@ const useAuth = () => {
   };
 
   // ENHANCED: Unified login with account linking detection
+  // FIXED: Don't call setUser before redirect to prevent race condition
   const login = async (email, password) => {
     setLoading(true);
     try {
@@ -333,18 +337,20 @@ const useAuth = () => {
           registrationMethod: userData.registrationMethod
         });
 
-        // Store unified account data
+        // Store unified account data in localStorage
+        // CRITICAL: Don't call setUser here - let redirect happen first
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
 
         return {
           success: true,
           user: userData,
+          role: userData.role,
           accountType: userData.accountType || 'unified'
         };
       } else {
         console.error('Login failed:', response.data.message);
+        setLoading(false);
         return {
           success: false,
           message: response.data.message,
@@ -354,6 +360,7 @@ const useAuth = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      setLoading(false);
       const errorData = error.response?.data;
 
       // ENHANCED: Handle account linking scenarios
@@ -382,9 +389,9 @@ const useAuth = () => {
           message: errorData?.message || error.message || 'Login failed'
         };
       }
-    } finally {
-      setLoading(false);
     }
+    // NOTE: No finally block - loading state managed explicitly above
+    // On success, we don't reset loading because redirect will happen
   };
 
   // ENHANCED: Check if current user can link accounts

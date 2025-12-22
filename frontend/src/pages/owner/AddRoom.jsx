@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, MapPin, DollarSign, Upload, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Home, MapPin, DollarSign, Upload, CheckCircle, X, Camera, AlertCircle, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ScrollReveal from '../../components/ScrollReveal';
 
 const AddRoom = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     // Basic Info
@@ -59,14 +62,179 @@ const AddRoom = () => {
     }));
   };
 
+  const handlePhotoUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxPhotos = 15; // Maximum 15 photos
+    
+    if (formData.photos.length + files.length > maxPhotos) {
+      toast.error(`Maximum ${maxPhotos} photos allowed`);
+      return;
+    }
+
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB max
+      
+      if (!isImage) {
+        toast.error(`${file.name} is not an image file`);
+        return false;
+      }
+      if (!isValidSize) {
+        toast.error(`${file.name} is too large (max 5MB)`);
+        return false;
+      }
+      return true;
+    });
+
+    // Convert to base64 for preview
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...prev.photos, {
+            file,
+            preview: reader.result,
+            name: file.name,
+            type: 'uploaded'
+          }]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Show success message
+    if (validFiles.length > 0) {
+      toast.success(`${validFiles.length} photo(s) added successfully!`);
+    }
+  };
+
+  const handleCameraCapture = (e) => {
+    const files = Array.from(e.target.files);
+    const maxPhotos = 15;
+    
+    if (formData.photos.length + files.length > maxPhotos) {
+      toast.error(`Maximum ${maxPhotos} photos allowed`);
+      return;
+    }
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...prev.photos, {
+            file,
+            preview: reader.result,
+            name: `Camera_${Date.now()}.jpg`,
+            type: 'camera'
+          }]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Show success message
+    if (files.length > 0) {
+      toast.success(`📸 Live photo captured successfully!`);
+    }
+  };
+
+  const handleRemovePhoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+    toast.success('Photo removed');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate minimum photos
+    if (formData.photos.length < 8) {
+      toast.error('Please upload at least 8 photos to reduce scams and build trust');
+      setStep(4); // Go to photos step
+      return;
+    }
+
     try {
-      toast.success('Room listed successfully! (API integration coming soon)');
-      navigate('/owner-dashboard');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to list a room');
+        navigate('/login');
+        return;
+      }
+
+      // Create FormData for multipart upload
+      const formDataToSend = new FormData();
+
+      // Add basic info
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('roomType', formData.roomType);
+      formDataToSend.append('genderPreference', formData.genderPreference);
+
+      // Add location as nested object
+      formDataToSend.append('address[street]', formData.street);
+      formDataToSend.append('address[area]', formData.area);
+      formDataToSend.append('address[city]', formData.city);
+      formDataToSend.append('address[state]', formData.state);
+      formDataToSend.append('address[pincode]', formData.pincode);
+      if (formData.landmark) {
+        formDataToSend.append('address[landmark]', formData.landmark);
+      }
+
+      // Add pricing
+      formDataToSend.append('rentPerMonth', formData.rentPerMonth);
+      formDataToSend.append('securityDeposit', formData.securityDeposit);
+      if (formData.maintenanceCharges) {
+        formDataToSend.append('maintenanceCharges', formData.maintenanceCharges);
+      }
+
+      // Add amenities
+      formData.amenities.forEach(amenity => {
+        formDataToSend.append('amenities[]', amenity);
+      });
+
+      // Add rules
+      formDataToSend.append('smokingAllowed', formData.smokingAllowed);
+      formDataToSend.append('petsAllowed', formData.petsAllowed);
+      formDataToSend.append('guestsAllowed', formData.guestsAllowed);
+
+      // Add availability
+      if (formData.availableFrom) {
+        formDataToSend.append('availableFrom', formData.availableFrom);
+      }
+      formDataToSend.append('isAvailable', formData.isAvailable);
+
+      // Add photos with type information
+      formData.photos.forEach((photo, index) => {
+        formDataToSend.append('photos', photo.file);
+        formDataToSend.append('photoTypes[]', photo.type || 'uploaded');
+      });
+
+      // Send to API
+      const response = await fetch('http://localhost:5001/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataToSend
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Room listed successfully!');
+        navigate('/owner-dashboard');
+      } else {
+        toast.error(data.message || 'Failed to list room');
+      }
     } catch (error) {
-      toast.error('Failed to list room');
+      console.error('Error listing room:', error);
+      toast.error('Failed to list room. Please try again.');
     }
   };
 
@@ -482,10 +650,155 @@ const AddRoom = () => {
                 />
               </div>
 
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  ℹ️ Note: Photo upload functionality will be available soon. For now, rooms will use default images.
-                </p>
+              {/* Photo Upload Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Property Photos * (Minimum 8 required)
+                  </label>
+                  <span className={`text-sm font-semibold ${formData.photos.length >= 8 ? 'text-green-600' : 'text-orange-600'}`}>
+                    {formData.photos.length} / 8 minimum
+                  </span>
+                </div>
+
+                {/* Upload Options - Gallery and Camera */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Gallery Upload */}
+                  <div className="relative">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      id="photo-upload"
+                      multiple
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="photo-upload"
+                      className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors bg-gray-50 dark:bg-gray-700/50 group"
+                    >
+                      <Image className="w-10 h-10 text-gray-400 group-hover:text-blue-500 mb-2 transition-colors" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                        📁 Upload from Gallery
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center px-2">
+                        Select multiple photos
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Camera Capture */}
+                  <div className="relative">
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      id="camera-capture"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleCameraCapture}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="camera-capture"
+                      className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-orange-300 dark:border-orange-600 rounded-xl cursor-pointer hover:border-orange-500 dark:hover:border-orange-400 transition-colors bg-orange-50 dark:bg-orange-900/20 group"
+                    >
+                      <Camera className="w-10 h-10 text-orange-500 group-hover:text-orange-600 mb-2 transition-colors" />
+                      <span className="text-sm font-medium text-orange-700 dark:text-orange-300 group-hover:text-orange-800 dark:group-hover:text-orange-200">
+                        📸 Take Live Photo
+                      </span>
+                      <span className="text-xs text-orange-600 dark:text-orange-400 mt-1 text-center px-2">
+                        Use your camera (Recommended)
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Info about photo types */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3">
+                  <p className="text-xs text-green-800 dark:text-green-300 flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    <span><strong>Pro Tip:</strong> Live photos from your camera build more trust! Mix gallery photos with live captures.</span>
+                  </p>
+                </div>
+
+                {/* Warning if less than 8 photos */}
+                {formData.photos.length < 8 && (
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-1">
+                          Why 8 photos minimum?
+                        </p>
+                        <ul className="text-xs text-orange-700 dark:text-orange-400 space-y-1">
+                          <li>• Reduces scams and fake listings</li>
+                          <li>• Builds trust with potential tenants</li>
+                          <li>• Shows all aspects of your property</li>
+                          <li>• Increases booking chances by 3x</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Photo Grid */}
+                {formData.photos.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {formData.photos.map((photo, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={photo.preview}
+                          alt={`Room ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(index)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                          {photo.type === 'camera' ? (
+                            <>
+                              <Camera className="w-3 h-3" />
+                              <span>Live #{index + 1}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Image className="w-3 h-3" />
+                              <span>#{index + 1}</span>
+                            </>
+                          )}
+                        </div>
+                        {photo.type === 'camera' && (
+                          <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Live</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Photo Tips */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">
+                    📸 Photo Tips for Better Bookings:
+                  </p>
+                  <ul className="text-xs text-blue-700 dark:text-blue-400 space-y-1">
+                    <li>• <strong>Use "Take Live Photo"</strong> - Builds 3x more trust!</li>
+                    <li>• Take photos in good lighting (daytime preferred)</li>
+                    <li>• Show room from different angles (4-5 angles minimum)</li>
+                    <li>• Include bathroom, kitchen, and common areas</li>
+                    <li>• Capture nearby facilities and landmarks</li>
+                    <li>• Mix live camera photos with gallery uploads</li>
+                    <li>• Avoid filters - show real property condition</li>
+                    <li>• <strong>Mobile camera works on all devices!</strong></li>
+                  </ul>
+                </div>
               </div>
 
               <div className="flex gap-4">
@@ -498,9 +811,14 @@ const AddRoom = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors"
+                  disabled={formData.photos.length < 8}
+                  className={`flex-1 py-4 rounded-xl font-semibold transition-colors ${
+                    formData.photos.length >= 8
+                      ? 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
+                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  }`}
                 >
-                  List Room
+                  {formData.photos.length >= 8 ? 'List Room' : `Upload ${8 - formData.photos.length} more photos`}
                 </button>
               </div>
             </div>

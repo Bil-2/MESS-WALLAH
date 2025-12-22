@@ -1,5 +1,5 @@
 const express = require('express');
-const { query, validationResult } = require('express-validator');
+const { query, param, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Room = require('../models/Room');
 const Booking = require('../models/Booking');
@@ -101,7 +101,6 @@ router.get('/', protect, authorize('admin'), [
 // @route   GET /api/users/my-favorites
 // @access  Private
 router.get('/my-favorites', protect, (req, res) => {
-  console.log('🔍 My-Favorites route hit with user:', req.user?._id);
   res.json({
     success: true,
     message: 'My favorites endpoint working',
@@ -180,8 +179,19 @@ router.get('/dashboard/activity', protect, [
 // @desc    Get user by ID (MUST BE AFTER specific routes)
 // @route   GET /api/users/:id
 // @access  Private
-router.get('/:id', protect, async (req, res) => {
+router.get('/:id', [
+  protect,
+  param('id').isMongoId().withMessage('Invalid user ID')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -230,8 +240,19 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    Toggle favorite room
 // @route   POST /api/users/favorites/:roomId
 // @access  Private
-router.post('/favorites/:roomId', protect, async (req, res) => {
+router.post('/favorites/:roomId', [
+  protect,
+  param('roomId').isMongoId().withMessage('Invalid room ID')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
     const { roomId } = req.params;
     const userId = req.user._id;
     
@@ -275,8 +296,19 @@ router.post('/favorites/:roomId', protect, async (req, res) => {
 // @desc    Remove room from favorites
 // @route   DELETE /api/users/favorites/:roomId
 // @access  Private
-router.delete('/favorites/:roomId', protect, async (req, res) => {
+router.delete('/favorites/:roomId', [
+  protect,
+  param('roomId').isMongoId().withMessage('Invalid room ID')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
     const { roomId } = req.params;
     const userId = req.user._id;
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PricingSuggestion from '../../components/owner/PricingSuggestion';
+import ScrollReveal from '../../components/ScrollReveal';
 
 const ManageRooms = () => {
   const navigate = useNavigate();
@@ -138,7 +139,7 @@ const ManageRooms = () => {
             onClick={() => setShowPricingFor(showPricingFor === room._id ? null : room._id)}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors"
           >
-            💡 Pricing
+            Pricing
           </button>
           <button
             onClick={() => toast.info('Edit functionality coming soon!')}
@@ -161,33 +162,35 @@ const ManageRooms = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-gray-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/owner-dashboard')}
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Dashboard
-          </button>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                My Listings
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage your room listings and availability
-              </p>
-            </div>
+        <ScrollReveal animation="fade-up">
+          <div className="mb-8">
             <button
-              onClick={() => navigate('/owner/rooms/new')}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-lg"
+              onClick={() => navigate('/owner-dashboard')}
+              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4 transition-colors"
             >
-              <Plus className="w-5 h-5" />
-              Add New Room
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
             </button>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  My Listings
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage your room listings and availability
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/owner/rooms/new')}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors shadow-lg"
+              >
+                <Plus className="w-5 h-5" />
+                Add New Room
+              </button>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Content */}
         {loading ? (
@@ -195,13 +198,17 @@ const ManageRooms = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
           </div>
         ) : rooms.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-            <EmptyState />
-          </div>
+          <ScrollReveal animation="fade-up" delay={100}>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+              <EmptyState />
+            </div>
+          </ScrollReveal>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rooms.map((room) => (
-              <RoomCard key={room._id} room={room} />
+            {rooms.map((room, index) => (
+              <ScrollReveal key={room._id} animation="fade-up" delay={index * 100}>
+                <RoomCard room={room} />
+              </ScrollReveal>
             ))}
           </div>
         )}

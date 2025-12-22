@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Send
 } from 'lucide-react';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Support = () => {
   const [searchQuery, setSearchQuery] = useState('');

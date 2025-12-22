@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, Filter, SlidersHorizontal, MapPin, Grid, List } from 'lucide-react';
 import RoomCard from '../components/RoomCard';
 import api, { roomsAPI } from '../utils/api';
+import ScrollReveal from '../components/ScrollReveal';
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -135,41 +136,43 @@ const SearchResults = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* Search Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search for rooms, mess, PG..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
+        <ScrollReveal animation="fade-up">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search for rooms, mess, PG..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex-1">
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Location (City, Area)"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
+              <div className="flex-1">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Location (City, Area)"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
               </div>
-            </div>
-            <button
-              type="submit"
-              className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
-            >
-              <Search className="w-5 h-5" />
-              <span>Search</span>
-            </button>
-          </form>
-        </div>
+              <button
+                type="submit"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+              >
+                <Search className="w-5 h-5" />
+                <span>Search</span>
+              </button>
+            </form>
+          </div>
+        </ScrollReveal>
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filters Sidebar */}

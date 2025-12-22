@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
 import App from './App.jsx'
 import './index.css'
-import './styles/performance.css'
 
 // Performance monitoring
 if (typeof window !== 'undefined') {

@@ -50,6 +50,22 @@ firestore-debug.log
 # Misc
 coverage/
 .cache/
+
+# MongoDB local data (NEVER commit database files!)
 backend/.mongo-data/
+.mongo-data/
+**/mongo-data/
+
+# Log files (NEVER commit logs!)
 backend/logs/
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test files (optional - uncomment if you want to exclude test pages)
+# **/test.jsx
+# **/Test.jsx
+# **/*Test.jsx
+# **/*test.js

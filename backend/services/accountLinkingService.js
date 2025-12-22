@@ -16,6 +16,7 @@ class AccountLinkingService {
    */
   static async findExistingUser(email, phone) {
     try {
+      // SECURITY: Don't log sensitive search parameters
       console.log(`[DEBUG] ACCOUNT SEARCH: Looking for existing accounts...`);
 
       // Generate all possible phone number variations
@@ -29,23 +30,17 @@ class AccountLinkingService {
         ]
       };
 
-      console.log(`[DEBUG] Phone variants to search:`, phoneVariants);
-      console.log(`[DEBUG] Email to search:`, email);
+      // SECURITY: Don't log phone variants or email in production
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEBUG] Searching with ${phoneVariants.length} phone variants`);
+      }
 
       const existingUser = await User.findOne(searchQuery)
         .select('+password +registrationMethod +accountType +canLinkEmail +profileCompleted +isPhoneVerified +isEmailVerified');
 
       if (existingUser) {
-        console.log(`[INFO] EXISTING USER FOUND:`, {
-          id: existingUser._id,
-          email: existingUser.email,
-          phone: existingUser.phone,
-          accountType: existingUser.accountType,
-          registrationMethod: existingUser.registrationMethod,
-          hasPassword: !!existingUser.password,
-          canLinkEmail: existingUser.canLinkEmail,
-          profileCompleted: existingUser.profileCompleted
-        });
+        // SECURITY: Don't log sensitive user data
+        console.log(`[INFO] EXISTING USER FOUND: ${existingUser._id} (${existingUser.accountType})`);
 
         // Analyze linking possibilities
         const linkingAnalysis = this.analyzeLinkingPossibilities(existingUser, email, phone);
@@ -153,14 +148,8 @@ class AccountLinkingService {
       analysis.reason = 'OTP-only account can be upgraded to unified account with email and password';
       analysis.confidence = 'high';
 
-      console.log(`[INFO] LINKING ANALYSIS: OTP account can be linked`, {
-        userId: existingUser._id,
-        currentPhone: existingUser.phone,
-        newEmail: email,
-        accountType: existingUser.accountType,
-        hasPassword: !!existingUser.password,
-        canLinkEmail: existingUser.canLinkEmail
-      });
+      // SECURITY: Don't log sensitive user data
+      console.log(`[INFO] LINKING ANALYSIS: OTP account can be linked (${existingUser._id})`);
 
       return analysis;
     }
@@ -177,12 +166,8 @@ class AccountLinkingService {
       analysis.reason = 'Email-only account can be enhanced with phone number';
       analysis.confidence = 'medium';
 
-      console.log(`[INFO] LINKING ANALYSIS: Email account can add phone`, {
-        userId: existingUser._id,
-        currentEmail: existingUser.email,
-        newPhone: phone,
-        accountType: existingUser.accountType
-      });
+      // SECURITY: Don't log sensitive user data
+      console.log(`[INFO] LINKING ANALYSIS: Email account can add phone (${existingUser._id})`);
 
       return analysis;
     }
@@ -194,13 +179,8 @@ class AccountLinkingService {
     analysis.reason = 'Account already has complete profile with both email and password';
     analysis.confidence = 'high';
 
-    console.log(`[WARNING] LINKING BLOCKED: Account already complete`, {
-      userId: existingUser._id,
-      hasEmail: !!existingUser.email,
-      hasPhone: !!existingUser.phone,
-      hasPassword: !!existingUser.password,
-      accountType: existingUser.accountType
-    });
+    // SECURITY: Don't log sensitive user data
+    console.log(`[WARNING] LINKING BLOCKED: Account already complete (${existingUser._id})`);
 
     return analysis;
   }
@@ -252,19 +232,13 @@ class AccountLinkingService {
 
       await existingUser.save();
 
-      console.log(`[SUCCESS] ACCOUNT LINKING SUCCESSFUL:`, {
-        userId: existingUser._id,
-        name: existingUser.name,
-        email: existingUser.email,
-        phone: existingUser.phone,
-        accountType: existingUser.accountType,
-        profileCompleted: existingUser.profileCompleted
-      });
+      // SECURITY: Don't log sensitive user data
+      console.log(`[SUCCESS] ACCOUNT LINKING SUCCESSFUL: ${existingUser._id} (${existingUser.accountType})`);
 
       return existingUser;
 
     } catch (error) {
-      console.error('[ERROR] Account linking error:', error);
+      console.error('[ERROR] Account linking error:', error.message);
       throw error;
     }
   }

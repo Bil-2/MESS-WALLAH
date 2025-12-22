@@ -1,239 +1,126 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { 
+  getCSRFToken, 
+  setCSRFToken, 
+  sanitizeObject, 
+  generateIdempotencyKey,
+  handleSecurityError,
+  isTokenValid
+} from './security';
 
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-  timeout: 15000,
+  timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
 
-// Request interceptor to add auth token
+// Request interceptor with enhanced security
 api.interceptors.request.use(
   (config) => {
+    // Add auth token
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Validate token before sending
+      if (!isTokenValid(token)) {
+        console.log('[SECURITY] Token invalid or expired, clearing...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Don't add invalid token to request
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
+
+    // Add CSRF token for state-changing requests
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method?.toUpperCase())) {
+      const csrfToken = getCSRFToken();
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken;
+      }
+      
+      // Add idempotency key for payment/booking requests
+      if (config.url?.includes('/payment') || config.url?.includes('/booking')) {
+        config.headers['X-Idempotency-Key'] = generateIdempotencyKey();
+      }
+
+      // Sanitize request body
+      if (config.data && typeof config.data === 'object') {
+        config.data = sanitizeObject(config.data);
+      }
+    }
+
+    console.log('[API] Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
-    console.error('Request Error:', error);
+    console.error('[API] Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor with enhanced error handling
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url);
+    console.log('[API] Response:', response.status, response.config.url);
+    
+    // Store CSRF token if provided
+    const csrfToken = response.headers['x-csrf-token'];
+    if (csrfToken) {
+      setCSRFToken(csrfToken);
+    }
+
     return response;
   },
   (error) => {
-    console.error('API Error:', error.response?.status, error.response?.data || error.message);
+    console.error('[API] Error:', error.response?.status, error.response?.data || error.message);
 
-    const message = error.response?.data?.message || 'Something went wrong';
+    const status = error.response?.status;
+    const errorCode = error.response?.data?.code;
 
-    // Handle specific error cases
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      toast.error('Session expired. Please login again.');
-    } else if (error.response?.status === 403) {
+    // Handle security-related errors
+    if (status === 401) {
+      const message = handleSecurityError(error);
+      
+      // Only show toast and redirect for actual auth failures, not missing tokens
+      if (errorCode !== 'NO_TOKEN') {
+        toast.error(message);
+        
+        // Clear auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Redirect to login if not already there
+        if (!window.location.pathname.includes('/login')) {
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1000);
+        }
+      }
+    } else if (status === 403) {
       toast.error('Access denied');
-    } else if (error.response?.status === 404) {
-      console.log('404 Error for:', error.config?.url);
-    } else if (error.response?.status >= 500) {
+    } else if (status === 429) {
+      const retryAfter = error.response?.data?.retryAfter || 60;
+      toast.error(`Too many requests. Please wait ${retryAfter} seconds.`);
+    } else if (status === 404) {
+      console.log('[API] 404 Error for:', error.config?.url);
+    } else if (status >= 500) {
       toast.error('Server error. Please try again later.');
     } else if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
-      console.error('Connection refused - backend server may not be running');
+      console.error('[API] Connection refused - backend server may not be running');
+      toast.error('Cannot connect to server. Please check your connection.');
     }
 
     return Promise.reject(error);
   }
 );
 
-// Mock authentication functions for demo
-const mockAuth = {
-  async sendOtp(phone) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (!phone || phone.length !== 10) {
-      throw new Error('Please enter a valid 10-digit phone number');
-    }
-
-    return {
-      success: true,
-      message: 'OTP sent successfully',
-      data: {
-        phone,
-        expiresIn: 5,
-        method: 'SMS',
-        canResendAfter: 60
-      }
-    };
-  },
-
-  async resendOtp(phone) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (!phone || phone.length !== 10) {
-      throw new Error('Please enter a valid 10-digit phone number');
-    }
-
-    return {
-      success: true,
-      message: 'OTP resent successfully',
-      data: {
-        phone,
-        expiresIn: 5,
-        method: 'SMS',
-        canResendAfter: 60
-      }
-    };
-  },
-
-  async verifyOtp(phone, otp) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    if (!otp || otp.length !== 6) {
-      throw new Error('Please enter a valid 6-digit OTP');
-    }
-
-    // Accept any 6-digit OTP for demo
-    const mockUser = {
-      _id: 'demo-user-' + Date.now(),
-      name: 'Demo User',
-      phone: phone,
-      email: `user${phone}@demo.com`,
-      role: 'student',
-      verified: true
-    };
-
-    const mockToken = 'demo-token-' + Date.now();
-
-    // Store in localStorage
-    localStorage.setItem('token', mockToken);
-    localStorage.setItem('user', JSON.stringify(mockUser));
-
-    return {
-      success: true,
-      message: 'OTP verified successfully',
-      data: {
-        user: mockUser,
-        token: mockToken
-      }
-    };
-  },
-
-  async login(email, password) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    if (!email || !password) {
-      throw new Error('Email and password are required');
-    }
-
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
-
-    const mockUser = {
-      _id: 'demo-user-' + Date.now(),
-      name: 'Demo User',
-      email: email,
-      phone: '9876543210',
-      role: 'student',
-      verified: true
-    };
-
-    const mockToken = 'demo-token-' + Date.now();
-
-    // Store in localStorage
-    localStorage.setItem('token', mockToken);
-    localStorage.setItem('user', JSON.stringify(mockUser));
-
-    return {
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: mockUser,
-        token: mockToken
-      }
-    };
-  },
-
-  async register(userData) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const { name, email, phone, password, role } = userData;
-
-    if (!name || !email || !phone || !password) {
-      throw new Error('All fields are required');
-    }
-
-    const mockUser = {
-      _id: 'demo-user-' + Date.now(),
-      name: name,
-      email: email,
-      phone: phone,
-      role: role || 'student',
-      verified: true
-    };
-
-    return {
-      success: true,
-      message: 'Account created successfully',
-      data: {
-        user: mockUser
-      }
-    };
-  },
-
-  async forgotPassword(email) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    if (!email) {
-      throw new Error('Email is required');
-    }
-
-    // Simulate email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new Error('Please enter a valid email address');
-    }
-
-    // 🚨 DEMO MODE: This is a simulation
-    // To send real emails, replace this with actual backend API call:
-    // const response = await api.post('/auth/forgot-password', { email });
-    // return response.data;
-
-    console.log(`DEMO: Would send password reset email to: ${email}`);
-
-    return {
-      success: true,
-      message: 'Password reset link sent to your email (Demo Mode)',
-      data: {
-        email: email,
-        resetToken: 'demo-reset-token-' + Date.now(),
-        expiresIn: 15 // minutes
-      }
-    };
-  }
-};
-
 // API helper functions
 export const apiHelpers = {
-  // Auth helpers - use mock 
   // Get user favorites
   async getFavorites() {
     try {

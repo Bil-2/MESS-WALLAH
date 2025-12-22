@@ -84,11 +84,11 @@ const register = async (req, res) => {
       });
     }
 
-    // Simplified password validation for testing
-    if (password.length < 6) {
+    // Simplified password validation for testing - SECURITY: Minimum 8 characters
+    if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long'
+        message: 'Password must be at least 8 characters long'
       });
     }
 
@@ -96,22 +96,16 @@ const register = async (req, res) => {
     console.log(`[INFO] UNIFIED REGISTRATION: Starting comprehensive account search...`);
     const accountSearch = await AccountLinkingService.findExistingUser(email, phone);
 
-    console.log(`📊 ACCOUNT SEARCH RESULT:`, {
-      found: accountSearch.found,
-      canLink: accountSearch.canLink,
-      shouldLink: accountSearch.shouldLink,
-      linkingType: accountSearch.linkingType,
-      reason: accountSearch.reason,
-      confidence: accountSearch.confidence
-    });
+    // SECURITY: Don't log sensitive account details
+    console.log(`[INFO] ACCOUNT SEARCH RESULT: found=${accountSearch.found}, canLink=${accountSearch.canLink}`);
 
-    // 🎯 ENHANCED: Handle account linking using comprehensive service
+    // ENHANCED: Handle account linking using comprehensive service
     if (accountSearch.found) {
       const existingUser = accountSearch.user;
 
       if (accountSearch.shouldLink && accountSearch.canLink) {
         console.log(`[INFO] ACCOUNT LINKING: ${accountSearch.linkingType} - ${accountSearch.reason}`);
-        console.log(`📊 Confidence Level: ${accountSearch.confidence}`);
+        console.log(`[INFO] Confidence Level: ${accountSearch.confidence}`);
 
         // Use the account linking service to perform the linking
         const linkedUser = await AccountLinkingService.linkAccounts(existingUser, {
@@ -154,26 +148,13 @@ const register = async (req, res) => {
         });
       } else {
         // User already exists with complete registration - cannot link
-        console.log(`[WARNING] REGISTRATION BLOCKED: ${accountSearch.reason}`);
-        console.log(`[INFO] Existing user details:`, {
-          id: existingUser._id,
-          email: existingUser.email,
-          phone: existingUser.phone,
-          hasPassword: !!existingUser.password,
-          registrationMethod: existingUser.registrationMethod,
-          accountType: existingUser.accountType,
-          profileCompleted: existingUser.profileCompleted
-        });
+        console.log(`[WARNING] REGISTRATION BLOCKED: User already exists`);
 
         return res.status(409).json({
           success: false,
           message: 'User already exists with this email or phone number',
-          hint: existingUser.email ?
-            'An account with this email already exists. Try logging in instead.' :
-            'An account with this phone number already exists. Try logging in with OTP instead.',
-          existingAccountType: existingUser.accountType,
-          cannotLink: true,
-          reason: accountSearch.reason
+          hint: 'An account already exists. Try logging in instead.',
+          cannotLink: true
         });
       }
     }
@@ -241,8 +222,8 @@ const register = async (req, res) => {
       }
     );
 
-    // Log successful registration
-    console.log(`New user registered: ${email} from IP: ${req.ip}`);
+    // Log successful registration (without sensitive data)
+    console.log(`New user registered: ${user._id} (${user.email?.substring(0, 3)}***)`);
 
     // Remove password from response
     const userResponse = user.toObject();
@@ -289,7 +270,8 @@ const login = async (req, res) => {
     }
 
     // CRITICAL FIX: Find user by email OR phone (unified account system)
-    console.log(`[DEBUG] LOGIN ATTEMPT: Searching for user with email: ${email}`);
+    // SECURITY: Don't log email in production
+    console.log(`[DEBUG] LOGIN ATTEMPT: Searching for user...`);
 
     const user = await User.findOne({
       $or: [
@@ -300,18 +282,12 @@ const login = async (req, res) => {
       ]
     }).select('+password +securityInfo +registrationMethod +accountType');
 
-    console.log(`[DEBUG] USER SEARCH RESULT:`, user ? {
-      id: user._id,
-      email: user.email,
-      phone: user.phone,
-      hasPassword: !!user.password,
-      registrationMethod: user.registrationMethod,
-      accountType: user.accountType
-    } : 'No user found');
+    // SECURITY: Don't log sensitive user data
+    console.log(`[DEBUG] USER SEARCH RESULT: ${user ? 'User found' : 'No user found'}`);
 
     if (!user) {
       req.authFailed = true;
-      console.log(`[WARNING] LOGIN FAILED: No user found with email: ${email} from IP: ${req.ip}`);
+      console.log(`[WARNING] LOGIN FAILED: No user found`);
 
       return res.status(401).json({
         success: false,
@@ -321,8 +297,7 @@ const login = async (req, res) => {
 
     // ENHANCED: Check if user was created via OTP but hasn't set a password
     if (!user.password && (user.registrationMethod === 'otp' || user.accountType === 'otp-only')) {
-      console.log(`[INFO] LOGIN ATTEMPT: OTP-only user trying email login: ${email} from IP: ${req.ip}`);
-      console.log(`[INFO] User details: ID=${user._id}, phone=${user.phone}, accountType=${user.accountType}`);
+      console.log(`[INFO] LOGIN ATTEMPT: OTP-only user trying email login`);
 
       return res.status(400).json({
         success: false,
@@ -330,9 +305,7 @@ const login = async (req, res) => {
         action: 'complete_registration',
         hint: 'You signed up using phone verification. Please go to Register page and complete your profile with email and password.',
         userExists: true,
-        needsPasswordSetup: true,
-        phone: user.phone,
-        userId: user._id
+        needsPasswordSetup: true
       });
     }
 
@@ -347,9 +320,9 @@ const login = async (req, res) => {
     }
 
     // Verify password
-    console.log(`🔐 PASSWORD CHECK: Comparing password for user ${email}`);
+    console.log(`[AUTH] PASSWORD CHECK: Verifying password...`);
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(`🔐 PASSWORD RESULT: ${isPasswordValid ? 'VALID' : 'INVALID'}`);
+    console.log(`[AUTH] PASSWORD RESULT: ${isPasswordValid ? 'VALID' : 'INVALID'}`);
 
     if (!isPasswordValid) {
       req.authFailed = true;
@@ -362,14 +335,14 @@ const login = async (req, res) => {
       user.securityInfo.failedLoginAttempts = (user.securityInfo.failedLoginAttempts || 0) + 1;
       user.securityInfo.lastFailedLogin = new Date();
 
-      console.log(`[WARNING] LOGIN FAILED: Invalid password for ${email}. Attempts: ${user.securityInfo.failedLoginAttempts}/5`);
+      console.log(`[WARNING] LOGIN FAILED: Invalid password. Attempts: ${user.securityInfo.failedLoginAttempts}/5`);
 
       // Lock account after 5 failed attempts
       if (user.securityInfo.failedLoginAttempts >= 5) {
         user.securityInfo.accountLocked = true;
         user.securityInfo.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 
-        console.log(`[WARNING] ACCOUNT LOCKED: ${email} due to failed login attempts from IP: ${req.ip}`);
+        console.log(`[WARNING] ACCOUNT LOCKED due to failed login attempts`);
       }
 
       await user.save();
@@ -408,8 +381,8 @@ const login = async (req, res) => {
       }
     );
 
-    // Log successful login
-    console.log(`Successful login: ${email} from IP: ${req.ip}`);
+    // Log successful login (without sensitive data)
+    console.log(`Successful login: ${user._id} (${user.email?.substring(0, 3)}***)`);
 
     // Remove sensitive data from response
     const userResponse = user.toObject();
@@ -497,8 +470,8 @@ const changePassword = async (req, res) => {
 
     await user.save();
 
-    // Log password change
-    console.log(`Password changed for user: ${user.email} from IP: ${req.ip}`);
+    // Log password change (without sensitive data)
+    console.log(`Password changed for user: ${user._id}`);
 
     res.json({
       success: true,
@@ -557,8 +530,8 @@ const getProfile = async (req, res) => {
 const logout = async (req, res) => {
   try {
     // In a production app, you might want to maintain a token blacklist
-    // For now, we'll just log the logout
-    console.log(`User logged out: ${req.user.email} from IP: ${req.ip}`);
+    // For now, we'll just log the logout (without sensitive data)
+    console.log(`User logged out: ${req.user._id}`);
 
     res.json({
       success: true,
@@ -601,7 +574,7 @@ const forgotPassword = async (req, res) => {
 
     // Always return success to prevent email enumeration attacks
     if (!user) {
-      console.log(`Password reset requested for non-existent email: ${email} from IP: ${req.ip}`);
+      console.log(`Password reset requested for non-existent email`);
       return res.json({
         success: true,
         message: 'If an account with that email exists, we have sent a password reset link.'
@@ -621,7 +594,7 @@ const forgotPassword = async (req, res) => {
     // Send reset email
     try {
       await sendPasswordResetEmail(user.email, resetToken, user.name);
-      console.log(`Password reset email sent to: ${user.email} from IP: ${req.ip}`);
+      console.log(`Password reset email sent to user: ${user._id}`);
     } catch (emailError) {
       console.error('Failed to send password reset email:', emailError);
       // Clear reset token if email fails
@@ -724,8 +697,8 @@ const resetPassword = async (req, res) => {
       // Don't fail the request if email fails
     }
 
-    // Log password reset
-    console.log(`Password reset successful for user: ${user.email} from IP: ${req.ip}`);
+    // Log password reset (without sensitive data)
+    console.log(`Password reset successful for user: ${user._id}`);
 
     res.json({
       success: true,
@@ -794,11 +767,8 @@ const checkUserExists = async (req, res) => {
         needsLinking: true,
         message: 'Account found with phone verification. Complete your registration by adding email and password.',
         action: 'complete_registration',
-        phone: user.phone,
         hasEmail: !!user.email,
-        userId: user._id,
-        registrationMethod: user.registrationMethod,
-        accountType: user.accountType || 'otp-legacy'
+        hasPhone: !!user.phone
       });
     }
 

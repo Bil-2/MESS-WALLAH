@@ -84,7 +84,7 @@ const sendOtp = async (req, res) => {
           success: true,
           sid: 'DEV_' + Date.now(),
           status: 'sent',
-          message: 'Development mode - use 123456'
+          message: 'Development mode - check console for OTP'
         };
       }
     } catch (error) {
@@ -93,7 +93,7 @@ const sendOtp = async (req, res) => {
         success: true,
         sid: 'DEV_' + Date.now(),
         status: 'sent',
-        message: 'Development mode - use 123456'
+        message: 'Development mode - check console for OTP'
       };
     }
 
@@ -110,7 +110,7 @@ const sendOtp = async (req, res) => {
     res.status(200).json({
       success: true,
       message: otpSendResult.sid.startsWith('DEV_') ?
-        '' :
+        'OTP sent successfully!' :
         'OTP sent to your device! Check your SMS messages.',
       data: {
         phone: formattedPhone,
@@ -120,11 +120,8 @@ const sendOtp = async (req, res) => {
         sid: otpSendResult.sid,
         canResendAfter: 30,
         note: otpSendResult.sid.startsWith('DEV_') ?
-          'Development mode: Use 123456' :
-          'Check your phone for SMS with 6-digit verification code',
-        quickTip: otpSendResult.sid.startsWith('DEV_') ?
-          'Development OTP: 123456' :
-          'Enter the exact 6-digit code from your SMS message'
+          'Development mode active' :
+          'Check your phone for SMS with 6-digit verification code'
       }
     });
 
@@ -157,7 +154,7 @@ const verifyOtp = async (req, res) => {
     // REAL OTP verification - verifies the actual OTP you received
     let verificationSuccess = false;
 
-    console.log(`[DEBUG] Verifying REAL OTP for ${formattedPhone}: ${otp}`);
+    console.log(`[DEBUG] Verifying OTP for ${formattedPhone.substring(0, 6)}****`);
 
     try {
       // PRODUCTION-READY OTP VERIFICATION with fallback
@@ -170,44 +167,26 @@ const verifyOtp = async (req, res) => {
         console.log('[SUCCESS] REAL SMS OTP verified successfully via Twilio');
         console.log('[SUCCESS] The OTP from your SMS is correct and valid!');
       } else {
-        // Production fallback: Check if it's a development environment
-        if (process.env.NODE_ENV === 'development' && otp === '123456') {
-          verificationSuccess = true;
-          console.log('[SUCCESS] Development OTP accepted for testing purposes');
-        } else {
-          console.log(`[ERROR] INVALID OTP: ${otp} - Not the real OTP from SMS`);
-          console.log('[WARNING] Rejecting invalid/fake OTP code');
+        // SECURITY: No fallback OTP - only real SMS OTP accepted
+        console.log(`[ERROR] INVALID OTP - Not the real OTP from SMS`);
 
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid OTP. Please enter the exact 6-digit code you received via SMS.',
-            error: 'OTP verification failed',
-            hint: process.env.NODE_ENV === 'development' ?
-              'Use the real OTP from SMS or 123456 for development testing' :
-              'Only the real OTP sent to your phone will work. Check your SMS messages.',
-            strict: true
-          });
-        }
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid OTP. Please enter the exact 6-digit code you received via SMS.',
+          error: 'OTP verification failed'
+        });
       }
     } catch (error) {
       console.log('[ERROR] OTP verification error:', error.message);
 
-      // Production fallback for development
-      if (process.env.NODE_ENV === 'development' && otp === '123456') {
-        verificationSuccess = true;
-        console.log('[SUCCESS] Development fallback OTP accepted');
-      } else {
-        console.log(`[WARNING] Rejecting OTP ${otp} due to verification error`);
+      // SECURITY: No fallback OTP in any environment
+      console.log(`[WARNING] Rejecting OTP ${otp.substring(0, 2)}**** due to verification error`);
 
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid OTP. Please enter the correct code from your SMS.',
-          error: 'OTP verification failed',
-          hint: process.env.NODE_ENV === 'development' ?
-            'Use 123456 for development or the real OTP from SMS' :
-            'Only the real OTP sent via SMS will be accepted'
-        });
-      }
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please enter the correct code from your SMS.',
+        error: 'OTP verification failed'
+      });
     }
 
     if (!verificationSuccess) {

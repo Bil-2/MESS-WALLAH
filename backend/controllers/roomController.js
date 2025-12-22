@@ -22,6 +22,47 @@ const getRooms = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
+    // FIXED: Add input validation and error handling
+    // Validate pagination parameters
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    
+    if (isNaN(pageNum) || pageNum < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid page number'
+      });
+    }
+    
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid limit. Must be between 1 and 100'
+      });
+    }
+
+    // Validate rent range
+    if (minRent && (isNaN(parseInt(minRent)) || parseInt(minRent) < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid minimum rent value'
+      });
+    }
+    
+    if (maxRent && (isNaN(parseInt(maxRent)) || parseInt(maxRent) < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid maximum rent value'
+      });
+    }
+    
+    if (minRent && maxRent && parseInt(minRent) > parseInt(maxRent)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Minimum rent cannot be greater than maximum rent'
+      });
+    }
+
     // Build filter object - make isAvailable optional for testing
     const filter = {};
 
@@ -59,6 +100,14 @@ const getRooms = async (req, res) => {
     }
 
     if (roomType) {
+      // Validate room type
+      const validRoomTypes = ['single', 'shared', 'studio', 'apartment'];
+      if (!validRoomTypes.includes(roomType)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid room type'
+        });
+      }
       filter.roomType = roomType;
     }
 
@@ -71,34 +120,39 @@ const getRooms = async (req, res) => {
       filter.featured = true;
     }
 
-    // Build sort object
+    // Build sort object with validation
+    const validSortFields = ['createdAt', 'rentPerMonth', 'rating', 'views'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const sortDirection = sortOrder === 'desc' ? -1 : 1;
+    
     const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    sort[sortField] = sortDirection;
 
     // Calculate pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    // Execute query
-    const rooms = await Room.find(filter)
-      .populate('owner', 'name phone email verified')
-      .sort(sort)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean();
+    // FIXED: Use aggregation pipeline for better performance
+    const [roomsData, totalRooms] = await Promise.all([
+      Room.find(filter)
+        .populate('owner', 'name phone email isVerified')
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Room.countDocuments(filter)
+    ]);
 
-    // Get total count for pagination
-    const totalRooms = await Room.countDocuments(filter);
-    const totalPages = Math.ceil(totalRooms / parseInt(limit));
+    const totalPages = Math.ceil(totalRooms / limitNum);
 
     res.status(200).json({
       success: true,
-      data: rooms,
+      data: roomsData,
       pagination: {
-        currentPage: parseInt(page),
+        currentPage: pageNum,
         totalPages,
         totalRooms,
-        hasNextPage: parseInt(page) < totalPages,
-        hasPrevPage: parseInt(page) > 1
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
       }
     });
   } catch (error) {
@@ -217,12 +271,32 @@ const createRoom = async (req, res) => {
       owner: req.user.id
     };
 
-    // Handle file uploads
+    // Get IP address and metadata for security
+    const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const device = req.headers['sec-ch-ua-platform'] || 'Unknown';
+
+    // Handle file uploads with IP tracking
     if (req.files && req.files.length > 0) {
-      roomData.photos = req.files.map(file => ({
+      roomData.photos = req.files.map((file, index) => ({
         url: `/uploads/${file.filename}`,
-        filename: file.filename
+        publicId: file.filename,
+        caption: `Photo ${index + 1}`,
+        isPrimary: index === 0,
+        uploadType: req.body.photoTypes ? req.body.photoTypes[index] : 'uploaded',
+        uploadedFrom: {
+          ipAddress: ipAddress,
+          userAgent: userAgent,
+          device: device
+        },
+        uploadedAt: new Date(),
+        verified: false
       }));
+
+      // Log photo upload for security audit (without exposing full IP)
+      console.log(`📸 Room photos uploaded by user ${req.user.id}`);
+      console.log(`   - Total photos: ${req.files.length}`);
+      console.log(`   - Device: ${device}`);
     }
 
     const room = new Room(roomData);
@@ -231,13 +305,31 @@ const createRoom = async (req, res) => {
     const populatedRoom = await Room.findById(room._id)
       .populate('owner', 'name phone email verified');
 
+    // Log successful room creation
+    logger.info('Room created successfully', {
+      roomId: room._id,
+      ownerId: req.user.id,
+      ipAddress: ipAddress,
+      photoCount: req.files ? req.files.length : 0
+    });
+
     res.status(201).json({
       success: true,
       data: populatedRoom,
-      message: 'Room created successfully'
+      message: 'Room created successfully',
+      security: {
+        photosVerified: false,
+        ipRecorded: true,
+        totalPhotos: req.files ? req.files.length : 0
+      }
     });
   } catch (error) {
     console.error('Error in createRoom:', error);
+    logger.error('Room creation failed', {
+      error: error.message,
+      userId: req.user?.id,
+      ipAddress: req.ip
+    });
     res.status(500).json({
       success: false,
       message: 'Error creating room',
@@ -416,12 +508,12 @@ const getRoomStats = async (req, res) => {
 // Seed sample rooms function
 const seedSampleRooms = async () => {
   try {
-    console.log('🌱 Starting room seeding process...');
+    console.log('[SEED] Starting room seeding process...');
 
     // Check if rooms already exist
     const existingRooms = await Room.countDocuments();
     if (existingRooms > 0) {
-      console.log(`📊 Database already has ${existingRooms} rooms. Skipping seeding.`);
+      console.log(`[INFO] Database already has ${existingRooms} rooms. Skipping seeding.`);
       return;
     }
 

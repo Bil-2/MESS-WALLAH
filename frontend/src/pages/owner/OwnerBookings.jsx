@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, Clock, Eye, MessageCircle, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ScrollReveal from '../../components/ScrollReveal';
 
 const OwnerBookings = () => {
   const navigate = useNavigate();
@@ -28,20 +29,48 @@ const OwnerBookings = () => {
 
   const handleApprove = async (bookingId) => {
     try {
-      // TODO: API call to approve booking
-      toast.success('Booking approved! Tenant will be notified.');
-      fetchBookings();
+      const token = localStorage.getItem('token');
+      // API call to approve booking
+      const response = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'confirmed' })
+      });
+      if (response.ok) {
+        toast.success('Booking approved! Tenant will be notified.');
+        fetchBookings();
+      } else {
+        throw new Error('Failed to approve');
+      }
     } catch (error) {
+      console.error('Approve error:', error);
       toast.error('Failed to approve booking');
     }
   };
 
   const handleReject = async (bookingId) => {
     try {
-      // TODO: API call to reject booking
-      toast.success('Booking rejected');
-      fetchBookings();
+      const token = localStorage.getItem('token');
+      // API call to reject booking
+      const response = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'rejected' })
+      });
+      if (response.ok) {
+        toast.success('Booking rejected');
+        fetchBookings();
+      } else {
+        throw new Error('Failed to reject');
+      }
     } catch (error) {
+      console.error('Reject error:', error);
       toast.error('Failed to reject booking');
     }
   };
@@ -89,45 +118,49 @@ const OwnerBookings = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-gray-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/owner-dashboard')}
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Dashboard
-          </button>
+        <ScrollReveal animation="fade-up">
+          <div className="mb-8">
+            <button
+              onClick={() => navigate('/owner-dashboard')}
+              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </button>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                Booking Requests
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Review and manage tenant booking requests
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  Booking Requests
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Review and manage tenant booking requests
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6 flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-500" />
-          <div className="flex gap-2 flex-wrap">
-            {['all', 'pending', 'approved', 'rejected'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === f
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
+        <ScrollReveal animation="fade-up" delay={100}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6 flex items-center gap-4">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <div className="flex gap-2 flex-wrap">
+              {['all', 'pending', 'approved', 'rejected'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === f
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Content */}
         {loading ? (
@@ -135,125 +168,129 @@ const OwnerBookings = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
           </div>
         ) : bookings.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-            <EmptyState />
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                      Tenant
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                      Room
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                      Duration
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                      Requested
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {bookings.map((booking) => (
-                    <tr key={booking._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                            {booking.tenant?.name?.charAt(0) || 'T'}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {booking.tenant?.name}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {booking.tenant?.phone}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {booking.room?.title}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          ₹{booking.room?.rentPerMonth?.toLocaleString()}/month
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {booking.startDate} to
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {booking.endDate}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(booking.status)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {booking.requestedAt}
-                      </td>
-                      <td className="px-6 py-4">
-                        {booking.status === 'pending' ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => toast.info('View details coming soon')}
-                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                              title="View Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleApprove(booking._id)}
-                              className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                              title="Approve"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleReject(booking._id)}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              title="Reject"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => toast.info('Messaging coming soon')}
-                              className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
-                              title="Message"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => toast.info('View details coming soon')}
-                              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <ScrollReveal animation="fade-up" delay={150}>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+              <EmptyState />
             </div>
-          </div>
+          </ScrollReveal>
+        ) : (
+          <ScrollReveal animation="fade-up" delay={150}>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+              {/* Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Tenant
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Room
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Duration
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Requested
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {bookings.map((booking) => (
+                      <tr key={booking._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                              {booking.tenant?.name?.charAt(0) || 'T'}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {booking.tenant?.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {booking.tenant?.phone}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {booking.room?.title}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            ₹{booking.room?.rentPerMonth?.toLocaleString()}/month
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-sm text-gray-900 dark:text-white">
+                            {booking.startDate} to
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {booking.endDate}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          {getStatusBadge(booking.status)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {booking.requestedAt}
+                        </td>
+                        <td className="px-6 py-4">
+                          {booking.status === 'pending' ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => toast.info('View details coming soon')}
+                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleApprove(booking._id)}
+                                className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                                title="Approve"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleReject(booking._id)}
+                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Reject"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => toast.info('Messaging coming soon')}
+                                className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                                title="Message"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => toast.info('View details coming soon')}
+                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </ScrollReveal>
         )}
       </div>
     </div>

@@ -22,12 +22,12 @@ const PerformanceMonitor = memo(() => {
         const endTime = Date.now();
         const speed = endTime - startTime;
         
-        if (speed < 100) setNetworkSpeed('🚀 Fast');
-        else if (speed < 300) setNetworkSpeed('⚡ Good');
-        else if (speed < 1000) setNetworkSpeed('🐌 Slow');
-        else setNetworkSpeed('🔴 Very Slow');
+        if (speed < 100) setNetworkSpeed('Fast');
+        else if (speed < 300) setNetworkSpeed('Good');
+        else if (speed < 1000) setNetworkSpeed('Slow');
+        else setNetworkSpeed('Very Slow');
       } catch (error) {
-        setNetworkSpeed('❌ Offline');
+        setNetworkSpeed('Offline');
       }
     };
 
@@ -60,7 +60,7 @@ const PerformanceMonitor = memo(() => {
   return (
     <div className="rocket-performance-monitor">
       <div className="text-xs space-y-1">
-        <div className="font-bold text-green-400">🚀 MESS WALLAH Performance</div>
+        <div className="font-bold text-green-400">MESS WALLAH Performance</div>
         <div>Load: {metrics.loadTime}ms</div>
         <div>API Calls: {metrics.apiCalls}</div>
         <div>Cache Hits: {metrics.cacheHits}</div>

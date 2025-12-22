@@ -40,7 +40,7 @@ const AccountLinkingNotification = ({
   const notificationConfig = {
     success: {
       icon: FiCheck,
-      title: '🎉 Account Successfully Linked!',
+      title: 'Account Successfully Linked!',
       color: 'green',
       bgGradient: 'from-green-500 to-emerald-600'
     },
@@ -52,13 +52,13 @@ const AccountLinkingNotification = ({
     },
     completion: {
       icon: FiUser,
-      title: '📝 Complete Your Profile',
+      title: 'Complete Your Profile',
       color: 'orange',
       bgGradient: 'from-orange-500 to-red-600'
     },
     info: {
       icon: FiShield,
-      title: 'ℹ️ Account Information',
+      title: 'Account Information',
       color: 'gray',
       bgGradient: 'from-gray-500 to-gray-600'
     }
@@ -243,7 +243,7 @@ const AccountLinkingNotification = ({
       {linkingData?.hint && (
         <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 mb-4">
           <p className="text-sm text-orange-800 dark:text-orange-200">
-            💡 {linkingData.hint}
+            {linkingData.hint}
           </p>
         </div>
       )}

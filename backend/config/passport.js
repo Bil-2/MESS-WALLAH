@@ -13,7 +13,7 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        console.log('🔐 Google OAuth: Processing authentication for:', profile.emails[0].value);
+        console.log('[AUTH] Google OAuth: Processing authentication for:', profile.emails[0].value);
 
         // Extract user information from Google profile
         const email = profile.emails[0].value;
@@ -31,7 +31,7 @@ passport.use(
 
         if (user) {
           // User exists - update Google info if not already set
-          console.log('✅ Existing user found:', user.email);
+          console.log('[SUCCESS] Existing user found:', user.email);
           
           if (!user.socialAuth) {
             user.socialAuth = {};
@@ -72,11 +72,11 @@ passport.use(
           lastLogin: new Date()
         });
 
-        console.log('✅ New user created successfully:', user.email);
+        console.log('[SUCCESS] New user created successfully:', user.email);
         return done(null, user);
 
       } catch (error) {
-        console.error('❌ Google OAuth Error:', error);
+        console.error('[ERROR] Google OAuth Error:', error);
         return done(error, null);
       }
     }

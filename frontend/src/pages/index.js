@@ -33,4 +33,3 @@ export { default as BookingPolicy } from './BookingPolicy';
 // Utility Pages
 export { default as Menu } from './Menu';
 export { default as Report } from './Report';
-export { default as SMSTest } from './SMSTest';

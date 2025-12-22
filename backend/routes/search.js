@@ -37,9 +37,9 @@ router.get('/', [
       searchQuery.$or = [
         { title: new RegExp(q, 'i') },
         { description: new RegExp(q, 'i') },
-        { location: new RegExp(q, 'i') },
-        { city: new RegExp(q, 'i') },
-        { area: new RegExp(q, 'i') }
+        { 'address.city': new RegExp(q, 'i') },
+        { 'address.area': new RegExp(q, 'i') },
+        { 'address.state': new RegExp(q, 'i') }
       ];
     }
 
@@ -47,9 +47,9 @@ router.get('/', [
       searchQuery.$and = searchQuery.$and || [];
       searchQuery.$and.push({
         $or: [
-          { location: new RegExp(location, 'i') },
-          { city: new RegExp(location, 'i') },
-          { area: new RegExp(location, 'i') }
+          { 'address.city': new RegExp(location, 'i') },
+          { 'address.area': new RegExp(location, 'i') },
+          { 'address.state': new RegExp(location, 'i') }
         ]
       });
     }
@@ -125,9 +125,9 @@ router.post('/advanced', [
 
     if (location) {
       searchQuery.$or = [
-        { location: new RegExp(location, 'i') },
-        { city: new RegExp(location, 'i') },
-        { area: new RegExp(location, 'i') }
+        { 'address.city': new RegExp(location, 'i') },
+        { 'address.area': new RegExp(location, 'i') },
+        { 'address.state': new RegExp(location, 'i') }
       ];
     }
 
@@ -136,9 +136,9 @@ router.post('/advanced', [
     }
 
     if (priceRange) {
-      searchQuery.price = {};
-      if (priceRange.min) searchQuery.price.$gte = priceRange.min;
-      if (priceRange.max) searchQuery.price.$lte = priceRange.max;
+      searchQuery.rentPerMonth = {};
+      if (priceRange.min) searchQuery.rentPerMonth.$gte = priceRange.min;
+      if (priceRange.max) searchQuery.rentPerMonth.$lte = priceRange.max;
     }
 
     if (amenities && amenities.length > 0) {
@@ -164,9 +164,9 @@ router.post('/advanced', [
       {
         $group: {
           _id: null,
-          avgPrice: { $avg: '$price' },
-          minPrice: { $min: '$price' },
-          maxPrice: { $max: '$price' },
+          avgPrice: { $avg: '$rentPerMonth' },
+          minPrice: { $min: '$rentPerMonth' },
+          maxPrice: { $max: '$rentPerMonth' },
           totalRooms: { $sum: 1 }
         }
       }
@@ -225,20 +225,20 @@ router.get('/suggestions', [
         $match: {
           isAvailable: true,
           $or: [
-            { location: new RegExp(q, 'i') },
-            { city: new RegExp(q, 'i') },
-            { area: new RegExp(q, 'i') }
+            { 'address.city': new RegExp(q, 'i') },
+            { 'address.area': new RegExp(q, 'i') },
+            { 'address.state': new RegExp(q, 'i') }
           ]
         }
       },
       {
         $group: {
-          _id: '$city',
+          _id: { $ifNull: ['$address.city', '$city'] },
           count: { $sum: 1 }
         }
       },
       { $sort: { count: -1 } },
-      { $limit: 5 }
+      { $limit: 10 }
     ]);
 
     // Get room type suggestions

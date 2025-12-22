@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import ScrollReveal from '../components/ScrollReveal';
 import { 
   User, Mail, Phone, MapPin, Edit3, Save, X, Camera,
   Shield, Key, Star, Home, CreditCard, Heart, 

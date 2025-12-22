@@ -5,6 +5,7 @@ import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiSh
 import { useAuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const RoomDetails = () => {

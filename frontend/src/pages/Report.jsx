@@ -14,6 +14,7 @@ import {
   ArrowLeft
 } from '../utils/iconMappings';
 import { Link } from 'react-router-dom';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Report = () => {
   const [formData, setFormData] = useState({
