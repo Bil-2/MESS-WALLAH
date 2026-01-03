@@ -20,22 +20,21 @@ const Login = () => {
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
-  const { sendOtp, verifyOtp, login, user, loading: authLoading } = useAuthContext();
+  const { sendOtp, verifyOtp, login, user, loading: authLoading, setAuthUser } = useAuthContext();
 
   // Redirect if already logged in
   useEffect(() => {
     // Wait for auth to initialize before checking
     if (!authLoading && user) {
       console.log('User already logged in, redirecting to home...', user);
-      // Use window.location.href for full page reload to ensure proper state initialization
       const userRole = user?.role || 'user';
       if (userRole === 'owner') {
-        window.location.href = '/owner-dashboard';
+        navigate('/owner-dashboard');
       } else {
-        window.location.href = '/';
+        navigate('/');
       }
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, navigate]);
 
   // Show loading while checking auth status
   if (authLoading) {
@@ -125,16 +124,19 @@ const Login = () => {
       if (result.success) {
         toast.success('Login successful!');
 
-        // CRITICAL: Don't reset verifyingOtp state - redirect immediately
-        // The page will unmount anyway, and resetting state can cause re-render issues
+        // Update global auth state immediately
+        if (setAuthUser && result.user) {
+          setAuthUser(result.user);
+        }
+
         const userRole = result.user?.role || result.role || 'user';
         if (userRole === 'owner') {
-          window.location.href = '/owner-dashboard';
+          navigate('/owner-dashboard');
         } else {
-          window.location.href = '/';
+          // If profile completed, go home, else maybe profile?
+          // For now keep standard redirect
+          navigate('/');
         }
-        // Don't return or do anything after redirect - let it complete
-        return;
       } else {
         setErrors({ otp: result.message || 'Invalid OTP' });
         toast.error(result.message || 'Invalid OTP');
@@ -146,7 +148,6 @@ const Login = () => {
       toast.error(error.message || 'Invalid OTP');
       setVerifyingOtp(false);
     }
-    // NOTE: No finally block - state reset only on error, not on success
   };
 
   const handlePasswordLogin = async (e) => {
@@ -170,14 +171,17 @@ const Login = () => {
       if (result.success) {
         toast.success('Login successful!');
 
-        // CRITICAL: Don't reset loading state - redirect immediately
+        // Update global auth state immediately
+        if (setAuthUser && result.user) {
+          setAuthUser(result.user);
+        }
+
         const userRole = result.user?.role || result.role || 'user';
         if (userRole === 'owner') {
-          window.location.href = '/owner-dashboard';
+          navigate('/owner-dashboard');
         } else {
-          window.location.href = '/';
+          navigate('/');
         }
-        return; // Don't do anything after redirect
       } else {
         // Handle different error scenarios
         setLoading(false);

@@ -47,6 +47,75 @@ const NotificationSchema = new mongoose.Schema({
     actionUrl: String,
     metadata: mongoose.Schema.Types.Mixed
   },
+  // Rich Media Support
+  media: {
+    imageUrl: String,          // Main image URL
+    thumbnailUrl: String,      // Thumbnail for list view
+    iconUrl: String,           // Icon for notification badge
+    altText: String            // Accessibility text
+  },
+  // Action Buttons
+  actions: [{
+    label: {
+      type: String,
+      maxlength: 50
+    },
+    action: {
+      type: String,
+      enum: ['navigate', 'api_call', 'external', 'dismiss'],
+      default: 'navigate'
+    },
+    url: String,               // Deep link or external URL
+    style: {
+      type: String,
+      enum: ['primary', 'secondary', 'danger', 'success'],
+      default: 'primary'
+    }
+  }],
+  // Multi-Channel Delivery Tracking
+  channels: {
+    inApp: {
+      enabled: { type: Boolean, default: true },
+      sent: { type: Boolean, default: false },
+      sentAt: Date
+    },
+    email: {
+      enabled: { type: Boolean, default: false },
+      sent: { type: Boolean, default: false },
+      sentAt: Date,
+      opened: { type: Boolean, default: false },
+      openedAt: Date
+    },
+    sms: {
+      enabled: { type: Boolean, default: false },
+      sent: { type: Boolean, default: false },
+      sentAt: Date
+    },
+    push: {
+      enabled: { type: Boolean, default: false },
+      sent: { type: Boolean, default: false },
+      sentAt: Date
+    }
+  },
+  // Analytics
+  analytics: {
+    delivered: { type: Boolean, default: false },
+    deliveredAt: Date,
+    opened: { type: Boolean, default: false },
+    openedAt: Date,
+    clicked: { type: Boolean, default: false },
+    clickedAt: Date,
+    actionTaken: String        // Which action button was clicked
+  },
+  // Scheduling
+  scheduledFor: Date,          // Send at specific time
+  // Personalization
+  personalization: {
+    userName: String,
+    roomName: String,
+    ownerName: String,
+    customData: mongoose.Schema.Types.Mixed
+  },
   isRead: {
     type: Boolean,
     default: false
@@ -75,19 +144,19 @@ NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
 // Static method to create notification
-NotificationSchema.statics.createNotification = async function(data) {
+NotificationSchema.statics.createNotification = async function (data) {
   const notification = await this.create(data);
   console.log(`[NOTIFICATION] Created for user ${data.userId}: ${data.title}`);
   return notification;
 };
 
 // Static method to get unread count
-NotificationSchema.statics.getUnreadCount = async function(userId) {
+NotificationSchema.statics.getUnreadCount = async function (userId) {
   return this.countDocuments({ userId, isRead: false });
 };
 
 // Static method to mark all as read
-NotificationSchema.statics.markAllAsRead = async function(userId) {
+NotificationSchema.statics.markAllAsRead = async function (userId) {
   return this.updateMany(
     { userId, isRead: false },
     { isRead: true, readAt: new Date() }
@@ -95,9 +164,31 @@ NotificationSchema.statics.markAllAsRead = async function(userId) {
 };
 
 // Instance method to mark as read
-NotificationSchema.methods.markAsRead = function() {
+NotificationSchema.methods.markAsRead = function () {
   this.isRead = true;
   this.readAt = new Date();
+  // Track analytics
+  if (!this.analytics.opened) {
+    this.analytics.opened = true;
+    this.analytics.openedAt = new Date();
+  }
+  return this.save();
+};
+
+// Instance method to track click
+NotificationSchema.methods.trackClick = function (actionLabel) {
+  this.analytics.clicked = true;
+  this.analytics.clickedAt = new Date();
+  if (actionLabel) {
+    this.analytics.actionTaken = actionLabel;
+  }
+  return this.save();
+};
+
+// Instance method to track delivery
+NotificationSchema.methods.markDelivered = function () {
+  this.analytics.delivered = true;
+  this.analytics.deliveredAt = new Date();
   return this.save();
 };
 

@@ -23,7 +23,7 @@ const sessionStore = new Map();
 setInterval(() => {
   const now = Date.now();
   const CLEANUP_AGE = 30 * 60 * 1000;
-  
+
   for (const [key, data] of bruteForceStore.entries()) {
     if (now - data.lastAttempt > CLEANUP_AGE) bruteForceStore.delete(key);
   }
@@ -70,7 +70,7 @@ const createRateLimit = (windowMs, max, message, keyGenerator) => {
 // Different rate limits for different endpoints
 const authLimiter = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  10, // 10 attempts
+  100, // 100 attempts (increased for development)
   'Too many authentication attempts. Please try again in 15 minutes.'
 );
 
@@ -111,9 +111,9 @@ const createBruteForceProtector = (maxAttempts = 5, lockoutTime = 15 * 60 * 1000
   return (req, res, next) => {
     const identifier = req.body?.email || req.body?.phone || req.ip;
     const key = crypto.createHash('md5').update(identifier).digest('hex');
-    
+
     let record = bruteForceStore.get(key);
-    
+
     if (!record) {
       record = { attempts: 0, lastAttempt: Date.now(), locked: false, lockUntil: null };
       bruteForceStore.set(key, record);
@@ -141,7 +141,7 @@ const createBruteForceProtector = (maxAttempts = 5, lockoutTime = 15 * 60 * 1000
     // Store for updating after auth result
     req.bruteForceKey = key;
     req.bruteForceRecord = record;
-    
+
     next();
   };
 };
@@ -152,7 +152,7 @@ const handleFailedAttempt = (key) => {
   if (record) {
     record.attempts++;
     record.lastAttempt = Date.now();
-    
+
     if (record.attempts >= 5) {
       record.locked = true;
       record.lockUntil = Date.now() + 15 * 60 * 1000; // 15 minutes
@@ -171,12 +171,12 @@ const handleSuccessfulAttempt = (key) => {
 const generateCSRFToken = (req, res, next) => {
   const userId = req.user?._id?.toString() || req.sessionID || req.ip;
   const token = crypto.randomBytes(32).toString('hex');
-  
+
   csrfTokenStore.set(userId, {
     token,
     created: Date.now()
   });
-  
+
   // Set token in response header and cookie
   res.setHeader('X-CSRF-Token', token);
   res.cookie('csrf-token', token, {
@@ -185,7 +185,7 @@ const generateCSRFToken = (req, res, next) => {
     sameSite: 'strict',
     maxAge: 30 * 60 * 1000 // 30 minutes
   });
-  
+
   next();
 };
 
@@ -202,9 +202,9 @@ const csrfProtection = (req, res, next) => {
 
   const userId = req.user?._id?.toString() || req.sessionID || req.ip;
   const token = req.headers['x-csrf-token'] || req.body?._csrf || req.cookies?.['csrf-token'];
-  
+
   const storedData = csrfTokenStore.get(userId);
-  
+
   if (!storedData || !token) {
     // For API calls, be more lenient but log
     console.log(`[SECURITY] CSRF token missing for: ${req.path}`);
@@ -217,7 +217,7 @@ const csrfProtection = (req, res, next) => {
       Buffer.from(token),
       Buffer.from(storedData.token)
     );
-    
+
     if (!isValid) {
       console.log(`[SECURITY] Invalid CSRF token for: ${req.path}`);
       return res.status(403).json({
@@ -228,7 +228,7 @@ const csrfProtection = (req, res, next) => {
   } catch (error) {
     console.log(`[SECURITY] CSRF validation error: ${error.message}`);
   }
-  
+
   next();
 };
 
@@ -264,7 +264,7 @@ const securityMiddleware = [
     hidePoweredBy: true,
     frameguard: { action: 'deny' }
   }),
-  
+
   // MongoDB injection prevention
   mongoSanitize({
     replaceWith: '_',
@@ -272,10 +272,10 @@ const securityMiddleware = [
       console.log(`[SECURITY] MongoDB injection attempt blocked: ${key}`);
     }
   }),
-  
+
   // XSS prevention
   xss(),
-  
+
   // HTTP Parameter Pollution prevention
   hpp({
     whitelist: ['amenities', 'tags', 'images'] // Allow arrays for these
@@ -306,15 +306,15 @@ const sanitizeInput = (req, res, next) => {
           return value.replace(pattern, '');
         }
       }
-      
+
       // Trim and limit length
       return value.trim().substring(0, 10000);
     }
-    
+
     if (Array.isArray(value)) {
       return value.map((item, i) => sanitizeValue(item, `${path}[${i}]`));
     }
-    
+
     if (value && typeof value === 'object') {
       const sanitized = {};
       for (const key of Object.keys(value)) {
@@ -327,7 +327,7 @@ const sanitizeInput = (req, res, next) => {
       }
       return sanitized;
     }
-    
+
     return value;
   };
 
@@ -363,11 +363,11 @@ const preventInjection = (req, res, next) => {
         }
       }
     }
-    
+
     if (Array.isArray(value)) {
       return value.some((item, i) => checkValue(item, `${path}[${i}]`));
     }
-    
+
     if (value && typeof value === 'object') {
       // Check for MongoDB operators in keys
       for (const key of Object.keys(value)) {
@@ -380,7 +380,7 @@ const preventInjection = (req, res, next) => {
         }
       }
     }
-    
+
     return false;
   };
 
@@ -410,10 +410,10 @@ const validateRequest = (req, res, next) => {
   // Check Content-Type for POST/PUT/PATCH
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     const contentType = req.headers['content-type'] || '';
-    
-    if (!contentType.includes('application/json') && 
-        !contentType.includes('multipart/form-data') &&
-        !contentType.includes('application/x-www-form-urlencoded')) {
+
+    if (!contentType.includes('application/json') &&
+      !contentType.includes('multipart/form-data') &&
+      !contentType.includes('application/x-www-form-urlencoded')) {
       // Allow but log
       console.log(`[SECURITY] Unusual Content-Type: ${contentType}`);
     }
@@ -430,7 +430,7 @@ const validateRequest = (req, res, next) => {
   // Validate request size
   const contentLength = parseInt(req.headers['content-length'] || '0');
   const maxSize = 10 * 1024 * 1024; // 10MB
-  
+
   if (contentLength > maxSize) {
     return res.status(413).json({
       success: false,
@@ -446,11 +446,11 @@ const validateRequest = (req, res, next) => {
 // ============================================
 const securityAuditLog = (req, res, next) => {
   const startTime = Date.now();
-  
+
   // Log security-relevant requests
   const securityPaths = ['/auth', '/payment', '/booking', '/admin', '/owner'];
   const isSecurityRelevant = securityPaths.some(path => req.path.includes(path));
-  
+
   if (isSecurityRelevant) {
     const logData = {
       timestamp: new Date().toISOString(),
@@ -460,13 +460,13 @@ const securityAuditLog = (req, res, next) => {
       userId: req.user?._id?.toString() || 'anonymous',
       userAgent: req.headers['user-agent']?.substring(0, 100)
     };
-    
+
     console.log(`[AUDIT] ${JSON.stringify(logData)}`);
   }
 
   // Log response
   const originalEnd = res.end;
-  res.end = function(...args) {
+  res.end = function (...args) {
     if (isSecurityRelevant) {
       const duration = Date.now() - startTime;
       console.log(`[AUDIT] Response: ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
@@ -482,11 +482,11 @@ const securityAuditLog = (req, res, next) => {
 // ============================================
 const sessionSecurity = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1] || req.cookies?.token;
-  
+
   if (token) {
     const sessionKey = crypto.createHash('md5').update(token).digest('hex');
     let session = sessionStore.get(sessionKey);
-    
+
     if (!session) {
       session = {
         created: Date.now(),

@@ -1,71 +1,104 @@
 /**
- * Regex Security Utilities
- * Provides safe regex operations to prevent ReDoS attacks
+ * Regex Security Utility
+ * Provides secure search query functions to prevent ReDoS attacks
  */
 
 /**
- * Create a safe search query that prevents regex injection
- * @param {string} searchTerm - The search term to sanitize
- * @returns {object} - Safe MongoDB regex query
+ * Escapes special regex characters to prevent regex injection
+ * @param {string} string - The string to escape
+ * @returns {string} - Escaped string safe for regex use
  */
-const createSafeSearchQuery = (searchTerm) => {
-  if (!searchTerm || typeof searchTerm !== 'string') {
-    return {};
-  }
-
-  // Remove special regex characters to prevent injection
-  const sanitizedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
-  // Limit length to prevent ReDoS attacks
-  const maxLength = 100;
-  const safeTerm = sanitizedTerm.slice(0, maxLength);
-  
-  return {
-    $regex: safeTerm,
-    $options: 'i' // case insensitive
-  };
+const escapeRegex = (string) => {
+  if (!string || typeof string !== 'string') return '';
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
 /**
- * Sanitize input to prevent regex injection
- * @param {string} input - Input to sanitize
- * @returns {string} - Sanitized input
- */
-const sanitizeRegexInput = (input) => {
-  if (!input || typeof input !== 'string') {
-    return '';
-  }
-  
-  // Escape special regex characters
-  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-};
-
-/**
- * Create safe text search for MongoDB
- * @param {string} searchTerm - Search term
- * @param {array} fields - Fields to search in
- * @returns {object} - MongoDB query object
+ * Creates a safe search query for MongoDB text search
+ * Prevents ReDoS attacks by sanitizing user input
+ * @param {string} searchTerm - The search term from user input
+ * @param {Array<string>} fields - Array of field names to search in
+ * @returns {Object} - MongoDB query object
  */
 const createTextSearchQuery = (searchTerm, fields = []) => {
   if (!searchTerm || typeof searchTerm !== 'string') {
     return {};
   }
 
-  const safeQuery = createSafeSearchQuery(searchTerm);
-  
-  if (fields.length === 0) {
-    return safeQuery;
+  // Sanitize and limit the search term length
+  const sanitizedTerm = escapeRegex(searchTerm.trim().substring(0, 100));
+
+  if (!sanitizedTerm) {
+    return {};
   }
 
-  const orConditions = fields.map(field => ({
-    [field]: safeQuery
-  }));
+  // If no fields specified, return empty query
+  if (!fields || fields.length === 0) {
+    return {};
+  }
 
-  return { $or: orConditions };
+  // Create case-insensitive regex pattern
+  const regex = new RegExp(sanitizedTerm, 'i');
+
+  // Create $or query for multiple fields
+  if (fields.length === 1) {
+    return { [fields[0]]: regex };
+  }
+
+  return {
+    $or: fields.map(field => ({ [field]: regex }))
+  };
+};
+
+/**
+ * Creates a safe search query with exact match option
+ * @param {string} searchTerm - The search term from user input
+ * @param {Array<string>} fields - Array of field names to search in
+ * @param {boolean} exactMatch - Whether to perform exact match
+ * @returns {Object} - MongoDB query object
+ */
+const createSafeSearchQuery = (searchTerm, fields = [], exactMatch = false) => {
+  if (!searchTerm || typeof searchTerm !== 'string') {
+    return {};
+  }
+
+  // Sanitize and limit the search term length
+  const sanitizedTerm = searchTerm.trim().substring(0, 100);
+
+  if (!sanitizedTerm) {
+    return {};
+  }
+
+  // If no fields specified, return empty query
+  if (!fields || fields.length === 0) {
+    return {};
+  }
+
+  if (exactMatch) {
+    // For exact match, create equality query
+    if (fields.length === 1) {
+      return { [fields[0]]: sanitizedTerm };
+    }
+    return {
+      $or: fields.map(field => ({ [field]: sanitizedTerm }))
+    };
+  }
+
+  // For partial match, use regex with escaped special characters
+  const escapedTerm = escapeRegex(sanitizedTerm);
+  const regex = new RegExp(escapedTerm, 'i');
+
+  if (fields.length === 1) {
+    return { [fields[0]]: regex };
+  }
+
+  return {
+    $or: fields.map(field => ({ [field]: regex }))
+  };
 };
 
 module.exports = {
-  createSafeSearchQuery,
-  sanitizeRegexInput,
-  createTextSearchQuery
+  escapeRegex,
+  createTextSearchQuery,
+  createSafeSearchQuery
 };

@@ -147,7 +147,7 @@ const NotificationBell = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50"
           >
             {/* Header */}
             <div className="px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white flex items-center justify-between">
@@ -174,14 +174,14 @@ const NotificationBell = () => {
             {/* Notifications List */}
             <div className="max-h-96 overflow-y-auto">
               {loading ? (
-                <div className="p-8 text-center text-gray-500">
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                   <div className="animate-spin w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                   Loading...
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>No notifications yet</p>
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                  <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                  <p className="text-gray-600 dark:text-gray-300">No notifications yet</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
@@ -189,9 +189,8 @@ const NotificationBell = () => {
                     key={notification._id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !notification.isRead ? 'bg-orange-50/50' : ''
-                    }`}
+                    className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-orange-50/50 dark:bg-orange-900/20' : ''
+                      }`}
                     onClick={() => {
                       if (!notification.isRead) markAsRead(notification._id);
                       if (notification.data?.actionUrl) {
@@ -203,7 +202,7 @@ const NotificationBell = () => {
                       <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className={`text-sm font-medium truncate ${!notification.isRead ? 'text-gray-900' : 'text-gray-600'}`}>
+                          <p className={`text-sm font-medium truncate ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                             {notification.title}
                           </p>
                           <button
@@ -213,8 +212,8 @@ const NotificationBell = () => {
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notification.message}</p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notification.message}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                           {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                         </p>
                       </div>
@@ -229,7 +228,7 @@ const NotificationBell = () => {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
                 <a
                   href="/notifications"
                   className="text-sm text-orange-500 hover:text-orange-600 font-medium"

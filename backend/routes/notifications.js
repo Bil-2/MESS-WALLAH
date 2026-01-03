@@ -163,4 +163,183 @@ router.delete('/clear-all', protect, async (req, res) => {
   }
 });
 
+// @desc    Get notification preferences
+// @route   GET /api/notifications/preferences
+// @access  Private
+router.get('/preferences', protect, async (req, res) => {
+  try {
+    const NotificationPreference = require('../models/NotificationPreference');
+    const preferences = await NotificationPreference.getOrCreate(req.user._id);
+
+    res.json({
+      success: true,
+      data: preferences
+    });
+  } catch (error) {
+    console.error('Get preferences error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get preferences' });
+  }
+});
+
+// @desc    Update notification preferences
+// @route   PUT /api/notifications/preferences
+// @access  Private
+router.put('/preferences', protect, async (req, res) => {
+  try {
+    const NotificationPreference = require('../models/NotificationPreference');
+    const { preferences, quietHours, preferredChannel, globalMute, marketing } = req.body;
+
+    let userPreferences = await NotificationPreference.findOne({ userId: req.user._id });
+
+    if (!userPreferences) {
+      userPreferences = new NotificationPreference({ userId: req.user._id });
+    }
+
+    // Update fields if provided
+    if (preferences) userPreferences.preferences = { ...userPreferences.preferences, ...preferences };
+    if (quietHours) userPreferences.quietHours = { ...userPreferences.quietHours, ...quietHours };
+    if (preferredChannel) userPreferences.preferredChannel = preferredChannel;
+    if (typeof globalMute === 'boolean') userPreferences.globalMute = globalMute;
+    if (marketing) userPreferences.marketing = { ...userPreferences.marketing, ...marketing };
+
+    await userPreferences.save();
+
+    res.json({
+      success: true,
+      message: 'Preferences updated successfully',
+      data: userPreferences
+    });
+  } catch (error) {
+    console.error('Update preferences error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update preferences' });
+  }
+});
+
+// @desc    Track notification click
+// @route   PATCH /api/notifications/:id/clicked
+// @access  Private
+router.patch('/:id/clicked', [
+  protect,
+  param('id').isMongoId().withMessage('Invalid notification ID')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { actionLabel } = req.body;
+
+    const notification = await Notification.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    await notification.trackClick(actionLabel);
+
+    res.json({
+      success: true,
+      message: 'Click tracked successfully',
+      data: { actionLabel }
+    });
+  } catch (error) {
+    console.error('Track click error:', error);
+    res.status(500).json({ success: false, message: 'Failed to track click' });
+  }
+});
+
+// @desc    Create notification from template
+// @route   POST /api/notifications/from-template
+// @access  Private (for testing/admin)
+router.post('/from-template', protect, async (req, res) => {
+  try {
+    const { templateName, data, targetUserId } = req.body;
+
+    if (!templateName || !data) {
+      return res.status(400).json({
+        success: false,
+        message: 'Template name and data are required'
+      });
+    }
+
+    const notificationTemplates = require('../utils/notificationTemplates');
+    const userId = targetUserId || req.user._id;
+
+    // Create notification from template
+    const notificationData = notificationTemplates.createFromTemplate(
+      templateName,
+      data,
+      userId
+    );
+
+    // Check user preferences before creating
+    const NotificationPreference = require('../models/NotificationPreference');
+    const preferences = await NotificationPreference.getOrCreate(userId);
+
+    // Respect user preferences for channels
+    if (notificationData.channels) {
+      for (const channel of ['inApp', 'email', 'sms', 'push']) {
+        if (notificationData.channels[channel] && notificationData.channels[channel].enabled) {
+          // Check if user has enabled this notification type for this channel
+          const shouldSend = preferences.shouldSend(templateName, channel);
+          notificationData.channels[channel].enabled = shouldSend;
+        }
+      }
+    }
+
+    // Check quiet hours
+    if (preferences.isQuietHours() && !['payment_failed', 'booking_cancelled'].includes(templateName)) {
+      // Delay non-urgent notifications until quiet hours end
+      const quietEnd = preferences.quietHours.end.split(':');
+      const scheduledTime = new Date();
+      scheduledTime.setHours(parseInt(quietEnd[0]), parseInt(quietEnd[1]), 0);
+
+      // If quiet hours end is earlier than current time, schedule for tomorrow
+      if (scheduledTime < new Date()) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
+      }
+
+      notificationData.scheduledFor = scheduledTime;
+    }
+
+    const notification = await Notification.createNotification(notificationData);
+
+    res.status(201).json({
+      success: true,
+      message: 'Notification created from template',
+      data: notification
+    });
+  } catch (error) {
+    console.error('Create from template error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to create notification'
+    });
+  }
+});
+
+// @desc    Get available notification templates
+// @route   GET /api/notifications/templates
+// @access  Private
+router.get('/templates', protect, async (req, res) => {
+  try {
+    const notificationTemplates = require('../utils/notificationTemplates');
+    const templates = notificationTemplates.getAvailableTemplates();
+
+    res.json({
+      success: true,
+      data: { templates }
+    });
+  } catch (error) {
+    console.error('Get templates error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get templates' });
+  }
+});
+
 module.exports = router;
+
+

@@ -114,169 +114,168 @@ const Home = () => {
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <div className="mb-8">
             <ScrollReveal animation="fade-down" duration={800}>
-            <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl text-base font-bold mb-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-white/20">
-              <div className="relative">
-                <Shield className="w-5 h-5 text-white" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow- rounded-full flex items-center justify-center">
+              <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl text-base font-bold mb-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-white/20">
+                <div className="relative">
+                  <Shield className="w-5 h-5 text-white" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow- rounded-full flex items-center justify-center">
 
+                  </div>
+                </div>
+                <span className="text-white font-extrabold tracking-wide">
+                  SAFE STUDENT HOUSING PLATFROM
+                </span>
+                <div className="px-2 py-1 bg-white/20 rounded-full">
+                  <span className="text-xs font-bold text-white">TRUSTED</span>
                 </div>
               </div>
-              <span className="text-white font-extrabold tracking-wide">
-                SAFE STUDENT HOUSING PLATFROM
-              </span>
-              <div className="px-2 py-1 bg-white/20 rounded-full">
-                <span className="text-xs font-bold text-white">TRUSTED</span>
-              </div>
-            </div>
             </ScrollReveal>
 
             {/* Awards & Recognition Section */}
             <ScrollReveal animation="fade-up" delay={200}>
-            <div className="max-w-4xl mx-auto mb-8">
-              {/* Section Header */}
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-100/80 to-orange-100/80 dark:bg-white/10 backdrop-blur-sm rounded-full border border-yellow-200/50 dark:border-white/20 mb-3 shadow-lg">
-                  <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                  <span className="text-orange-700 dark:text-white font-bold text-sm">Awards & Recognition</span>
+              <div className="max-w-4xl mx-auto mb-8">
+                {/* Section Header */}
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-yellow-500 dark:to-orange-600 backdrop-blur-sm rounded-full border border-yellow-500/50 dark:border-orange-500/50 mb-3 shadow-lg">
+                    <Trophy className="w-5 h-5 text-white" />
+                    <span className="text-white font-bold text-sm">Awards & Recognition</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Awards Row - Horizontal Layout */}
-              <div className="flex flex-col md:flex-row gap-4 justify-center">
-                {/* Gold Award - Most Searched */}
-                <div className="relative group">
-                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <Trophy className="w-6 h-6 text-yellow-500" />
+                {/* Awards Row - Horizontal Layout */}
+                <div className="flex flex-col md:flex-row gap-4 justify-center">
+                  {/* Gold Award - Most Searched */}
+                  <div className="relative group">
+                    <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                          <Trophy className="w-6 h-6 text-yellow-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-black text-white">2024 MOST SEARCHED</h4>
+                          <p className="text-white/90 text-sm font-semibold">Global Search Index</p>
+                        </div>
+                        <div className="px-3 py-1 bg-white/20 rounded-lg">
+                          <span className="text-xs font-bold text-white">GOLD</span>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="text-lg font-black text-white">2024 MOST SEARCHED</h4>
-                        <p className="text-white/90 text-sm font-semibold">Global Search Index</p>
-                      </div>
-                      <div className="px-3 py-1 bg-white/20 rounded-lg">
-                        <span className="text-xs font-bold text-white">GOLD</span>
+                    </div>
+                  </div>
+
+                  {/* Silver Award - Top 10 Platforms */}
+                  <div className="relative group">
+                    <div className="bg-gradient-to-r from-slate-500 to-gray-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                          <Medal className="w-6 h-6 text-slate-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-black text-white">TOP 10 PLATFORMS</h4>
+                          <p className="text-white/90 text-sm font-semibold">Industry Insights India</p>
+                        </div>
+                        <div className="px-3 py-1 bg-white/20 rounded-lg">
+                          <span className="text-xs font-bold text-white">SILVER</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Silver Award - Top 10 Platforms */}
-                <div className="relative group">
-                  <div className="bg-gradient-to-r from-slate-500 to-gray-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <Medal className="w-6 h-6 text-slate-500" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-lg font-black text-white">TOP 10 PLATFORMS</h4>
-                        <p className="text-white/90 text-sm font-semibold">Industry Insights India</p>
-                      </div>
-                      <div className="px-3 py-1 bg-white/20 rounded-lg">
-                        <span className="text-xs font-bold text-white">SILVER</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </div>
             </ScrollReveal>
 
             {/* Main Hero Content */}
             <ScrollReveal animation="zoom" delay={400}>
-            <div className="text-center mb-8">
-              {/* Hero Headline */}
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-4 leading-tight">
-                <span className="block bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
-                  Find Your Perfect
-                </span>
-                <span className="block text-white relative">
-                  Student Accommodation
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full"></div>
-                </span>
-              </h1>
+              <div className="text-center mb-8">
+                {/* Hero Headline */}
+                <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-4 leading-tight">
+                  <span className="block bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
+                    Find Your Perfect
+                  </span>
+                  <span className="block text-white relative">
+                    Student Accommodation
+                  </span>
+                </h1>
 
-              {/* Value Proposition */}
-              <p className="text-xl sm:text-2xl text-gray-300 mb-6 max-w-4xl mx-auto font-medium leading-relaxed">
-                Discover <span className="text-orange-400 font-bold">verified</span>,
-                <span className="text-pink-400 font-bold"> secure</span>, and
-                <span className="text-purple-400 font-bold"> affordable</span> student housing
-                with premium amenities and 24/7 safety for your peace of mind.
-              </p>
+                {/* Value Proposition */}
+                <p className="text-xl sm:text-2xl text-gray-300 mb-6 max-w-4xl mx-auto font-medium leading-relaxed">
+                  Discover <span className="text-orange-400 font-bold">verified</span>,
+                  <span className="text-pink-400 font-bold"> secure</span>, and
+                  <span className="text-purple-400 font-bold"> affordable</span> student housing
+                  with premium amenities and 24/7 safety for your peace of mind.
+                </p>
 
-              {/* Key Features Pills */}
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
-                  <Shield className="w-4 h-4 text-green-400" />
-                  <span className="text-green-300 font-semibold text-sm">24/7 Security</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
-                  <Users className="w-4 h-4 text-blue-400" />
-                  <span className="text-blue-300 font-semibold text-sm">Verified Owners</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
-                  <HomeIcon className="w-4 h-4 text-purple-400" />
-                  <span className="text-purple-300 font-semibold text-sm">Premium Amenities</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 border border-orange-400/30 rounded-full backdrop-blur-sm">
-                  <MapPin className="w-4 h-4 text-orange-400" />
-                  <span className="text-orange-300 font-semibold text-sm">Prime Locations</span>
+                {/* Key Features Pills */}
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
+                    <Shield className="w-4 h-4 text-green-400" />
+                    <span className="text-green-300 font-semibold text-sm">24/7 Security</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    <span className="text-blue-300 font-semibold text-sm">Verified Owners</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
+                    <HomeIcon className="w-4 h-4 text-purple-400" />
+                    <span className="text-purple-300 font-semibold text-sm">Premium Amenities</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 border border-orange-400/30 rounded-full backdrop-blur-sm">
+                    <MapPin className="w-4 h-4 text-orange-400" />
+                    <span className="text-orange-300 font-semibold text-sm">Prime Locations</span>
+                  </div>
                 </div>
               </div>
-            </div>
             </ScrollReveal>
 
             {/* Enhanced Action Buttons */}
             <ScrollReveal animation="fade-up" delay={600}>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-              {/* Primary CTA - Decreased color intensity */}
-              <button
-                type="button"
-                onClick={() => navigate('/rooms')}
-                className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-orange-400/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative flex items-center gap-3">
-                  <Search className="w-6 h-6" />
-                  <span>Find Student Housing</span>
-                  <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-                </div>
-              </button>
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+                {/* Primary CTA - Decreased color intensity */}
+                <button
+                  type="button"
+                  onClick={() => navigate('/rooms')}
+                  className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-orange-400/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative flex items-center gap-3">
+                    <Search className="w-6 h-6" />
+                    <span>Find Student Housing</span>
+                    <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                  </div>
+                </button>
 
-              {/* Secondary CTA - Improved colors */}
-              <button
-                type="button"
-                onClick={() => navigate('/register')}
-                className="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-emerald-500/25"
-              >
-                <div className="flex items-center gap-3">
-                  <Users className="w-6 h-6 text-white" />
-                  <span>Register Now</span>
-                </div>
-              </button>
-            </div>
+                {/* Secondary CTA - Improved colors */}
+                <button
+                  type="button"
+                  onClick={() => navigate('/register')}
+                  className="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-emerald-500/25"
+                >
+                  <div className="flex items-center gap-3">
+                    <Users className="w-6 h-6 text-white" />
+                    <span>Register Now</span>
+                  </div>
+                </button>
+              </div>
             </ScrollReveal>
 
             {/* Trust Indicators */}
             <ScrollReveal animation="fade-up" delay={800}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              <div className="text-center">
-                <div className="text-3xl font-black text-orange-400 mb-1">25K+</div>
-                <div className="text-sm text-gray-400 font-semibold">Happy Students</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div className="text-center">
+                  <div className="text-3xl font-black text-orange-400 mb-1">25K+</div>
+                  <div className="text-sm text-gray-400 font-semibold">Happy Students</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-black text-pink-400 mb-1">4,500+</div>
+                  <div className="text-sm text-gray-400 font-semibold">Verified Rooms</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-black text-purple-400 mb-1">1,500+</div>
+                  <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-black text-green-400 mb-1">4.88★</div>
+                  <div className="text-sm text-gray-400 font-semibold">Safety Rating</div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-black text-pink-400 mb-1">4,500+</div>
-                <div className="text-sm text-gray-400 font-semibold">Verified Rooms</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-black text-purple-400 mb-1">1,500+</div>
-                <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-black text-green-400 mb-1">4.88★</div>
-                <div className="text-sm text-gray-400 font-semibold">Safety Rating</div>
-              </div>
-            </div>
             </ScrollReveal>
           </div>
         </div>
@@ -286,14 +285,14 @@ const Home = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-900/30 via-purple-900/30 to-pink-900/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal animation="fade-up">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Student Housing</span>
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Discover premium student accommodations in India's top educational and professional hubs
-            </p>
-          </div>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Student Housing</span>
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Discover premium student accommodations in India's top educational and professional hubs
+              </p>
+            </div>
           </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
@@ -394,22 +393,22 @@ const Home = () => {
 
           {/* Additional Info */}
           <ScrollReveal animation="fade-up" delay={600}>
-          <div className="text-center mt-12">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Click on any city to explore available student housing and PG accommodations
-            </p>
-            <div className="flex justify-center items-center mt-4 space-x-4">
-              <div className="flex items-center space-x-2 text-green-400">
-                <Shield className="w-5 h-5" />
-                <span className="text-sm font-medium">100% Verified Properties</span>
-              </div>
-              <div className="w-px h-4 bg-gray-600"></div>
-              <div className="flex items-center space-x-2 text-blue-400">
-                <Star className="w-5 h-5" />
-                <span className="text-sm font-medium">Premium Locations</span>
+            <div className="text-center mt-12">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Click on any city to explore available student housing and PG accommodations
+              </p>
+              <div className="flex justify-center items-center mt-4 space-x-4">
+                <div className="flex items-center space-x-2 text-green-400">
+                  <Shield className="w-5 h-5" />
+                  <span className="text-sm font-medium">100% Verified Properties</span>
+                </div>
+                <div className="w-px h-4 bg-gray-600"></div>
+                <div className="flex items-center space-x-2 text-blue-400">
+                  <Star className="w-5 h-5" />
+                  <span className="text-sm font-medium">Premium Locations</span>
+                </div>
               </div>
             </div>
-          </div>
           </ScrollReveal>
         </div>
       </section>
@@ -420,20 +419,20 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <ScrollReveal animation="fade-up">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full text-sm font-bold mb-6 shadow-lg">
-              <Star className="w-4 h-4" />
-              <span>Why Students Trust Us</span>
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full text-sm font-bold mb-6 shadow-lg">
+                <Star className="w-4 h-4" />
+                <span>Why Students Trust Us</span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-black mb-4">
+                <span className="bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+                  Trusted by Thousands
+                </span>
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+                Join thousands of students who have found their perfect, safe accommodation through our platform
+              </p>
             </div>
-            <h2 className="text-5xl md:text-6xl font-black mb-4">
-              <span className="bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
-                Trusted by Thousands
-              </span>
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Join thousands of students who have found their perfect, safe accommodation through our platform
-            </p>
-          </div>
           </ScrollReveal>
 
           {/* Enhanced Stats Grid */}

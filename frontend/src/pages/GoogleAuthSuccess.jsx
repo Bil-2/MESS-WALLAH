@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuthContext } from '../context/AuthContext';
 import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const GoogleAuthSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { setAuthUser } = useAuthContext();
 
   useEffect(() => {
     const handleGoogleAuth = () => {
@@ -27,6 +29,11 @@ const GoogleAuthSuccess = () => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
 
+        // Update context state IMMEDIATELY
+        if (setAuthUser) {
+          setAuthUser(userData);
+        }
+
         // Show success message
         toast.success(`Welcome back, ${userData.name}!`);
 
@@ -42,7 +49,7 @@ const GoogleAuthSuccess = () => {
     };
 
     handleGoogleAuth();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, setAuthUser]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">

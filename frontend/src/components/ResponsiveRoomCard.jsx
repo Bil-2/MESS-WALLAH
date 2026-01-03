@@ -33,8 +33,8 @@ const ResponsiveRoomCard = ({
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Get all images
-  const images = room.photos?.length > 0 
-    ? room.photos.map(p => p.url || p) 
+  const images = room.photos?.length > 0
+    ? room.photos.map(p => p.url || p)
     : [room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600'];
 
   // Auto-rotate images on hover (Airbnb style)
@@ -94,10 +94,10 @@ const ResponsiveRoomCard = ({
             className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
         </AnimatePresence>
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
+
         {/* Image Dots Indicator */}
         {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -105,9 +105,8 @@ const ResponsiveRoomCard = ({
               <button
                 key={idx}
                 onClick={(e) => { e.stopPropagation(); setImageIndex(idx); }}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === imageIndex ? 'bg-white w-4' : 'bg-white/50 w-1.5 hover:bg-white/80'
-                }`}
+                className={`h-1.5 rounded-full transition-all ${idx === imageIndex ? 'bg-white w-4' : 'bg-white/50 w-1.5 hover:bg-white/80'
+                  }`}
               />
             ))}
           </div>
@@ -118,17 +117,17 @@ const ResponsiveRoomCard = ({
           <div className="flex flex-col gap-2">
             {/* Superhost Badge */}
             {(room.verified || room.isVerified) && (
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-slate-900 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 dark:border-slate-700"
               >
                 <Award className="w-3.5 h-3.5 text-rose-500" />
-                <span className="text-xs font-semibold text-gray-800">Verified</span>
+                <span className="text-xs font-semibold text-gray-900 dark:text-white">Verified</span>
               </motion.div>
             )}
-            
+
             {/* Room Type Badge */}
             <div className="px-2.5 py-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold rounded-full shadow-lg uppercase tracking-wide">
               {room.roomType || room.type || 'Room'}
@@ -143,11 +142,10 @@ const ResponsiveRoomCard = ({
               e.stopPropagation();
               onToggleFavorite(room._id || room.id);
             }}
-            className={`p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all ${
-              isFavorite 
-                ? 'bg-rose-500 text-white' 
-                : 'bg-white/90 text-gray-700 hover:bg-white'
-            }`}
+            className={`p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all ${isFavorite
+              ? 'bg-rose-500 text-white'
+              : 'bg-white/90 text-gray-700 hover:bg-white'
+              }`}
           >
             <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
           </motion.button>
@@ -155,12 +153,12 @@ const ResponsiveRoomCard = ({
 
         {/* Price Tag - Bottom Left */}
         <div className="absolute bottom-3 left-3">
-          <div className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-gray-200 dark:border-slate-700">
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-black text-gray-900">
+              <span className="text-xl font-black text-gray-900 dark:text-white">
                 ₹{(room.rent || room.rentPerMonth || 0).toLocaleString()}
               </span>
-              <span className="text-sm text-gray-500 font-medium">/mo</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200 font-medium">/mo</span>
             </div>
           </div>
         </div>
@@ -183,7 +181,7 @@ const ResponsiveRoomCard = ({
         </div>
 
         {/* Title */}
-        <h3 
+        <h3
           onClick={() => onViewDetails(room._id || room.id)}
           className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
         >
@@ -208,7 +206,7 @@ const ResponsiveRoomCard = ({
         {room.amenities && room.amenities.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             {room.amenities.slice(0, 4).map((amenity, index) => (
-              <span 
+              <span
                 key={index}
                 className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 text-xs rounded-full capitalize"
               >
@@ -244,7 +242,7 @@ const ResponsiveRoomCard = ({
           >
             Book Now
           </motion.button>
-          
+
           {room.ownerPhone && (
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -259,7 +257,7 @@ const ResponsiveRoomCard = ({
               <Phone className="w-5 h-5" />
             </motion.button>
           )}
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

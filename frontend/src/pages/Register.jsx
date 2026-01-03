@@ -34,7 +34,7 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
 
   const navigate = useNavigate();
-  const { register, sendOtp, verifyOtp, user, loading: authLoading } = useAuthContext();
+  const { register, sendOtp, verifyOtp, user, loading: authLoading, setAuthUser } = useAuthContext();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -184,8 +184,13 @@ const Register = () => {
       const result = await register(registrationData);
       if (result && result.success) {
         toast.success('Registration successful! Welcome to MESS WALLAH!');
-        // Use window.location for a full page reload to ensure state updates
-        window.location.href = '/';
+
+        // Update global auth state immediately if user data returned
+        if (setAuthUser && result.user) {
+          setAuthUser(result.user);
+        }
+
+        navigate('/');
       } else {
         toast.error(result?.message || 'Registration failed');
       }

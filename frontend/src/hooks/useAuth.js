@@ -107,7 +107,7 @@ const useAuth = () => {
         // CRITICAL: Store in localStorage BEFORE setting state to ensure persistence
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
-        
+
         // Don't call setUser here - let the redirect happen first
         // The new page will read from localStorage on mount
 
@@ -461,7 +461,8 @@ const useAuth = () => {
     isVerified,
     // ENHANCED: Account linking utilities
     canLinkAccounts,
-    getAccountStatus
+    getAccountStatus,
+    setAuthUser: setUser // Expose internal state setter for OAuth flows
   };
 };
 

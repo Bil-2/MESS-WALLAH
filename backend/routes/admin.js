@@ -9,7 +9,7 @@ const User = require('../models/User');
 // @route   GET /api/admin/rooms/:id/photos
 // @access  Private (Admin only)
 router.get('/rooms/:id/photos', [
-  protect, 
+  protect,
   authorize('admin'),
   param('id').isMongoId().withMessage('Invalid room ID')
 ], async (req, res) => {
@@ -72,7 +72,7 @@ router.get('/rooms/:id/photos', [
 // @route   PATCH /api/admin/rooms/:id/photos/verify
 // @access  Private (Admin only)
 router.patch('/rooms/:id/photos/verify', [
-  protect, 
+  protect,
   authorize('admin'),
   param('id').isMongoId().withMessage('Invalid room ID'),
   body('photoIndexes').isArray().withMessage('Photo indexes must be an array'),
@@ -154,8 +154,8 @@ router.get('/suspicious-uploads', protect, authorize('admin'), async (req, res) 
           uniqueIPs: ipAddresses.size,
           ipAddresses: Array.from(ipAddresses),
           createdAt: room.createdAt,
-          suspicionReason: ipAddresses.size > 2 
-            ? 'Multiple IP addresses detected' 
+          suspicionReason: ipAddresses.size > 2
+            ? 'Multiple IP addresses detected'
             : 'No live camera photos'
         });
       }
@@ -173,6 +173,40 @@ router.get('/suspicious-uploads', protect, authorize('admin'), async (req, res) 
     res.status(500).json({
       success: false,
       message: 'Error fetching suspicious uploads',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Get admin dashboard stats
+// @route   GET /api/admin/stats
+// @access  Private (Admin only)
+router.get('/stats', protect, authorize('admin'), async (req, res) => {
+  try {
+    const [totalRooms, totalUsers, totalBookings] = await Promise.all([
+      Room.countDocuments(),
+      User.countDocuments(),
+      require('../models/Booking').countDocuments().catch(() => 0)
+    ]);
+
+    const stats = {
+      totalRooms,
+      totalUsers,
+      totalBookings,
+      activeRooms: await Room.countDocuments({ isAvailable: true }),
+      verifiedRooms: await Room.countDocuments({ verified: true }),
+      featuredRooms: await Room.countDocuments({ featured: true })
+    };
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching admin stats',
       error: error.message
     });
   }

@@ -8,8 +8,8 @@ const passport = require('../config/passport');
  * @desc    Initiate Google OAuth flow
  * @access  Public
  */
-router.get('/google', 
-  passport.authenticate('google', { 
+router.get('/google',
+  passport.authenticate('google', {
     scope: ['profile', 'email'],
     session: false
   })
@@ -21,7 +21,7 @@ router.get('/google',
  * @access  Public
  */
 router.get('/google/callback',
-  passport.authenticate('google', { 
+  passport.authenticate('google', {
     session: false,
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_auth_failed`
   }),
@@ -75,7 +75,7 @@ router.get('/google/callback',
         name: user.name,
         role: user.role
       };
-      
+
       res.cookie('user_data', JSON.stringify(publicUserData), {
         httpOnly: false, // Readable by JS
         secure: process.env.NODE_ENV === 'production',
@@ -83,9 +83,11 @@ router.get('/google/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
-      // Redirect to frontend success page (no sensitive data in URL)
-      const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/success`;
-      
+      // Redirect to frontend success page with token and user data in URL
+      // (Frontend expects these as query parameters)
+      const userDataString = encodeURIComponent(JSON.stringify(publicUserData));
+      const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/success?token=${token}&user=${userDataString}`;
+
       res.redirect(redirectUrl);
 
     } catch (error) {
@@ -102,12 +104,12 @@ router.get('/google/callback',
  */
 router.get('/google/status', (req, res) => {
   const isConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-  
+
   res.json({
     success: true,
     configured: isConfigured,
-    message: isConfigured 
-      ? 'Google OAuth is configured and ready' 
+    message: isConfigured
+      ? 'Google OAuth is configured and ready'
       : 'Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env file'
   });
 });
