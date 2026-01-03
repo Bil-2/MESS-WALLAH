@@ -4,18 +4,18 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const { 
-  sendEmail, 
-  sendBookingConfirmationToCustomer, 
+const {
+  sendEmail,
+  sendBookingConfirmationToCustomer,
   sendBookingNotificationToOwner,
   sendBookingCancellation,
-  sendBookingStatusUpdate 
+  sendBookingStatusUpdate
 } = require('../services/notify');
-const { 
-  rateLimiters, 
+const {
+  rateLimiters,
   csrfProtection,
   sanitizeInput,
-  preventInjection 
+  preventInjection
 } = require('../middleware/advancedSecurity');
 
 const router = express.Router();
@@ -213,7 +213,7 @@ router.post('/', [
           name: 'Default Room Owner',
           email: 'default.owner@messwallah.com',
           password: hashedPassword,
-          phone: '+919999999999',
+          phone: '+919876543210',
           role: 'owner',
           isVerified: true,
           isActive: true
@@ -554,7 +554,7 @@ router.patch('/:id/status', [
 
     // Send notifications to seeker
     try {
-      const statusMessage = status === 'confirmed' 
+      const statusMessage = status === 'confirmed'
         ? 'Your booking has been confirmed! Please proceed with payment.'
         : `Your booking has been rejected.${reason ? ` Reason: ${reason}` : ''}`;
 
@@ -579,7 +579,7 @@ router.patch('/:id/status', [
         userId: booking.userId._id,
         type: status === 'confirmed' ? 'booking_confirmed' : 'booking_rejected',
         title: status === 'confirmed' ? '✅ Booking Confirmed!' : '❌ Booking Rejected',
-        message: status === 'confirmed' 
+        message: status === 'confirmed'
           ? `Great news! Your booking for ${booking.roomId.title} has been confirmed. Please complete the payment.`
           : `Your booking request for ${booking.roomId.title} was rejected.${reason ? ` Reason: ${reason}` : ''}`,
         data: {
@@ -634,7 +634,7 @@ router.patch('/:id/cancel', [
     // Check authorization - handle populated objects
     const userId = booking.userId._id ? booking.userId._id.toString() : booking.userId.toString();
     const ownerId = booking.ownerId._id ? booking.ownerId._id.toString() : booking.ownerId.toString();
-    
+
     const isAuthorized = userId === req.user.id || ownerId === req.user.id;
 
     if (!isAuthorized) {
