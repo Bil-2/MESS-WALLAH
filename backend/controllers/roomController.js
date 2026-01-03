@@ -26,14 +26,14 @@ const getRooms = async (req, res) => {
     // Validate pagination parameters
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
-    
+
     if (isNaN(pageNum) || pageNum < 1) {
       return res.status(400).json({
         success: false,
         message: 'Invalid page number'
       });
     }
-    
+
     if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
       return res.status(400).json({
         success: false,
@@ -48,14 +48,14 @@ const getRooms = async (req, res) => {
         message: 'Invalid minimum rent value'
       });
     }
-    
+
     if (maxRent && (isNaN(parseInt(maxRent)) || parseInt(maxRent) < 0)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid maximum rent value'
       });
     }
-    
+
     if (minRent && maxRent && parseInt(minRent) > parseInt(maxRent)) {
       return res.status(400).json({
         success: false,
@@ -124,7 +124,7 @@ const getRooms = async (req, res) => {
     const validSortFields = ['createdAt', 'rentPerMonth', 'rating', 'views'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     const sortDirection = sortOrder === 'desc' ? -1 : 1;
-    
+
     const sort = {};
     sort[sortField] = sortDirection;
 
@@ -523,7 +523,7 @@ const seedSampleRooms = async () => {
       sampleOwner = new User({
         name: 'Sample Owner',
         email: 'owner@messwallah.com',
-        phone: '9876543210',
+        phone: '+919876543210',
         role: 'owner',
         verified: true,
         password: 'hashedpassword123' // In real app, this would be properly hashed
