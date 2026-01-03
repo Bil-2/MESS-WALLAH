@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: mess-wallah-backend
+    env: node
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: MONGODB_URI
+        value: mongodb+srv://resumebuilder:Cu4nHcmt8YoMyRSn@bil-2.xu2re3p.mongodb.net/mess-wallah?retryWrites=true&w=majority&appName=bil-2
+      - key: JWT_SECRET
+        value: mess-wallah-super-secret-jwt-key-production-2024
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: SESSION_SECRET
+        value: mess-wallah-session-secret-production-2024
+      - key: BCRYPT_ROUNDS
+        value: 12
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: FRONTEND_URL
+        value: https://frontend-m5hwb7t6e-biltu-bags-projects.vercel.app
+      - key: CLIENT_URL
+        value: https://frontend-m5hwb7t6e-biltu-bags-projects.vercel.app
+      - key: ALLOWED_ORIGINS
+        value: https://frontend-m5hwb7t6e-biltu-bags-projects.vercel.app
+      - key: EMAIL_FROM
+        value: noreply@messwallah.com
