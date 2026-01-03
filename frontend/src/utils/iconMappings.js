@@ -95,7 +95,8 @@ import {
   FiHardDrive as HardDrive,
   FiServer as Server,
   FiDatabase as Database,
-  FiWifi as WiFi
+  FiWifi as WiFi,
+  FiAward as Award
 } from 'react-icons/fi';
 
 // Export all icons for easy importing
@@ -113,5 +114,5 @@ export {
   Anchor, Bookmark, Tag, Hash, AtSign, Percent, DollarSign,
   Coffee, Sun, Moon, Cloud, CloudRain,
   Zap, Battery, Power, Monitor, Smartphone,
-  HardDrive, Server, Database, WiFi
+  HardDrive, Server, Database, WiFi, Award
 };

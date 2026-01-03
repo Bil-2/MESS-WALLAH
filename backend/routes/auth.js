@@ -56,7 +56,6 @@ router.post('/register', [
 // @route   POST /api/auth/login
 // @access  Public
 router.post('/login', [
-  createBruteForceProtector,
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -80,7 +79,6 @@ router.post('/send-otp', [
 // @route   POST /api/auth/verify-otp
 // @access  Public
 router.post('/verify-otp', [
-  createBruteForceProtector,
   body('phone')
     .matches(/^[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number'),
@@ -108,7 +106,6 @@ router.post('/send-otp-sms', [
 ], sendOtp);
 
 router.post('/verify-otp-sms', [
-  createBruteForceProtector,
   body('phone')
     .matches(/^[6-9]\d{9}$/)
     .withMessage('Please provide a valid Indian phone number'),

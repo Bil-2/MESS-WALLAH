@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
   // Performance monitoring with Web Vitals
   const reportWebVitals = (metric) => {
     console.log('[Performance]', metric);
-    
+
     // Send to analytics in production
     if (process.env.NODE_ENV === 'production') {
       // You can send metrics to your analytics service here
@@ -35,7 +35,7 @@ if (typeof window !== 'undefined') {
   const updateNetworkStatus = () => {
     const status = navigator.onLine ? 'online' : 'offline';
     document.body.setAttribute('data-network-status', status);
-    
+
     if (!navigator.onLine) {
       console.log('[Network] Application is offline');
     } else {
@@ -50,7 +50,7 @@ if (typeof window !== 'undefined') {
   // Preload critical resources
   const preloadCriticalResources = () => {
     const criticalRoutes = ['/rooms', '/login', '/register'];
-    
+
     criticalRoutes.forEach(route => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
@@ -71,7 +71,7 @@ if (typeof window !== 'undefined') {
         total: Math.round(memInfo.totalJSHeapSize / 1024 / 1024),
         limit: Math.round(memInfo.jsHeapSizeLimit / 1024 / 1024)
       };
-      
+
       if (memoryUsage.used > 100) { // Alert if using more than 100MB
         console.warn('[Memory] High memory usage detected:', memoryUsage);
       }
@@ -82,10 +82,10 @@ if (typeof window !== 'undefined') {
 // Error boundary for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
   console.error('[Error] Unhandled promise rejection:', event.reason);
-  
+
   // Prevent the default browser behavior
   event.preventDefault();
-  
+
   // You can send error reports to your logging service here
   if (process.env.NODE_ENV === 'production') {
     // Example: Sentry.captureException(event.reason);
@@ -95,7 +95,7 @@ window.addEventListener('unhandledrejection', (event) => {
 // Global error handler
 window.addEventListener('error', (event) => {
   console.error('[Error] Global error:', event.error);
-  
+
   if (process.env.NODE_ENV === 'production') {
     // Example: Sentry.captureException(event.error);
   }
