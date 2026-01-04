@@ -3,9 +3,10 @@ import { FcGoogle } from 'react-icons/fc';
 
 const GoogleSignInButton = () => {
   const handleClick = () => {
-    // Redirect to backend Google OAuth endpoint
+    // Redirect to backend Google OAuth endpoint with current frontend URL
     const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-    window.location.href = `${backendUrl}/auth/google`;
+    const currentOrigin = window.location.origin;
+    window.location.href = `${backendUrl}/auth/google?redirect_url=${encodeURIComponent(currentOrigin)}`;
   };
 
   return (
