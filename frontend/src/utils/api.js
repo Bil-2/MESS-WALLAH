@@ -12,16 +12,8 @@ import {
 // Create axios instance with base configuration
 // Helper to determine the correct base URL
 const getBaseUrl = () => {
-  // First priority: VITE_API_URL environment variable
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  // Second priority: Production mode fallback (Hardcoded Render Backend)
-  if (import.meta.env.PROD) {
-    return 'https://mess-wallah.onrender.com/api';
-  }
-  // Third priority: Local development fallback
-  return 'http://localhost:5001/api';
+  // Hardcoded for production stability
+  return 'https://mess-wallah.onrender.com/api';
 };
 
 // Create axios instance with base configuration

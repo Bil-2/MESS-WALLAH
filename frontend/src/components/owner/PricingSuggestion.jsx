@@ -17,7 +17,7 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/owner/pricing-suggestions/${roomId}`,
+        `https://mess-wallah.onrender.com/api/owner/pricing-suggestions/${roomId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -53,10 +53,10 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
 
   return (
     <div className={`rounded-xl p-4 mt-4 border ${isPriceIncrease
-        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-        : isPriceDecrease
-          ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+      : isPriceDecrease
+        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
       }`}>
       <div className="flex items-start justify-between mb-3">
         <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -78,15 +78,15 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
             </p>
           </div>
           <div className={`rounded-lg p-3 ${isPriceIncrease
-              ? 'bg-green-100 dark:bg-green-900/30'
-              : isPriceDecrease
-                ? 'bg-orange-100 dark:bg-orange-900/30'
-                : 'bg-blue-100 dark:bg-blue-900/30'
+            ? 'bg-green-100 dark:bg-green-900/30'
+            : isPriceDecrease
+              ? 'bg-orange-100 dark:bg-orange-900/30'
+              : 'bg-blue-100 dark:bg-blue-900/30'
             }`}>
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Recommended</p>
             <p className={`text-xl font-bold ${isPriceIncrease ? 'text-green-700 dark:text-green-400'
-                : isPriceDecrease ? 'text-orange-700 dark:text-orange-400'
-                  : 'text-blue-700 dark:text-blue-400'
+              : isPriceDecrease ? 'text-orange-700 dark:text-orange-400'
+                : 'text-blue-700 dark:text-blue-400'
               }`}>
               ₹{suggestion.suggestedPrice.toLocaleString()}
               {suggestion.priceDiff !== 0 && (
