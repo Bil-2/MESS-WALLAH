@@ -67,19 +67,24 @@ const corsOptions = {
       process.env.CLIENT_URL
     ].filter(Boolean);
 
+    // Check if origin matches allowed origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow any Vercel deployment URL (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) {
+      console.log(`[CORS] Allowing Vercel deployment: ${origin}`);
+      return callback(null, true);
+    }
+
     // In production, be strict about origins
     if (process.env.NODE_ENV === 'production') {
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log(`[SECURITY] CORS blocked origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
+      console.log(`[SECURITY] CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     } else {
       // In development, allow all origins but log
-      if (!allowedOrigins.includes(origin)) {
-        console.log(`[SECURITY] Non-whitelisted origin in dev: ${origin}`);
-      }
+      console.log(`[SECURITY] Non-whitelisted origin in dev: ${origin}`);
       callback(null, true);
     }
   },
