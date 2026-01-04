@@ -1,6 +1,9 @@
 {
   "framework": "vite",
-  "buildCommand": "vite build",
+  "buildCommand": "VITE_API_URL=https://mess-wallah.onrender.com/api vite build",
   "installCommand": "npm install",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "env": {
+    "VITE_API_URL": "https://mess-wallah.onrender.com/api"
+  }
 }
