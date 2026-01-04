@@ -1,17 +1,32 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { 
-  getCSRFToken, 
-  setCSRFToken, 
-  sanitizeObject, 
+import {
+  getCSRFToken,
+  setCSRFToken,
+  sanitizeObject,
   generateIdempotencyKey,
   handleSecurityError,
   isTokenValid
 } from './security';
 
 // Create axios instance with base configuration
+// Helper to determine the correct base URL
+const getBaseUrl = () => {
+  // First priority: VITE_API_URL environment variable
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // Second priority: Production mode fallback (Hardcoded Render Backend)
+  if (import.meta.env.PROD) {
+    return 'https://mess-wallah.onrender.com/api';
+  }
+  // Third priority: Local development fallback
+  return 'http://localhost:5001/api';
+};
+
+// Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  baseURL: getBaseUrl(),
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
@@ -42,7 +57,7 @@ api.interceptors.request.use(
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
       }
-      
+
       // Add idempotency key for payment/booking requests
       if (config.url?.includes('/payment') || config.url?.includes('/booking')) {
         config.headers['X-Idempotency-Key'] = generateIdempotencyKey();
@@ -67,7 +82,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log('[API] Response:', response.status, response.config.url);
-    
+
     // Store CSRF token if provided
     const csrfToken = response.headers['x-csrf-token'];
     if (csrfToken) {
@@ -85,15 +100,15 @@ api.interceptors.response.use(
     // Handle security-related errors
     if (status === 401) {
       const message = handleSecurityError(error);
-      
+
       // Only show toast and redirect for actual auth failures, not missing tokens
       if (errorCode !== 'NO_TOKEN') {
         toast.error(message);
-        
+
         // Clear auth data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        
+
         // Redirect to login if not already there
         if (!window.location.pathname.includes('/login')) {
           setTimeout(() => {
