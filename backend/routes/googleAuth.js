@@ -31,7 +31,9 @@ router.get('/google/callback',
 
       if (!user) {
         console.error('[ERROR] No user found after Google authentication');
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
+        const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendBase = frontendUrl.replace(/\/$/, '');
+        return res.redirect(`${frontendBase}/login?error=auth_failed`);
       }
 
       console.log('[SUCCESS] Google authentication successful for:', user.email);
@@ -83,16 +85,23 @@ router.get('/google/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
+      // Detect frontend URL from request (referer or origin)
+      const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendBase = frontendUrl.replace(/\/$/, ''); // Remove trailing slash
+      console.log(`[AUTH] Redirecting to detected frontend: ${frontendBase}`);
+
       // Redirect to frontend success page with token and user data in URL
       // (Frontend expects these as query parameters)
       const userDataString = encodeURIComponent(JSON.stringify(publicUserData));
-      const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/success?token=${token}&user=${userDataString}`;
+      const redirectUrl = `${frontendBase}/auth/google/success?token=${token}&user=${userDataString}`;
 
       res.redirect(redirectUrl);
 
     } catch (error) {
       console.error('[ERROR] Error in Google callback:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=server_error`);
+      const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendBase = frontendUrl.replace(/\/$/, '');
+      res.redirect(`${frontendBase}/login?error=server_error`);
     }
   }
 );
