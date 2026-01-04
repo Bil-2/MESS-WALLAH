@@ -8,12 +8,22 @@ const passport = require('../config/passport');
  * @desc    Initiate Google OAuth flow
  * @access  Public
  */
-router.get('/google',
+router.get('/google', (req, res, next) => {
+  // Capture the frontend URL from the request origin or query param
+  const frontendUrl = req.query.redirect_url || req.headers.origin || req.headers.referer || process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendBase = frontendUrl.replace(/\/$/, '').split('?')[0]; // Remove trailing slash and query params
+
+  // Pass frontend URL through OAuth state parameter (base64 encoded for safety)
+  const state = Buffer.from(JSON.stringify({ frontend: frontendBase })).toString('base64');
+
+  console.log(`[AUTH] Initiating Google OAuth from frontend: ${frontendBase}`);
+
   passport.authenticate('google', {
     scope: ['profile', 'email'],
-    session: false
-  })
-);
+    session: false,
+    state: state
+  })(req, res, next);
+});
 
 /**
  * @route   GET /api/auth/google/callback
@@ -85,10 +95,20 @@ router.get('/google/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
-      // Detect frontend URL from request (referer or origin)
-      const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
-      const frontendBase = frontendUrl.replace(/\/$/, ''); // Remove trailing slash
-      console.log(`[AUTH] Redirecting to detected frontend: ${frontendBase}`);
+      // Detect frontend URL from OAuth state parameter (passed from initiation)
+      let frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+      try {
+        if (req.query.state) {
+          const stateData = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
+          if (stateData.frontend) {
+            frontendBase = stateData.frontend;
+            console.log(`[AUTH] Using frontend from state: ${frontendBase}`);
+          }
+        }
+      } catch (e) {
+        console.log('[AUTH] Could not decode state, using fallback frontend URL');
+      }
 
       // Redirect to frontend success page with token and user data in URL
       // (Frontend expects these as query parameters)
