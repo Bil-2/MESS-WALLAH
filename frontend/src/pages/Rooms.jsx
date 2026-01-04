@@ -11,6 +11,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { useDebounce } from '../hooks/usePerformance';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
+import api from '../utils/api';
 
 // ============================================
 // MARKET-RESEARCH BASED MODERN ROOM CARD
@@ -19,9 +20,9 @@ import toast from 'react-hot-toast';
 const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
   const [imageIndex, setImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  
-  const images = room.photos?.length > 0 
-    ? room.photos.map(p => p.url || p) 
+
+  const images = room.photos?.length > 0
+    ? room.photos.map(p => p.url || p)
     : [room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600'];
 
   // Auto-rotate images on hover (like Airbnb)
@@ -58,10 +59,10 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
             className="w-full h-full object-cover"
           />
         </AnimatePresence>
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
+
         {/* Image Dots Indicator */}
         {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -69,9 +70,8 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
               <button
                 key={idx}
                 onClick={(e) => { e.stopPropagation(); setImageIndex(idx); }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  idx === imageIndex ? 'bg-white w-4' : 'bg-white/50 hover:bg-white/80'
-                }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === imageIndex ? 'bg-white w-4' : 'bg-white/50 hover:bg-white/80'
+                  }`}
               />
             ))}
           </div>
@@ -82,7 +82,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
           <div className="flex flex-col gap-2">
             {/* Superhost/Verified Badge - Like Airbnb */}
             {room.verified && (
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg"
@@ -91,7 +91,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
                 <span className="text-xs font-semibold text-gray-800">Superhost</span>
               </motion.div>
             )}
-            
+
             {/* Room Type Badge */}
             <div className="px-2.5 py-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold rounded-full shadow-lg uppercase tracking-wide">
               {room.roomType || 'Room'}
@@ -103,11 +103,10 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={(e) => { e.stopPropagation(); onFavorite(room._id || room.id); }}
-            className={`p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all ${
-              isFavorite 
-                ? 'bg-rose-500 text-white' 
-                : 'bg-white/90 text-gray-700 hover:bg-white'
-            }`}
+            className={`p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all ${isFavorite
+              ? 'bg-rose-500 text-white'
+              : 'bg-white/90 text-gray-700 hover:bg-white'
+              }`}
           >
             <FiHeart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
           </motion.button>
@@ -141,7 +140,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
         </div>
 
         {/* Title */}
-        <h3 
+        <h3
           onClick={() => onView(room._id || room.id)}
           className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
         >
@@ -165,7 +164,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
         {/* Amenities - Compact Pills */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {(room.amenities || []).slice(0, 4).map((amenity, idx) => (
-            <span 
+            <span
               key={idx}
               className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 text-xs rounded-full capitalize"
             >
@@ -197,7 +196,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
           >
             Book Now
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -206,7 +205,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
           >
             <FiPhone className="w-5 h-5" />
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -235,7 +234,7 @@ const Rooms = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   // State
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -245,7 +244,7 @@ const Rooms = () => {
   const [favorites, setFavorites] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid'); // grid or list
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+
   // Filters
   const initialSearch = searchParams.get('search') || '';
   const [filters, setFilters] = useState({
@@ -257,7 +256,7 @@ const Rooms = () => {
     amenities: [],
     sortBy: 'popular'
   });
-  
+
   const debouncedSearch = useDebounce(filters.search, 400);
 
   // Popular Cities Data
@@ -284,7 +283,7 @@ const Rooms = () => {
   const fetchRooms = useCallback(async (page = 1, append = false) => {
     try {
       if (!append) setLoading(true);
-      
+
       const params = new URLSearchParams({
         page,
         limit: 12,
@@ -296,8 +295,8 @@ const Rooms = () => {
         ...(filters.amenities.length && { amenities: filters.amenities.join(',') }),
       });
 
-      const response = await fetch(`/api/rooms?${params}`);
-      const data = await response.json();
+      const response = await api.get(`/rooms?${params}`);
+      const data = response.data;
 
       if (data.success) {
         const transformedRooms = (data.data || []).map(room => ({
@@ -317,7 +316,7 @@ const Rooms = () => {
         } else {
           setRooms(transformedRooms);
         }
-        
+
         setTotalPages(data.pagination?.totalPages || 1);
         setHasMore(data.pagination?.hasNextPage || false);
         setCurrentPage(page);
@@ -412,7 +411,7 @@ const Rooms = () => {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Main Heading */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -452,7 +451,7 @@ const Rooms = () => {
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-gray-700 transition-all"
                   />
                   {filters.search && (
-                    <button 
+                    <button
                       onClick={() => setFilters(prev => ({ ...prev, search: '', location: '' }))}
                       className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full"
                     >
@@ -526,7 +525,7 @@ const Rooms = () => {
               View all <FiChevronRight className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
             {popularCities.map((city, idx) => (
               <motion.button
@@ -536,9 +535,8 @@ const Rooms = () => {
                 transition={{ delay: idx * 0.1 }}
                 whileHover={{ scale: 1.05 }}
                 onClick={() => handleCityClick(city.name)}
-                className={`flex-shrink-0 relative w-36 h-24 rounded-2xl overflow-hidden group ${
-                  filters.search === city.name ? 'ring-2 ring-violet-500 ring-offset-2' : ''
-                }`}
+                className={`flex-shrink-0 relative w-36 h-24 rounded-2xl overflow-hidden group ${filters.search === city.name ? 'ring-2 ring-violet-500 ring-offset-2' : ''
+                  }`}
               >
                 <img src={city.image} alt={city.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -568,16 +566,15 @@ const Rooms = () => {
                     onClick={() => {
                       setFilters(prev => ({
                         ...prev,
-                        amenities: isActive 
+                        amenities: isActive
                           ? prev.amenities.filter(a => a !== amenity.key)
                           : [...prev.amenities, amenity.key]
                       }));
                     }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                      isActive
-                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${isActive
+                      ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
                   >
                     <amenity.icon className="w-4 h-4" />
                     {amenity.label}
@@ -664,7 +661,7 @@ const Rooms = () => {
                 {rooms.length} properties found
               </p>
             </div>
-            
+
             {/* Sort Dropdown */}
             <select
               value={filters.sortBy}
@@ -722,11 +719,10 @@ const Rooms = () => {
                 hidden: { opacity: 0 },
                 visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
               }}
-              className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1 max-w-3xl mx-auto'
-              }`}
+              className={`grid gap-6 ${viewMode === 'grid'
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                : 'grid-cols-1 max-w-3xl mx-auto'
+                }`}
             >
               {rooms.map((room) => (
                 <ModernRoomCard
@@ -896,11 +892,10 @@ const Rooms = () => {
                     <button
                       key={type}
                       onClick={() => setFilters(prev => ({ ...prev, roomType: prev.roomType === type ? '' : type }))}
-                      className={`px-4 py-3 rounded-xl text-sm font-medium capitalize transition-all ${
-                        filters.roomType === type
-                          ? 'bg-violet-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                      }`}
+                      className={`px-4 py-3 rounded-xl text-sm font-medium capitalize transition-all ${filters.roomType === type
+                        ? 'bg-violet-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                        }`}
                     >
                       {type}
                     </button>
@@ -920,16 +915,15 @@ const Rooms = () => {
                         onClick={() => {
                           setFilters(prev => ({
                             ...prev,
-                            amenities: isActive 
+                            amenities: isActive
                               ? prev.amenities.filter(a => a !== amenity.key)
                               : [...prev.amenities, amenity.key]
                           }));
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                          isActive
-                            ? 'bg-violet-600 text-white'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                          }`}
                       >
                         <amenity.icon className="w-4 h-4" />
                         {amenity.label}

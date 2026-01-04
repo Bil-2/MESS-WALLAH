@@ -11,9 +11,12 @@ import {
 
 // Create axios instance with base configuration
 // Helper to determine the correct base URL
+export const API_VERSION_FIX = '2026-01-04-fix-v5';
 const getBaseUrl = () => {
   // Hardcoded for production stability
-  return 'https://mess-wallah.onrender.com/api';
+  const url = 'https://mess-wallah.onrender.com/api';
+  console.log('Fixed API URL:', url);
+  return url;
 };
 
 // Create axios instance with base configuration

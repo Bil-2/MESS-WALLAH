@@ -20,6 +20,7 @@ import SuccessStories from '../components/SuccessStories';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
 import ScrollReveal from '../components/ScrollReveal';
+import api from '../utils/api';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -39,9 +40,9 @@ const Home = () => {
   const fetchHomeData = async () => {
     try {
       // Fetch real featured rooms from your backend
-      const roomsResponse = await fetch('/api/rooms/featured');
-      if (roomsResponse.ok) {
-        const roomsData = await roomsResponse.json();
+      const roomsResponse = await api.get('/rooms/featured');
+      if (roomsResponse.status === 200) {
+        const roomsData = roomsResponse.data;
         if (roomsData.success && roomsData.data && roomsData.data.rooms) {
           // Transform backend data to match frontend format
           const transformedRooms = roomsData.data.rooms.slice(0, 6).map(room => ({
@@ -59,9 +60,9 @@ const Home = () => {
       }
 
       // Fetch real stats
-      const statsResponse = await fetch('/api/rooms/stats');
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
+      const statsResponse = await api.get('/rooms/stats');
+      if (statsResponse.status === 200) {
+        const statsData = statsResponse.data;
         if (statsData.success && statsData.data) {
           setStats({
             totalRooms: statsData.data.totalRooms || 4500,
