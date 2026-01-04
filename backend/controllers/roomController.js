@@ -547,10 +547,11 @@ const seedSampleRooms = async () => {
           state: 'Karnataka',
           pincode: '560034'
         },
-        amenities: ['WiFi', 'AC', 'Parking', 'Security'],
+        amenities: ['wifi', 'ac', 'parking', 'security'],
         photos: [{
           url: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
-          filename: 'sample1.jpg'
+          publicId: 'sample1',
+          caption: 'Cozy single room'
         }],
         owner: sampleOwner._id,
         featured: true,
@@ -571,10 +572,11 @@ const seedSampleRooms = async () => {
           state: 'Karnataka',
           pincode: '560100'
         },
-        amenities: ['WiFi', 'Laundry', 'Kitchen', 'Security'],
+        amenities: ['wifi', 'laundry', 'kitchen', 'security'],
         photos: [{
           url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
-          filename: 'sample2.jpg'
+          publicId: 'sample2',
+          caption: 'Shared room near IT Park'
         }],
         owner: sampleOwner._id,
         featured: true,
@@ -595,10 +597,11 @@ const seedSampleRooms = async () => {
           state: 'Karnataka',
           pincode: '560038'
         },
-        amenities: ['WiFi', 'AC', 'Kitchen', 'Parking', 'Gym'],
+        amenities: ['wifi', 'ac', 'kitchen', 'parking', 'gym'],
         photos: [{
           url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
-          filename: 'sample3.jpg'
+          publicId: 'sample3',
+          caption: 'Studio apartment with modern amenities'
         }],
         owner: sampleOwner._id,
         featured: true,
