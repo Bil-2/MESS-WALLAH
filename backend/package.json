@@ -16,7 +16,8 @@
     "start:mongo": "npm run mongo:start && npm start",
     "health:check": "curl -f http://localhost:5001/health || exit 1",
     "security:audit": "node scripts/runSecurityAudit.js",
-    "security:check": "npm run security:audit"
+    "security:check": "npm run security:audit",
+    "seed:production": "node seedProduction.js"
   },
   "keywords": [
     "room-booking",

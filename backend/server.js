@@ -346,6 +346,10 @@ const startServer = async () => {
     healthMonitor.startMonitoring(30000); // Check every 30 seconds
     console.log('[SUCCESS] Health monitoring system started');
 
+    // Keep-alive now handled by GitHub Actions - see .github/workflows/keep-alive.yml
+    // const { startKeepAlive } = require('./utils/keepAlive');
+    // startKeepAlive();
+
     // Production-ready global error handling middleware
     app.use(gracefulErrorRecovery);
 

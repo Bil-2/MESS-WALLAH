@@ -69,3 +69,12 @@ yarn-error.log*
 # **/Test.jsx
 # **/*Test.jsx
 # **/*test.js
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+dist/
+build/
+.vercel/

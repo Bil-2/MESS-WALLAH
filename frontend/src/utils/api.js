@@ -13,10 +13,17 @@ import {
 // Helper to determine the correct base URL
 export const API_VERSION_FIX = '2026-01-04-fix-v5';
 const getBaseUrl = () => {
-  // Hardcoded for production stability
-  const url = 'https://mess-wallah.onrender.com/api';
-  console.log('Fixed API URL:', url);
-  return url;
+  // Use environment variable if available, otherwise fallback based on mode
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Default to localhost in development, Render URL in production
+  if (import.meta.env.DEV) {
+    return 'http://localhost:5001/api';
+  }
+
+  return 'https://mess-wallah.onrender.com/api';
 };
 
 // Create axios instance with base configuration

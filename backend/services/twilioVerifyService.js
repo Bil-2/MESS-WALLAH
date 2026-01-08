@@ -72,18 +72,18 @@ const verifyMessWallahOTP = async (phoneNumber, code) => {
   try {
     const formattedPhone = formatPhoneNumber(phoneNumber);
 
-    // Development fallback
+    // Development fallback ONLY when Twilio is NOT configured
     if (!client || !verifyServiceSid) {
-      // In dev mode, we might want to accept a specific test code like '123456'
-      // or if the controller handles verification itself. 
-      // Checking otpController.js, it seems to rely on this service for the actual check.
-
-      // For dev/testing purposes, let's allow a magic code
+      console.log('[TWILIO] No credentials configured - using development bypass');
+      // For dev/testing purposes, allow a magic code when Twilio is not set up
       if (code === '123456') {
+        console.log('[TWILIO] Development bypass accepted: 123456');
         return { success: true, status: 'approved' };
       }
-      return { success: false, status: 'failed', error: 'Dev mode: Use 123456' };
+      return { success: false, status: 'failed', error: 'Twilio not configured. Use 123456 for testing.' };
     }
+
+    // If we reach here, Twilio IS configured - use real verification
 
     const verificationCheck = await client.verify.v2.services(verifyServiceSid)
       .verificationChecks

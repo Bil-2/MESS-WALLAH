@@ -108,8 +108,9 @@ const useAuth = () => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
 
-        // Don't call setUser here - let the redirect happen first
-        // The new page will read from localStorage on mount
+        // FIXED: Update the auth state immediately after storing in localStorage
+        // This ensures the user is properly logged in and prevents redirect loops
+        setUser(userData);
 
         return {
           success: true,

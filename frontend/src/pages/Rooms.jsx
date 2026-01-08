@@ -286,7 +286,7 @@ const Rooms = () => {
 
       const params = new URLSearchParams({
         page,
-        limit: 12,
+        limit: 50,
         ...(filters.search && { search: filters.search }),
         ...(filters.location && { location: filters.location }),
         ...(filters.minRent && { minRent: filters.minRent }),
@@ -765,7 +765,7 @@ const Rooms = () => {
           {/* Pagination Info */}
           {rooms.length > 0 && (
             <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">
-              Showing {rooms.length} of {totalPages * 12}+ rooms
+              Showing {rooms.length} of {totalPages * 50}+ rooms
             </p>
           )}
         </div>

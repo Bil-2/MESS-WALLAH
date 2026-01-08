@@ -1,0 +1,37 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    # Run every 10 minutes (Render free tier spins down after 15 minutes of inactivity)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Backend Health Endpoint
+        continue-on-error: true  # Don't fail the workflow if ping fails
+        run: |
+          echo "Pinging backend to prevent cold start..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://mess-wallah.onrender.com/health || echo "000")
+          echo "Response code: $response"
+          
+          if [ $response -eq 200 ]; then
+            echo "✅ Backend is alive and healthy"
+          else
+            echo "⚠️ Backend returned status: $response (this is OK, will retry in 10 minutes)"
+          fi
+          
+          # Always exit with success to avoid email notifications
+          exit 0
+      
+      - name: Ping API Test Endpoint
+        continue-on-error: true  # Don't fail the workflow if ping fails
+        run: |
+          echo "Testing API endpoint..."
+          curl -s https://mess-wallah.onrender.com/api/test | head -c 200 || true
+          echo ""
+          echo "✅ API test completed"
+          exit 0  # Always succeed to avoid notifications
