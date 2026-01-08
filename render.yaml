@@ -4,10 +4,10 @@ services:
     env: node
     region: singapore
     plan: free
-    rootDir: backend
+    healthCheckPath: /health
+    rootDir: ./backend  # CRITICAL: Tell Render where backend folder is
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
