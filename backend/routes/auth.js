@@ -422,20 +422,6 @@ router.post('/reset-password', [
     .withMessage('Password must be at least 8 characters long')
 ], resetPassword);
 
-// @desc    Change password
-// @route   POST /api/auth/change-password
-// @access  Private
-router.post('/change-password', [
-  protect,
-  rateLimiters.general,
-  body('currentPassword')
-    .notEmpty()
-    .withMessage('Current password is required'),
-  body('newPassword')
-    .isLength({ min: 8 })
-    .withMessage('New password must be at least 8 characters long')
-], changePassword);
-
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private

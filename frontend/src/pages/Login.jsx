@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight, Home, Key, BedDouble } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
@@ -18,6 +18,9 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Prevent duplicate OTP requests
+  const otpRequestInProgress = useRef(false);
 
   const navigate = useNavigate();
   const { sendOtp, verifyOtp, login, user, loading: authLoading, setAuthUser } = useAuthContext();
@@ -82,7 +85,14 @@ const Login = () => {
       return;
     }
 
+    // Prevent duplicate requests
+    if (otpRequestInProgress.current) {
+      console.log('[OTP] Request already in progress, ignoring duplicate click');
+      return;
+    }
+
     try {
+      otpRequestInProgress.current = true;
       setLoading(true);
       console.log('[OTP] Sending OTP to:', formData.phone);
       const result = await sendOtp(formData.phone);
@@ -106,6 +116,7 @@ const Login = () => {
       toast.error(errorMsg);
     } finally {
       setLoading(false);
+      otpRequestInProgress.current = false;
     }
   };
 

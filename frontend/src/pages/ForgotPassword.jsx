@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Mail, ArrowLeft, Shield, CheckCircle, AlertCircle
@@ -12,6 +12,9 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Prevent duplicate requests
+  const requestInProgress = useRef(false);
 
   const navigate = useNavigate();
   const { forgotPassword } = useAuthContext();
@@ -42,7 +45,14 @@ const ForgotPassword = () => {
       return;
     }
 
+    // Prevent duplicate requests
+    if (requestInProgress.current) {
+      console.log('[FORGOT_PASSWORD] Request already in progress');
+      return;
+    }
+
     try {
+      requestInProgress.current = true;
       setLoading(true);
 
       const result = await forgotPassword(email);
@@ -58,6 +68,7 @@ const ForgotPassword = () => {
       setErrors({ email: message });
     } finally {
       setLoading(false);
+      requestInProgress.current = false;
     }
   };
 

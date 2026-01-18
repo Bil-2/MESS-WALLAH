@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -32,6 +32,9 @@ const Register = () => {
     isVerified: false
   });
   const [passwordStrength, setPasswordStrength] = useState(0);
+
+  // Prevent duplicate registration requests
+  const registrationInProgress = useRef(false);
 
   const navigate = useNavigate();
   const { register, sendOtp, verifyOtp, user, loading: authLoading, setAuthUser } = useAuthContext();
@@ -173,7 +176,14 @@ const Register = () => {
       return;
     }
 
+    // Prevent duplicate registration requests
+    if (registrationInProgress.current) {
+      console.log('[REGISTER] Registration already in progress');
+      return;
+    }
+
     setLoading(true);
+    registrationInProgress.current = true;
     try {
       // Set role based on user intent
       const registrationData = {
@@ -198,6 +208,7 @@ const Register = () => {
       toast.error(error.message || 'Registration failed');
     } finally {
       setLoading(false);
+      registrationInProgress.current = false;
     }
   };
 
