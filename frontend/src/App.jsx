@@ -7,6 +7,7 @@ import './styles/scroll-animations.css';
 import { AuthProvider, ThemeProvider } from './context';
 import { Navbar, Footer, LoadingSpinner, MobileNavigation, ProtectedRoute, RoleBasedRedirect } from './components';
 import FaviconGenerator from './components/FaviconGenerator';
+import useServerWarmup from './hooks/useServerWarmup';
 
 // Lazy load components for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -54,6 +55,9 @@ const PageLoadingFallback = () => (
 );
 
 function App() {
+  // Pre-warm backend server to prevent cold starts
+  useServerWarmup();
+
   return (
     <ThemeProvider>
       <AuthProvider>

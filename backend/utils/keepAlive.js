@@ -4,21 +4,37 @@ const http = require('http');
 /**
  * Keep-Alive Service
  * Prevents server from spinning down on free-tier platforms
- * Pings the server every 14 minutes (Render free tier spins down after 15 min of inactivity)
+ * Pings the server every 12 minutes (aligned with GitHub Actions)
+ * This provides redundancy if GitHub Actions fails
  */
 
-const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes in milliseconds
+const PING_INTERVAL = 12 * 60 * 1000; // 12 minutes in milliseconds
 const BACKEND_URL = process.env.BASE_URL || process.env.BACKEND_URL || 'http://localhost:5001';
 
 function pingServer() {
-  const url = `${BACKEND_URL}/health`;
+  const url = `${BACKEND_URL}/api/warmup`;
   const protocol = url.startsWith('https') ? https : http;
 
   const startTime = Date.now();
 
   protocol.get(url, (res) => {
     const duration = Date.now() - startTime;
-    console.log(`[KEEP-ALIVE] Ping successful - ${res.statusCode} - ${duration}ms`);
+
+    let body = '';
+    res.on('data', chunk => body += chunk);
+    res.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        console.log(`[KEEP-ALIVE] Warmup successful - ${res.statusCode} - ${duration}ms`);
+        if (data.metrics) {
+          console.log(`[KEEP-ALIVE] Metrics: DB ${data.metrics.databaseConnected ? 'Connected' : 'Disconnected'}, ` +
+            `Rooms: ${data.metrics.roomsInDatabase || 0}, ` +
+            `DB Query: ${data.metrics.databaseQueryTime}`);
+        }
+      } catch (error) {
+        console.log(`[KEEP-ALIVE] Response received - ${res.statusCode} - ${duration}ms`);
+      }
+    });
 
     // Log if response is slow (> 3 seconds)
     if (duration > 3000) {
@@ -36,12 +52,13 @@ function startKeepAlive() {
     return null;
   }
 
-  console.log(`[KEEP-ALIVE] Started - Pinging ${BACKEND_URL}/health every 14 minutes`);
+  console.log(`[KEEP-ALIVE] Started - Pinging ${BACKEND_URL}/api/warmup every 12 minutes`);
+  console.log('[KEEP-ALIVE] This provides redundancy to GitHub Actions workflow');
 
   // Ping immediately on startup
   setTimeout(pingServer, 5000); // Wait 5 seconds after server start
 
-  // Then ping every 14 minutes
+  // Then ping every 12 minutes
   return setInterval(pingServer, PING_INTERVAL);
 }
 

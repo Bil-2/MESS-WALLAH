@@ -2,8 +2,8 @@ name: Keep Backend Alive
 
 on:
   schedule:
-    # Run every 10 minutes (Render free tier spins down after 15 minutes of inactivity)
-    - cron: '*/10 * * * *'
+    # Run every 12 minutes (safer margin before Render's 15-minute timeout)
+    - cron: '*/12 * * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -11,27 +11,56 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Ping Backend Health Endpoint
-        continue-on-error: true  # Don't fail the workflow if ping fails
+      - name: Ping Warmup Endpoint with Retry Logic
         run: |
-          echo "Pinging backend to prevent cold start..."
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://mess-wallah.onrender.com/health || echo "000")
-          echo "Response code: $response"
+          echo "🔥 Warming up backend to prevent cold start..."
           
-          if [ $response -eq 200 ]; then
-            echo "✅ Backend is alive and healthy"
-          else
-            echo "⚠️ Backend returned status: $response (this is OK, will retry in 10 minutes)"
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          SUCCESS=false
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SUCCESS" = "false" ]; do
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Attempt $RETRY_COUNT of $MAX_RETRIES..."
+            
+            response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://mess-wallah.onrender.com/api/warmup || echo "000")
+            echo "Response code: $response"
+            
+            if [ $response -eq 200 ]; then
+              echo "✅ Warmup successful on attempt $RETRY_COUNT"
+              SUCCESS=true
+              
+              # Get warmup metrics
+              echo "Fetching warmup metrics..."
+              curl -s https://mess-wallah.onrender.com/api/warmup | head -c 500 || true
+              echo ""
+            else
+              echo "⚠️ Warmup returned status: $response"
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                WAIT_TIME=$((RETRY_COUNT * 10))
+                echo "Retrying in ${WAIT_TIME}s..."
+                sleep $WAIT_TIME
+              fi
+            fi
+          done
+          
+          if [ "$SUCCESS" = "false" ]; then
+            echo "⚠️ All warmup attempts failed (this is OK, server might be starting)"
           fi
           
           # Always exit with success to avoid email notifications
           exit 0
       
-      - name: Ping API Test Endpoint
-        continue-on-error: true  # Don't fail the workflow if ping fails
+      - name: Ping Health Endpoint (Redundancy Check)
         run: |
-          echo "Testing API endpoint..."
-          curl -s https://mess-wallah.onrender.com/api/test | head -c 200 || true
-          echo ""
-          echo "✅ API test completed"
+          echo "🏥 Checking health endpoint..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://mess-wallah.onrender.com/health || echo "000")
+          echo "Health endpoint response: $response"
+          
+          if [ $response -eq 200 ]; then
+            echo "✅ Health check passed"
+          else
+            echo "⚠️ Health check returned: $response (non-critical)"
+          fi
+          
           exit 0  # Always succeed to avoid notifications

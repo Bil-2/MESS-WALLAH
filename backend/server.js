@@ -220,6 +220,54 @@ const startServer = async () => {
       res.status(200).json(metrics);
     }));
 
+    // Warmup endpoint to prevent cold starts
+    app.get('/api/warmup', asyncErrorHandler(async (req, res) => {
+      const startTime = Date.now();
+
+      try {
+        // Check database connection
+        const dbConnected = mongoose.connection.readyState === 1;
+
+        // Perform lightweight database query to warm connection pool
+        let dbQueryTime = 0;
+        let roomCount = 0;
+        if (dbConnected) {
+          const queryStart = Date.now();
+          const Room = require('./models/Room');
+          roomCount = await Room.countDocuments();
+          dbQueryTime = Date.now() - queryStart;
+        }
+
+        const totalTime = Date.now() - startTime;
+
+        res.status(200).json({
+          status: 'warmed',
+          message: 'Server and database connections are warm',
+          timestamp: new Date().toISOString(),
+          metrics: {
+            totalResponseTime: totalTime + 'ms',
+            databaseQueryTime: dbQueryTime + 'ms',
+            databaseConnected: dbConnected,
+            roomsInDatabase: roomCount,
+            serverUptime: Math.floor(process.uptime()) + 's'
+          },
+          environment: process.env.NODE_ENV || 'development'
+        });
+      } catch (error) {
+        console.error('[WARMUP] Error during warmup:', error.message);
+        res.status(200).json({
+          status: 'partial',
+          message: 'Server is warm but database warmup failed',
+          timestamp: new Date().toISOString(),
+          error: error.message,
+          metrics: {
+            totalResponseTime: (Date.now() - startTime) + 'ms',
+            serverUptime: Math.floor(process.uptime()) + 's'
+          }
+        });
+      }
+    }));
+
     // Enhanced test endpoint with error recovery
     app.get('/api/test', asyncErrorHandler(async (req, res) => {
       // Test database connectivity
@@ -339,6 +387,16 @@ const startServer = async () => {
       console.log('   [OK] /api/notifications routes registered');
     } catch (error) {
       console.error('   [ERROR] Failed to register /api/notifications routes:', error.message);
+    }
+
+    // Test routes for email and OTP services (development/testing only)
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        app.use('/api/test-services', require('./routes/testServices'));
+        console.log('   [OK] /api/test-services routes registered (DEV ONLY)');
+      } catch (error) {
+        console.error('   [ERROR] Failed to register /api/test-services routes:', error.message);
+      }
     }
 
 
