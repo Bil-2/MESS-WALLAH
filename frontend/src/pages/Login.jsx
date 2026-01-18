@@ -91,7 +91,14 @@ const Login = () => {
       if (result && result.success) {
         console.log('[SUCCESS] OTP sent successfully, showing input field');
         setOtpSent(true);
-        toast.success('OTP sent successfully! Check your phone.');
+
+        // Critical UX Fix for Production Fallback
+        if (result.data?.method === 'Development') {
+          toast.success('DEV MODE: Use OTP 123456', { duration: 6000, icon: '🛠️' });
+          console.log('DEV OTP: 123456');
+        } else {
+          toast.success('OTP sent successfully! Check your phone.');
+        }
       } else {
         console.error('[ERROR] OTP send failed:', result);
         const errorMsg = result?.message || 'Failed to send OTP';
