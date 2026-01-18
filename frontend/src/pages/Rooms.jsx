@@ -88,7 +88,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
                 className="flex items-center gap-1.5 px-2.5 py-1 bg-white backdrop-blur-md rounded-full shadow-lg border border-gray-100"
               >
                 <FiAward className="w-3.5 h-3.5 text-rose-500" />
-                <span className="text-xs font-bold text-black">Superhost</span>
+                <span className="text-xs font-bold" style={{ color: '#000000' }}>Superhost</span>
               </motion.div>
             )}
 
@@ -116,8 +116,8 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
         <div className="absolute bottom-3 left-3">
           <div className="bg-white backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-gray-100">
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-black">₹{(room.rent || room.rentPerMonth || 0).toLocaleString()}</span>
-              <span className="text-sm text-gray-600 font-medium">/mo</span>
+              <span className="text-2xl font-black" style={{ color: '#000000' }}>₹{(room.rent || room.rentPerMonth || 0).toLocaleString()}</span>
+              <span className="text-sm font-medium" style={{ color: '#4B5563' }}>/mo</span>
             </div>
           </div>
         </div>
