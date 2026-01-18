@@ -6,6 +6,10 @@
   "devCommand": "cd frontend && npm run dev",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://mess-wallah.onrender.com/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
