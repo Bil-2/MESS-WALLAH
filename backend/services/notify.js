@@ -172,18 +172,6 @@ const sendBookingConfirmation = async (userEmail, bookingDetails) => {
 // Send OTP email
 const sendOTPEmail = async (userEmail, otp) => {
   try {
-    // Development mode - log to console (without OTP for security)
-    if (!process.env.SENDGRID_API_KEY) {
-      console.log('\n' + '='.repeat(80));
-      console.log('[DEVELOPMENT MODE] OTP Email');
-      console.log('='.repeat(80));
-      console.log(`To: ${userEmail}`);
-      console.log(`\nOTP Code sent (check email service logs)`);
-      console.log(`\nExpires in: 10 minutes`);
-      console.log('='.repeat(80) + '\n');
-      return;
-    }
-
     const msg = {
       to: userEmail,
       from: {
@@ -226,10 +214,38 @@ const sendOTPEmail = async (userEmail, otp) => {
       `
     };
 
-    await sgMail.send(msg);
-    console.log('[SUCCESS] OTP email sent successfully to:', userEmail);
+    // Try SendGrid first if configured
+    if (process.env.SENDGRID_API_KEY) {
+      await sgMail.send(msg);
+      console.log('[SUCCESS] OTP email sent via SendGrid to:', userEmail);
+      return;
+    }
+
+    // Fallback to Gmail if SendGrid not available
+    const gmailTransporter = createGmailTransporter();
+    if (gmailTransporter) {
+      await gmailTransporter.sendMail({
+        from: `"${emailConfig.fromName}" <${emailConfig.from}>`,
+        to: userEmail,
+        subject: msg.subject,
+        html: msg.html
+      });
+      console.log('[SUCCESS] OTP email sent via Gmail to:', userEmail);
+      return;
+    }
+
+    // No email service configured - development mode
+    console.log('\n' + '='.repeat(80));
+    console.log('[DEVELOPMENT MODE] OTP Email');
+    console.log('='.repeat(80));
+    console.log(`To: ${userEmail}`);
+    console.log(`OTP Code: ${otp}`);
+    console.log(`\nExpires in: 10 minutes`);
+    console.log('='.repeat(80) + '\n');
+
   } catch (error) {
-    console.error('[ERROR] OTP email failed:', error.message);
+    console.error('[ERROR] Failed to send OTP email:', error.message);
+    throw new Error('Failed to send OTP email. Please try again later.');
   }
 };
 
@@ -774,7 +790,7 @@ const sendBookingCancellation = async (email, phone, details, isOwner = false) =
   `;
 
   await sendEmail(email, `❌ Booking Cancelled - ${bookingId}`, emailHtml);
-  
+
   const smsMessage = `MESS WALLAH: Booking ${bookingId} has been cancelled. ${refundAmount ? `Refund: ₹${refundAmount}` : ''} Contact support for queries.`;
   await sendSMS(phone, smsMessage);
 
@@ -825,7 +841,7 @@ const sendBookingStatusUpdate = async (email, phone, details) => {
   `;
 
   await sendEmail(email, `${statusEmojis[status] || '📋'} Booking ${status} - ${bookingId}`, emailHtml);
-  
+
   const smsMessage = `MESS WALLAH: Booking ${bookingId} is now ${status.toUpperCase()}. ${message || 'Login to view details.'}`;
   await sendSMS(phone, smsMessage);
 
@@ -836,14 +852,14 @@ module.exports = {
   // Generic
   sendEmail,
   sendSMS,
-  
+
   // Existing
   sendWelcomeEmail,
   sendBookingConfirmation,
   sendOTPEmail,
   sendPasswordResetEmail,
   sendPasswordResetSuccessEmail,
-  
+
   // New booking notifications
   sendBookingConfirmationToCustomer,
   sendBookingNotificationToOwner,
