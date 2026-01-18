@@ -352,22 +352,26 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS
-        }
+        },
+        connectionTimeout: 10000, // 10 second timeout
+        greetingTimeout: 10000,
+        socketTimeout: 10000
       });
 
       const mailOptions = {
         from: `"${emailConfig.fromName}" <${process.env.GMAIL_USER}>`,
         to: userEmail,
-        subject: 'Reset your MESS WALLAH password',
+        subject: 'Reset Your MESS WALLAH Password',
         html: htmlContent
       };
 
       await transporter.sendMail(mailOptions);
-      console.log('[SUCCESS] Password reset email sent successfully via Gmail to:', userEmail);
-      return;
+      console.log(`[SUCCESS] Password reset email sent via Gmail to: ${userEmail}`);
+      return; // Exit successfully
     } catch (error) {
       console.error('[ERROR] Gmail SMTP failed:', error.message);
-      // Fall through to try SendGrid or development mode
+      // Throw error to be caught by authController
+      throw new Error('Failed to send password reset email via Gmail');
     }
   }
 
@@ -402,6 +406,9 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
   console.log(`\nPassword Reset Link:`);
   console.log(`\n   ${resetUrl}\n`);
   console.log('='.repeat(80) + '\n');
+
+  // In development, still throw error to prevent proceeding
+  throw new Error('Email service not configured - check development logs for reset link');
 };
 
 // Send password reset success confirmation email

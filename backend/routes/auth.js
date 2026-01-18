@@ -150,10 +150,20 @@ router.post('/send-otp-email', [
     await otpRecord.save();
 
     // Send OTP email using notify service
-    const { sendOTPEmail } = require('../services/notify');
-    await sendOTPEmail(email, otp);
-
-    console.log(`[SUCCESS] OTP email sent to: ${email}`);
+    try {
+      const { sendOTPEmail } = require('../services/notify');
+      await sendOTPEmail(email, otp);
+      console.log(`[SUCCESS] OTP email sent to: ${email}`);
+    } catch (emailError) {
+      console.error('[ERROR] Failed to send OTP email:', emailError.message);
+      // Delete the OTP record since email failed
+      await Otp.deleteOne({ _id: otpRecord._id });
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+      });
+    }
 
     res.status(200).json({
       success: true,
