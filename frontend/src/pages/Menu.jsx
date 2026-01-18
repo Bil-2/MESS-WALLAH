@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  User, Home, Search, Heart, Shield, Phone, 
+import {
+  User, Home, Search, Heart, Shield, Phone,
   CheckCircle, X
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext';
@@ -65,8 +65,8 @@ const Menu = () => {
 
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       x: 0,
       transition: { duration: 0.3 }
     }
@@ -161,18 +161,18 @@ const Menu = () => {
                   <span className="text-xs text-green-600 font-medium">Online & Active</span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                   <div className="text-lg font-bold text-orange-600">4,500+</div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Rooms Available</div>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                  <div className="text-lg font-bold text-green-600">4.8★</div>
+                  <div className="text-lg font-bold text-green-600">4.8/5</div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">User Rating</div>
                 </div>
               </div>
-              
+
               <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
                 <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                   <span>Version 1.2.0</span>
@@ -183,10 +183,10 @@ const Menu = () => {
                   <span>Status: Stable</span>
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  
+
                 </p>
               </div>
             </div>

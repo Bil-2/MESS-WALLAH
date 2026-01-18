@@ -8,13 +8,13 @@ import { FiCheck, FiLink, FiPhone, FiMail, FiUser, FiShield, FiX, FiArrowRight }
  * Guides users through account linking process for millions of users
  */
 
-const AccountLinkingNotification = ({ 
-  isVisible, 
-  onClose, 
-  linkingData, 
+const AccountLinkingNotification = ({
+  isVisible,
+  onClose,
+  linkingData,
   onProceedToRegister,
   onProceedToLogin,
-  accountStatus 
+  accountStatus
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
@@ -46,7 +46,7 @@ const AccountLinkingNotification = ({
     },
     linking: {
       icon: FiLink,
-      title: '🔗 Account Linking Available',
+      title: 'Account Linking Available',
       color: 'blue',
       bgGradient: 'from-blue-500 to-indigo-600'
     },
@@ -81,11 +81,11 @@ const AccountLinkingNotification = ({
         >
           <FiCheck className="w-10 h-10 text-green-600 dark:text-green-400" />
         </motion.div>
-        
+
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
           Your accounts are now unified!
         </h3>
-        
+
         <p className="text-gray-600 dark:text-gray-300 mb-4">
           {linkingData?.message || 'Your phone and email are now connected in one secure account.'}
         </p>
@@ -131,11 +131,11 @@ const AccountLinkingNotification = ({
         <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
           <FiLink className="w-8 h-8 text-blue-600 dark:text-blue-400" />
         </div>
-        
+
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center">
           Link Your Accounts
         </h3>
-        
+
         <p className="text-gray-600 dark:text-gray-300 text-center mb-4">
           We found an existing account that can be linked with your current login method.
         </p>
@@ -191,7 +191,7 @@ const AccountLinkingNotification = ({
           <FiLink className="w-4 h-4" />
           <span>Link Accounts</span>
         </motion.button>
-        
+
         <button
           onClick={() => setShowDetails(!showDetails)}
           className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium py-2 transition-colors"
@@ -230,11 +230,11 @@ const AccountLinkingNotification = ({
         <div className="w-16 h-16 mx-auto mb-4 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
           <FiUser className="w-8 h-8 text-orange-600 dark:text-orange-400" />
         </div>
-        
+
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 text-center">
           Complete Your Profile
         </h3>
-        
+
         <p className="text-gray-600 dark:text-gray-300 text-center mb-4">
           {linkingData?.message || 'Add email and password to complete your account setup.'}
         </p>
@@ -257,7 +257,7 @@ const AccountLinkingNotification = ({
         >
           Complete Registration
         </motion.button>
-        
+
         <button
           onClick={onProceedToLogin}
           className="w-full text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium py-2 transition-colors"

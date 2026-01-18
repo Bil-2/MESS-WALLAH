@@ -163,7 +163,7 @@ const SuccessStories = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold text-gray-900 dark:text-white mb-4"
           >
-            💬 Success Stories
+            Success Stories
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -249,8 +249,8 @@ const SuccessStories = () => {
             <motion.div
               key={index}
               className={`h-2 rounded-full transition-all duration-300 ${index === currentReviewIndex
-                  ? `w-8 bg-gradient-to-r ${currentReview?.categoryColor}`
-                  : 'w-2 bg-gray-300 dark:bg-gray-600'
+                ? `w-8 bg-gradient-to-r ${currentReview?.categoryColor}`
+                : 'w-2 bg-gray-300 dark:bg-gray-600'
                 }`}
               animate={{
                 scale: index === currentReviewIndex ? 1.2 : 1,

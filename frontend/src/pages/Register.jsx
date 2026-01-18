@@ -296,7 +296,7 @@ const Register = () => {
                     </div>
                     <div className="flex-1 text-left">
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                        🏠 I want to FIND A ROOM
+                        I want to FIND A ROOM
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Student or professional looking to rent accommodation
@@ -329,7 +329,7 @@ const Register = () => {
                     </div>
                     <div className="flex-1 text-left">
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                        🏢 I want to RENT OUT MY ROOM
+                        I want to RENT OUT MY ROOM
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Property owner or landlord listing rooms for rent
@@ -346,7 +346,7 @@ const Register = () => {
                   className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl"
                 >
                   <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
-                    ✓ You selected: <span className="font-semibold">
+                    You selected: <span className="font-semibold">
                       {userIntent === 'tenant' ? 'Find a Room (Tenant)' : 'Rent Out Room (Owner)'}
                     </span>
                   </p>

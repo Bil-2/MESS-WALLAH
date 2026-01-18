@@ -105,19 +105,19 @@ const NotificationBell = () => {
 
   const getNotificationIcon = (type) => {
     const icons = {
-      booking_request: '📋',
-      booking_confirmed: '✅',
-      booking_rejected: '❌',
-      booking_cancelled: '🚫',
-      payment_success: '💳',
-      payment_failed: '⚠️',
-      refund_initiated: '💰',
-      refund_completed: '✅',
-      message_received: '💬',
-      review_received: '⭐',
-      system: '🔔'
+      booking_request: 'REQ',
+      booking_confirmed: 'OK',
+      booking_rejected: 'NO',
+      booking_cancelled: 'CXL',
+      payment_success: 'PAID',
+      payment_failed: 'FAIL',
+      refund_initiated: 'REF',
+      refund_completed: 'DONE',
+      message_received: 'MSG',
+      review_received: 'REV',
+      system: 'SYS'
     };
-    return icons[type] || '🔔';
+    return icons[type] || 'INFO';
   };
 
   return (
@@ -199,7 +199,7 @@ const NotificationBell = () => {
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{getNotificationIcon(notification.type)}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <p className={`text-sm font-medium truncate ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>

@@ -182,7 +182,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
         <div className="flex items-center gap-2 mb-4 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800/30">
           <FiZap className="w-4 h-4 text-amber-600" />
           <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-            🔥 High demand - {Math.floor(Math.random() * 10) + 3} people viewing
+            HIGH DEMAND - {Math.floor(Math.random() * 10) + 3} people viewing
           </span>
         </div>
 
@@ -360,7 +360,7 @@ const Rooms = () => {
       toast.success('Removed from favorites');
     } else {
       newFavorites.add(roomId);
-      toast.success('Added to favorites ❤️');
+      toast.success('Added to favorites');
     }
     setFavorites(newFavorites);
     localStorage.setItem('mess-wallah-favorites', JSON.stringify([...newFavorites]));
@@ -781,7 +781,7 @@ const Rooms = () => {
               { value: '4,500+', label: 'Verified Rooms' },
               { value: '50K+', label: 'Happy Students' },
               { value: '100+', label: 'Cities Covered' },
-              { value: '4.8★', label: 'Average Rating' },
+              { value: '4.8', label: 'Average Rating' },
             ].map((stat, idx) => (
               <motion.div
                 key={idx}

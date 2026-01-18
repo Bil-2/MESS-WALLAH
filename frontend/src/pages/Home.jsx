@@ -273,7 +273,7 @@ const Home = () => {
                   <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-green-400 mb-1">4.88★</div>
+                  <div className="text-3xl font-black text-green-400 mb-1">4.88/5</div>
                   <div className="text-sm text-gray-400 font-semibold">Safety Rating</div>
                 </div>
               </div>

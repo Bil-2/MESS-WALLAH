@@ -77,19 +77,19 @@ const Notifications = () => {
 
   const getNotificationIcon = (type) => {
     const icons = {
-      booking_request: '📋',
-      booking_confirmed: '✅',
-      booking_rejected: '❌',
-      booking_cancelled: '🚫',
-      payment_success: '💳',
-      payment_failed: '⚠️',
-      refund_initiated: '💰',
-      refund_completed: '✅',
-      message_received: '💬',
-      review_received: '⭐',
-      system: '🔔'
+      booking_request: 'REQ',
+      booking_confirmed: 'OK',
+      booking_rejected: 'NO',
+      booking_cancelled: 'CXL',
+      payment_success: 'PAID',
+      payment_failed: 'FAIL',
+      refund_initiated: 'REF',
+      refund_completed: 'DONE',
+      message_received: 'MSG',
+      review_received: 'REV',
+      system: 'SYS'
     };
-    return icons[type] || '🔔';
+    return icons[type] || 'INFO';
   };
 
   const getTypeColor = (type) => {
@@ -205,13 +205,12 @@ const Notifications = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
-                    className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border-l-4 ${getTypeColor(notification.type)} ${
-                      !notification.isRead ? 'ring-2 ring-orange-200 dark:ring-orange-800' : ''
-                    }`}
+                    className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border-l-4 ${getTypeColor(notification.type)} ${!notification.isRead ? 'ring-2 ring-orange-200 dark:ring-orange-800' : ''
+                      }`}
                   >
                     <div className="p-5">
                       <div className="flex items-start gap-4">
-                        <span className="text-3xl flex-shrink-0">{getNotificationIcon(notification.type)}</span>
+                        <span className="text-xs font-bold px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{getNotificationIcon(notification.type)}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4">
                             <div>
