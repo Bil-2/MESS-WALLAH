@@ -85,10 +85,10 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm rounded-full shadow-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white backdrop-blur-md rounded-full shadow-lg border border-gray-100"
               >
                 <FiAward className="w-3.5 h-3.5 text-rose-500" />
-                <span className="text-xs font-semibold text-gray-800">Superhost</span>
+                <span className="text-xs font-bold text-black">Superhost</span>
               </motion.div>
             )}
 
@@ -114,10 +114,10 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
 
         {/* Bottom Left - Price Tag (OYO Style) */}
         <div className="absolute bottom-3 left-3">
-          <div className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+          <div className="bg-white backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-gray-100">
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-gray-900">₹{(room.rent || room.rentPerMonth || 0).toLocaleString()}</span>
-              <span className="text-sm text-gray-500 font-medium">/mo</span>
+              <span className="text-2xl font-black text-black">₹{(room.rent || room.rentPerMonth || 0).toLocaleString()}</span>
+              <span className="text-sm text-gray-600 font-medium">/mo</span>
             </div>
           </div>
         </div>
