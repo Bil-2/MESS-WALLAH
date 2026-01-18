@@ -28,10 +28,10 @@ services:
       - key: RATE_LIMIT_MAX_REQUESTS
         value: 100
       - key: FRONTEND_URL
-        value: https://frontend-m5hwb7t6e-biltu-bags-projects.vercel.app
+        value: https://frontend-pearl-mu-12.vercel.app
       - key: CLIENT_URL
-        value: https://frontend-m5hwb7t6e-biltu-bags-projects.vercel.app
+        value: https://frontend-pearl-mu-12.vercel.app
       - key: ALLOWED_ORIGINS
-        value: https://frontend-m5hwb7t6e-biltu-bags-projects.vercel.app
+        value: https://frontend-pearl-mu-12.vercel.app,https://frontend-git-main-biltu-bags-projects.vercel.app,https://frontend-cza85omwe-biltu-bags-projects.vercel.app,http://localhost:5173
       - key: EMAIL_FROM
         value: noreply@messwallah.com
