@@ -3,7 +3,9 @@ const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendMessWallahOTP, verifyMessWallahOTP, formatPhoneNumber } = require('../services/twilioVerifyService');
+const { sendFast2SMS } = require('../services/fast2smsService');
 const AccountLinkingService = require('../services/accountLinkingService');
+const bcrypt = require('bcryptjs');
 
 // Generate 6-digit OTP
 const generateOTP = () => {
@@ -62,45 +64,69 @@ const sendOtp = async (req, res) => {
       });
     }
 
-    // REAL SMS OTP sending - sends actual SMS to your device
+    // OTP Sending Logic with Provider Fallback
     let otpSendResult;
+    let otpProvider = 'twilio';
+    let generatedOtp = null; // Only for non-Twilio providers
 
-    console.log(`[INFO] Sending REAL SMS OTP to: ${formattedPhone}`);
+    console.log(`[INFO] Sending OTP to: ${formattedPhone}`);
 
-    try {
-      // Force real SMS sending with proper Twilio configuration
-      console.log('[DEBUG] Attempting to send REAL SMS via Twilio...');
+    // CONFIG CHECK
+    const hasTwilio = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_VERIFY_SERVICE_SID;
+    const hasFast2SMS = process.env.FAST2SMS_API_KEY;
+
+    // 1. Try Twilio Verify
+    if (hasTwilio) {
+      console.log('[OTP] Using Twilio Verify provider');
       otpSendResult = await sendMessWallahOTP(formattedPhone);
 
       if (otpSendResult.success && !otpSendResult.sid.startsWith('FALLBACK_')) {
-        console.log(`[SUCCESS] REAL SMS OTP sent successfully to ${formattedPhone}`);
-        console.log(`[INFO] Check your device for the OTP message!`);
-        console.log(`[DEBUG] Twilio SID: ${otpSendResult.sid}`);
+        otpProvider = 'twilio';
       } else {
-        console.log(`[WARNING] Twilio SMS failed or fallback used: ${otpSendResult.error || 'Fallback mode'}`);
-        console.log('[DEBUG] Using development mode instead');
-        // Fallback to development mode
-        otpSendResult = {
-          success: true,
-          sid: 'DEV_' + Date.now(),
-          status: 'sent',
-          message: 'Development mode - check console for OTP'
-        };
+        console.log('[OTP] Twilio failed or keys invalid, trying fallbacks...');
+        otpSendResult = { success: false }; // Mark as failed to trigger fallback
       }
-    } catch (error) {
-      console.log('[ERROR] SMS sending failed, using development fallback:', error.message);
+    }
+
+    // 2. Try Fast2SMS (If Twilio failed or not configured)
+    if ((!otpSendResult || !otpSendResult.success) && hasFast2SMS) {
+      console.log('[OTP] Using Fast2SMS provider');
+      generatedOtp = generateOTP();
+      otpSendResult = await sendFast2SMS(formattedPhone, generatedOtp);
+
+      if (otpSendResult.success) {
+        otpProvider = 'fast2sms';
+        // Standardize response structure
+        otpSendResult.sid = 'F2S_' + Date.now();
+        otpSendResult.status = 'sent';
+      }
+    }
+
+    // 3. Fallback to Development Mode
+    if (!otpSendResult || !otpSendResult.success) {
+      console.log('[OTP] Using Development Fallback');
+      generatedOtp = '123456'; // Fixed dev code
+      otpProvider = 'development';
       otpSendResult = {
         success: true,
         sid: 'DEV_' + Date.now(),
         status: 'sent',
-        message: 'Development mode - check console for OTP'
+        message: 'Development mode active'
       };
     }
 
-    // Save verification attempt to database for tracking
+    // Determine Hash to store
+    // For Twilio, we don't know the code, so use placeholder.
+    // For others, we hash the generated code.
+    let codeHashToStore = 'universal_otp';
+    if (otpProvider !== 'twilio' && generatedOtp) {
+      codeHashToStore = await bcrypt.hash(generatedOtp, 10);
+    }
+
+    // Save verification attempt to database
     const otpRecord = new Otp({
       phone: formattedPhone,
-      codeHash: 'universal_otp', // Universal OTP system
+      codeHash: codeHashToStore,
       expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
       attempts: 0,
       verificationSid: otpSendResult.sid
@@ -109,19 +135,17 @@ const sendOtp = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: otpSendResult.sid.startsWith('DEV_') ?
-        'OTP sent successfully!' :
+      message: otpProvider === 'development' ?
+        'OTP sent successfully!' : // Frontend handles the "Use 123456" toast
         'OTP sent to your device! Check your SMS messages.',
       data: {
         phone: formattedPhone,
-        expiresIn: 10, // minutes
-        method: otpSendResult.sid.startsWith('DEV_') ? 'Development' : 'Real SMS',
+        expiresIn: 10,
+        method: otpProvider === 'development' ? 'Development' : 'Real SMS',
+        provider: otpProvider,
         status: 'sent',
         sid: otpSendResult.sid,
-        canResendAfter: 30,
-        note: otpSendResult.sid.startsWith('DEV_') ?
-          'Development mode active' :
-          'Check your phone for SMS with 6-digit verification code'
+        canResendAfter: 30
       }
     });
 
@@ -157,22 +181,38 @@ const verifyOtp = async (req, res) => {
     console.log(`[DEBUG] Verifying OTP for ${formattedPhone.substring(0, 6)}****`);
 
     try {
-      // PRODUCTION-READY OTP VERIFICATION with fallback
-      console.log(`[INFO] PRODUCTION OTP VERIFICATION for ${formattedPhone}: ${otp}`);
 
-      const verifyResult = await verifyMessWallahOTP(formattedPhone, otp);
+      // Determine Verification Strategy based on DB Record
+      const existingOtpRecord = await Otp.findOne({ phone: formattedPhone }).sort({ createdAt: -1 });
 
-      if (verifyResult.success) {
-        verificationSuccess = true;
-        console.log('[SUCCESS] REAL SMS OTP verified successfully via Twilio');
-        console.log('[SUCCESS] The OTP from your SMS is correct and valid!');
+      if (!existingOtpRecord) {
+        return res.status(400).json({ success: false, message: 'OTP expired or not found' });
+      }
+
+      // STRATEGY A: Twilio Verify (If we didn't store a hash)
+      if (existingOtpRecord.codeHash === 'universal_otp') {
+        console.log(`[INFO] Verifying via Twilio API`);
+        const verifyResult = await verifyMessWallahOTP(formattedPhone, otp);
+        if (verifyResult.success) {
+          verificationSuccess = true;
+        }
+      }
+      // STRATEGY B: Local Hash Verify (Fast2SMS or Dev)
+      else {
+        console.log(`[INFO] Verifying via Local Hash`);
+        const isMatch = await bcrypt.compare(otp, existingOtpRecord.codeHash);
+        if (isMatch) {
+          verificationSuccess = true;
+        }
+      }
+
+      if (verificationSuccess) {
+        console.log('[SUCCESS] OTP Verified Successfully');
       } else {
-        // SECURITY: No fallback OTP - only real SMS OTP accepted
-        console.log(`[ERROR] INVALID OTP - Not the real OTP from SMS`);
-
+        console.log('[ERROR] Invalid OTP');
         return res.status(400).json({
           success: false,
-          message: 'Invalid OTP. Please enter the exact 6-digit code you received via SMS.',
+          message: 'Invalid OTP. Please enter the exact code.',
           error: 'OTP verification failed'
         });
       }
