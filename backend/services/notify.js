@@ -344,7 +344,29 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
     </html>
   `;
 
-  // Check if Gmail SMTP is configured
+  // Try SendGrid FIRST (works on Render)
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const msg = {
+        to: userEmail,
+        from: {
+          email: emailConfig.from,
+          name: emailConfig.fromName
+        },
+        subject: 'Reset Your MESS WALLAH Password',
+        html: htmlContent
+      };
+
+      await sgMail.send(msg);
+      console.log('[SUCCESS] Password reset email sent via SendGrid to:', userEmail);
+      return; // Exit successfully
+    } catch (error) {
+      console.error('[ERROR] SendGrid failed:', error.message);
+      // Fall through to try Gmail
+    }
+  }
+
+  // Try Gmail SMTP as fallback (works locally but not on Render)
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
     try {
       const transporter = nodemailer.createTransport({
@@ -353,7 +375,7 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS
         },
-        connectionTimeout: 10000, // 10 second timeout
+        connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 10000
       });
@@ -370,29 +392,6 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
       return; // Exit successfully
     } catch (error) {
       console.error('[ERROR] Gmail SMTP failed:', error.message);
-      // Throw error to be caught by authController
-      throw new Error('Failed to send password reset email via Gmail');
-    }
-  }
-
-  // Check if SendGrid is configured
-  if (process.env.SENDGRID_API_KEY) {
-    try {
-      const msg = {
-        to: userEmail,
-        from: {
-          email: emailConfig.from,
-          name: emailConfig.fromName
-        },
-        subject: 'Reset your MESS WALLAH password',
-        html: htmlContent
-      };
-
-      await sgMail.send(msg);
-      console.log('[SUCCESS] Password reset email sent successfully via SendGrid to:', userEmail);
-      return;
-    } catch (error) {
-      console.error('[ERROR] SendGrid failed:', error.message);
       // Fall through to development mode
     }
   }
