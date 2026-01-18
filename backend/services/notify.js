@@ -362,7 +362,12 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
       return; // Exit successfully
     } catch (error) {
       console.error('[ERROR] SendGrid failed:', error.message);
-      // Fall through to try Gmail
+      console.error('[ERROR] SendGrid details:', error.response ? error.response.body : 'No details');
+      // If no Gmail fallback available, throw SendGrid error
+      if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+        throw new Error(`SendGrid error: ${error.message || 'Unauthorized'}`);
+      }
+      // Otherwise fall through to try Gmail
     }
   }
 
