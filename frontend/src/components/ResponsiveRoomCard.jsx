@@ -121,10 +121,10 @@ const ResponsiveRoomCard = ({
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-slate-900 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 dark:border-slate-700"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-gray-200"
               >
                 <Award className="w-3.5 h-3.5 text-rose-500" />
-                <span className="text-xs font-semibold text-gray-900 dark:text-white">Verified</span>
+                <span className="text-xs font-semibold text-gray-900">Verified</span>
               </motion.div>
             )}
 
@@ -153,12 +153,12 @@ const ResponsiveRoomCard = ({
 
         {/* Price Tag - Bottom Left */}
         <div className="absolute bottom-3 left-3">
-          <div className="bg-white dark:bg-slate-900 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg border border-gray-200 dark:border-slate-700">
+          <div className="bg-white/95 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-gray-200">
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-black text-gray-900 dark:text-white">
+              <span className="text-xl font-black text-gray-900">
                 ₹{(room.rent || room.rentPerMonth || 0).toLocaleString()}
               </span>
-              <span className="text-sm text-gray-600 dark:text-gray-200 font-medium">/mo</span>
+              <span className="text-sm text-gray-600 font-medium">/mo</span>
             </div>
           </div>
         </div>
