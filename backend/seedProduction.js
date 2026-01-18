@@ -134,6 +134,35 @@ const getPriceRange = (state) => {
   }
 };
 
+// 25+ High Quality Unsplash Images (Hostels, Bedrooms, Apartments)
+const roomImages = [
+  'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1616594039964-40891a909d99?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1522771753035-1a5b6562f329?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1512918760513-955403756248?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1628994503718-47c3761749ba?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1516455590571-18259e0df69e?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1595524366192-e71889709e35?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1598928636135-d146006ff4be?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1556020685-ae41abfc9365?auto=format&fit=crop&w=800&q=80'
+];
+
 // Generate random pincode (realistic-ish)
 const generatePincode = () => {
   return String(100000 + Math.floor(Math.random() * 899999));
@@ -168,7 +197,7 @@ const generateRoom = (state, district, index, isBooked, ownerId) => {
     },
     amenities,
     photos: [{
-      url: `https://res.cloudinary.com/demo/image/upload/sample_${index % 5 + 1}.jpg`,
+      url: roomImages[Math.floor(Math.random() * roomImages.length)],
       publicId: `room_${state}_${district}_${index}`,
       isPrimary: true,
       uploadType: 'uploaded',
