@@ -6,6 +6,10 @@ const twilio = require('twilio');
 // Initialize SendGrid with API key (if available)
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log('[NOTIFY] SendGrid initialized with API key');
+  console.log('[NOTIFY] Sender email configured as:', process.env.FROM_EMAIL || process.env.EMAIL_FROM || process.env.GMAIL_USER || 'noreply@messwallah.com');
+} else {
+  console.log('[WARNING] SENDGRID_API_KEY not found - email functionality will be limited');
 }
 
 // Initialize Twilio for SMS notifications
@@ -16,8 +20,9 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 }
 
 // Email configuration
+// Support both FROM_EMAIL and EMAIL_FROM for backwards compatibility
 const emailConfig = {
-  from: process.env.FROM_EMAIL || process.env.GMAIL_USER || 'noreply@messwallah.com',
+  from: process.env.FROM_EMAIL || process.env.EMAIL_FROM || process.env.GMAIL_USER || 'noreply@messwallah.com',
   fromName: 'MESS WALLAH'
 };
 
@@ -347,6 +352,10 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
   // Try SendGrid FIRST (works on Render)
   if (process.env.SENDGRID_API_KEY) {
     try {
+      console.log('[INFO] Attempting to send password reset via SendGrid');
+      console.log('[INFO] Sender email:', emailConfig.from);
+      console.log('[INFO] Recipient email:', userEmail);
+
       const msg = {
         to: userEmail,
         from: {
@@ -362,13 +371,26 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
       return; // Exit successfully
     } catch (error) {
       console.error('[ERROR] SendGrid failed:', error.message);
-      console.error('[ERROR] SendGrid details:', error.response ? error.response.body : 'No details');
+      console.error('[ERROR] SendGrid error code:', error.code);
+      console.error('[ERROR] SendGrid details:', error.response ? JSON.stringify(error.response.body) : 'No details');
+
+      // Check for common SendGrid errors
+      if (error.code === 401 || error.message.includes('Unauthorized')) {
+        throw new Error('SendGrid authentication failed. Please verify your API key.');
+      }
+      if (error.code === 403 || error.message.includes('Forbidden')) {
+        throw new Error(`SendGrid sender verification failed. Please verify ${emailConfig.from} in SendGrid dashboard.`);
+      }
+
       // If no Gmail fallback available, throw SendGrid error
       if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-        throw new Error(`SendGrid error: ${error.message || 'Unauthorized'}`);
+        throw new Error(`SendGrid error: ${error.message || 'Unknown error'}`);
       }
+      console.log('[INFO] Falling back to Gmail SMTP');
       // Otherwise fall through to try Gmail
     }
+  } else {
+    console.log('[WARNING] SENDGRID_API_KEY not configured, trying Gmail fallback');
   }
 
   // Try Gmail SMTP as fallback (works locally but not on Render)
