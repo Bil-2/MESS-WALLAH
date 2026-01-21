@@ -780,7 +780,7 @@ const Rooms = () => {
             {[
               { value: '4,500+', label: 'Verified Rooms' },
               { value: '50K+', label: 'Happy Students' },
-              { value: '100+', label: 'Cities Covered' },
+              { value: '900+', label: 'Cities Covered' },
               { value: '4.8', label: 'Average Rating' },
             ].map((stat, idx) => (
               <motion.div
