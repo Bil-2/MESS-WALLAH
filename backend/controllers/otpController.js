@@ -49,6 +49,17 @@ const sendOtp = async (req, res) => {
     // Format phone number
     const formattedPhone = formatPhoneNumber(phone);
 
+    // CRITICAL: Check if phone number exists in database (per user requirements)
+    // Only registered users can use OTP login
+    const existingUser = await User.findOne({ phone: formattedPhone });
+    if (!existingUser) {
+      console.log(`[AUTH] OTP requested for unregistered phone: ${formattedPhone}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Mobile number not registered. Please register first.'
+      });
+    }
+
     // Check rate limiting - max 3 OTPs per phone per hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentOtps = await Otp.countDocuments({

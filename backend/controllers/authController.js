@@ -578,15 +578,14 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Find user
+    // Find user - Return explicit error if not found (per user requirements)
     const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-    // Always return success to prevent email enumeration attacks
     if (!user) {
-      console.log(`Password reset requested for non-existent email`);
-      return res.json({
-        success: true,
-        message: 'If an account with that email exists, we have sent a password reset link.'
+      console.log(`Password reset requested for non-existent email: ${email}`);
+      return res.status(404).json({
+        success: false,
+        message: 'Email not found. Please register first.'
       });
     }
 
