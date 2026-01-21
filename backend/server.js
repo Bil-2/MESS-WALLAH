@@ -27,7 +27,7 @@ const bookingRoutes = require('./routes/bookings');
 const ownerRoutes = require('./routes/owner');
 const paymentRoutes = require('./routes/paymentRoutes');
 const searchRoutes = require('./routes/search'); // Add search routes
-const notificationRoutes = require('./routes/notificationRoutes'); // Add notification routes
+const notificationRoutes = require('./routes/notifications'); // Add notification routes
 
 const healthMonitor = require('./utils/healthMonitor');
 
@@ -362,8 +362,7 @@ const startServer = async () => {
       console.error('   [ERROR] Failed to register /api/payments routes:', error.message);
       // Fallback to simple routes if new routes fail
       try {
-        app.use('/api/payments', require('./routes/simplePaymentRoutes'));
-        console.log('   [OK] /api/payments fallback routes registered');
+        console.warn('   [WARN] Payment routes fallback disabled (simplePaymentRoutes deleted)');
       } catch (fallbackError) {
         console.error('   [ERROR] Payment routes completely failed');
       }
