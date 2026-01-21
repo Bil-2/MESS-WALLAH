@@ -22,9 +22,9 @@ const {
 // Routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-const roomRoutes = require('./routes/roomController');
+const roomRoutes = require('./routes/rooms');
 const bookingRoutes = require('./routes/bookings');
-const ownerRoutes = require('./routes/ownerController');
+const ownerRoutes = require('./routes/owner');
 const paymentRoutes = require('./routes/paymentRoutes');
 const searchRoutes = require('./routes/search'); // Add search routes
 const notificationRoutes = require('./routes/notificationRoutes'); // Add notification routes
