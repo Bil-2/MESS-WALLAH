@@ -33,5 +33,7 @@ services:
         value: https://frontend-pearl-mu-12.vercel.app
       - key: ALLOWED_ORIGINS
         value: https://frontend-pearl-mu-12.vercel.app,https://frontend-git-main-biltu-bags-projects.vercel.app,https://frontend-cza85omwe-biltu-bags-projects.vercel.app,http://localhost:5173
-      - key: EMAIL_FROM
-        value: noreply@messwallah.com
+      - key: FROM_EMAIL
+        value: biltubag29@gmail.com
+      - key: SENDGRID_API_KEY
+        sync: false
