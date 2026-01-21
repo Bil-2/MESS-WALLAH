@@ -21,7 +21,7 @@ const {
 
 // Routes
 const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/userController');
+const userRoutes = require('./routes/users');
 const roomRoutes = require('./routes/roomController');
 const bookingRoutes = require('./routes/bookings');
 const ownerRoutes = require('./routes/ownerController');
