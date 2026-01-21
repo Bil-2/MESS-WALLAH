@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - NODE_ENV=production
+      # Add other environment variables here or use env_file
+      # - MONGODB_URI=...
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Mount source code for development (optional, remove for production)
+      # - ./backend:/app
+      # - /app/node_modules
+      - ./backend/uploads:/app/uploads
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:5001/api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
