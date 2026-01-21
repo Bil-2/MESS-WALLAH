@@ -42,8 +42,11 @@ const sendEmail = async (options) => {
   try {
     const transporter = createTransporter();
 
+    // Use FROM_EMAIL if set, otherwise use GMAIL_USER
+    const fromEmail = process.env.FROM_EMAIL || process.env.GMAIL_USER || 'noreply@messwallah.com';
+
     const mailOptions = {
-      from: `"MESS WALLAH" <${process.env.GMAIL_USER}>`,
+      from: `"MESS WALLAH" <${fromEmail}>`,
       to: options.to,
       subject: options.subject,
       text: options.text,

@@ -456,6 +456,15 @@ const changePassword = async (req, res) => {
       });
     }
 
+    // Check if new password was used in the past
+    const isInHistory = await user.isPasswordInHistory(newPassword);
+    if (isInHistory) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot reuse a previous password. Please choose a new password.'
+      });
+    }
+
     // Hash new password
     const saltRounds = 12;
     const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
@@ -659,13 +668,24 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Check if new password is same as current
-    const isSamePassword = await bcrypt.compare(newPassword, user.password);
-    if (isSamePassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be different from current password'
-      });
+    // Check if new password is same as current (only if user has a password)
+    if (user.password) {
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be different from current password'
+        });
+      }
+
+      // Check if new password was used in the past
+      const isInHistory = await user.isPasswordInHistory(newPassword);
+      if (isInHistory) {
+        return res.status(400).json({
+          success: false,
+          message: 'You cannot reuse a previous password. Please choose a new password that you haven\'t used before.'
+        });
+      }
     }
 
     // Hash new password

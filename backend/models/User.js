@@ -199,6 +199,18 @@ const UserSchema = new mongoose.Schema({
     default: null
   },
 
+  // Password history - stores last 5 password hashes to prevent reuse
+  passwordHistory: [{
+    passwordHash: {
+      type: String,
+      required: true
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -220,13 +232,36 @@ UserSchema.index({ 'profile.city': 1 });
 UserSchema.index({ isVerified: 1 });
 UserSchema.index({ isActive: 1 });
 
-// Pre-save middleware to hash password
+// Pre-save middleware to hash password and save old password to history
 UserSchema.pre('save', async function (next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
 
   try {
-    // Hash password with cost of 12
+    // Save old password to history (if exists and not first time)
+    if (this.password && !this.isNew) {
+      // Initialize passwordHistory if it doesn't exist
+      if (!this.passwordHistory) {
+        this.passwordHistory = [];
+      }
+
+      // Add current password to history before changing it
+      // Note: The current password is already hashed from previous save
+      const oldPassword = await this.model('User').findById(this._id).select('+password');
+      if (oldPassword && oldPassword.password) {
+        this.passwordHistory.push({
+          passwordHash: oldPassword.password,
+          changedAt: new Date()
+        });
+
+        // Keep only last 5 passwords
+        if (this.passwordHistory.length > 5) {
+          this.passwordHistory = this.passwordHistory.slice(-5);
+        }
+      }
+    }
+
+    // Hash new password with cost of 12
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();
@@ -266,6 +301,23 @@ UserSchema.methods.resetLoginAttempts = function () {
   return this.updateOne({
     $unset: { loginAttempts: 1, lockUntil: 1 }
   });
+};
+
+// Method to check if password was used before
+UserSchema.methods.isPasswordInHistory = async function (password) {
+  if (!this.passwordHistory || this.passwordHistory.length === 0) {
+    return false;
+  }
+
+  // Check against each password in history
+  for (const historyEntry of this.passwordHistory) {
+    const isMatch = await bcrypt.compare(password, historyEntry.passwordHash);
+    if (isMatch) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 // Get user without sensitive information
