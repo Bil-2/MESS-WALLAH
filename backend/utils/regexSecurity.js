@@ -1,6 +1,6 @@
 /**
- * Regex Security Utilities - STUB VERSION
- * Original file was deleted but still needed
+ * Regex Security Utilities
+ * Provides safe regex queries for MongoDB search
  */
 
 const createSafeSearchQuery = (input) => {
@@ -11,12 +11,18 @@ const createSafeSearchQuery = (input) => {
   return { $regex: escaped, $options: 'i' };
 };
 
-const createTextSearchQuery = (input) => {
-  if (!input) return {};
+const createTextSearchQuery = (input, fields = []) => {
+  if (!input || !fields || fields.length === 0) return {};
 
-  // Simple text search
+  // Escape regex special characters
   const escaped = input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return { $regex: escaped, $options: 'i' };
+
+  // Create $or query for multiple fields
+  return {
+    $or: fields.map(field => ({
+      [field]: { $regex: escaped, $options: 'i' }
+    }))
+  };
 };
 
 module.exports = {
