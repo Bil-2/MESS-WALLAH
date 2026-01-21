@@ -3,7 +3,6 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const { createSafeSearchQuery, createTextSearchQuery } = require('../utils/regexSecurity');
-const logger = require('../utils/productionLogger');
 
 // Get all rooms with filtering and pagination
 const getRooms = async (req, res) => {

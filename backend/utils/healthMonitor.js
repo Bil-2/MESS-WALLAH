@@ -5,7 +5,6 @@
 
 const mongoose = require('mongoose');
 const axios = require('axios');
-const logger = require('./productionLogger');
 
 class HealthMonitor {
   constructor() {
@@ -18,7 +17,7 @@ class HealthMonitor {
       errors: [],
       warnings: []
     };
-    
+
     this.isMonitoring = false;
     this.checkInterval = null;
     this.alertThresholds = {
@@ -33,12 +32,12 @@ class HealthMonitor {
    */
   startMonitoring(intervalMs = 30000) {
     if (this.isMonitoring) {
-      logger.warn('Health monitoring is already running');
+      console.warn('Health monitoring is already running');
       return;
     }
 
     this.isMonitoring = true;
-    logger.info('Starting health monitoring system', { interval: intervalMs });
+    console.log('Starting health monitoring system', { interval: intervalMs });
 
     // Initial health check
     this.performHealthCheck();
@@ -61,7 +60,7 @@ class HealthMonitor {
       this.checkInterval = null;
     }
     this.isMonitoring = false;
-    logger.info('Health monitoring stopped');
+    console.log('Health monitoring stopped');
   }
 
   /**
@@ -69,7 +68,7 @@ class HealthMonitor {
    */
   async performHealthCheck() {
     const startTime = Date.now();
-    
+
     try {
       // Reset status
       this.healthStatus.errors = [];
@@ -90,7 +89,7 @@ class HealthMonitor {
       this.checkSystemHealth();
 
       const duration = Date.now() - startTime;
-      logger.info('Health check completed', {
+      console.log('Health check completed', {
         duration: duration + 'ms',
         status: this.getOverallHealth()
       });
@@ -99,7 +98,7 @@ class HealthMonitor {
       await this.performAutoRecovery();
 
     } catch (error) {
-      logger.error('Health check failed', { error: error.message });
+      console.error('Health check failed', { error: error.message });
       this.healthStatus.errors.push({
         type: 'HealthCheckError',
         message: error.message,
@@ -114,7 +113,7 @@ class HealthMonitor {
   async checkDatabaseHealth() {
     try {
       const startTime = Date.now();
-      
+
       // Check connection state
       if (mongoose.connection.readyState !== 1) {
         this.healthStatus.database = 'disconnected';
@@ -129,9 +128,9 @@ class HealthMonitor {
       // Test database query performance
       const Room = require('../models/Room');
       await Room.findOne().lean().limit(1);
-      
+
       const responseTime = Date.now() - startTime;
-      
+
       if (responseTime > 1000) {
         this.healthStatus.database = 'slow';
         this.healthStatus.warnings.push({
@@ -143,7 +142,7 @@ class HealthMonitor {
         this.healthStatus.database = 'healthy';
       }
 
-      logger.debug('Database health check passed', { responseTime: responseTime + 'ms' });
+      console.log('Database health check passed', { responseTime: responseTime + 'ms' });
 
     } catch (error) {
       this.healthStatus.database = 'error';
@@ -152,7 +151,7 @@ class HealthMonitor {
         message: error.message,
         timestamp: new Date().toISOString()
       });
-      logger.error('Database health check failed', { error: error.message });
+      console.error('Database health check failed', { error: error.message });
     }
   }
 
@@ -163,7 +162,7 @@ class HealthMonitor {
     try {
       const startTime = Date.now();
       const port = process.env.PORT || 5001;
-      
+
       // Test critical endpoints
       const endpoints = [
         `http://localhost:${port}/health`,
@@ -172,7 +171,7 @@ class HealthMonitor {
       ];
 
       const results = await Promise.allSettled(
-        endpoints.map(url => 
+        endpoints.map(url =>
           axios.get(url, { timeout: 5000 })
         )
       );
@@ -199,9 +198,9 @@ class HealthMonitor {
         });
       }
 
-      logger.debug('API health check completed', { 
+      console.log('API health check completed', {
         responseTime: responseTime + 'ms',
-        failedEndpoints: failedEndpoints.length 
+        failedEndpoints: failedEndpoints.length
       });
 
     } catch (error) {
@@ -211,7 +210,7 @@ class HealthMonitor {
         message: error.message,
         timestamp: new Date().toISOString()
       });
-      logger.error('API health check failed', { error: error.message });
+      console.error('API health check failed', { error: error.message });
     }
   }
 
@@ -236,7 +235,7 @@ class HealthMonitor {
         this.healthStatus.memory = 'healthy';
       }
 
-      logger.debug('Memory health check completed', {
+      console.log('Memory health check completed', {
         heapUsed: memUsageMB + 'MB',
         heapTotal: memTotalMB + 'MB',
         percentage: memUsagePercent + '%'
@@ -259,7 +258,7 @@ class HealthMonitor {
     try {
       // Check CPU usage (simplified)
       const cpuUsage = process.cpuUsage();
-      
+
       // Check if process has been running for a long time without restart
       const uptimeHours = Math.floor(process.uptime() / 3600);
       if (uptimeHours > 24) {
@@ -270,13 +269,13 @@ class HealthMonitor {
         });
       }
 
-      logger.debug('System health check completed', {
+      console.log('System health check completed', {
         uptime: uptimeHours + ' hours',
         pid: process.pid
       });
 
     } catch (error) {
-      logger.error('System health check failed', { error: error.message });
+      console.error('System health check failed', { error: error.message });
     }
   }
 
@@ -286,24 +285,24 @@ class HealthMonitor {
   async performAutoRecovery() {
     // Database recovery
     if (this.healthStatus.database === 'disconnected') {
-      logger.info('Attempting database auto-recovery...');
+      console.log('Attempting database auto-recovery...');
       try {
         await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah', {
           useNewUrlParser: true,
           useUnifiedTopology: true,
         });
-        logger.info('Database auto-recovery successful');
+        console.log('Database auto-recovery successful');
         this.healthStatus.database = 'healthy';
       } catch (error) {
-        logger.error('Database auto-recovery failed', { error: error.message });
+        console.error('Database auto-recovery failed', { error: error.message });
       }
     }
 
     // Memory recovery
     if (this.healthStatus.memory === 'high' && global.gc) {
-      logger.info('Triggering garbage collection for memory recovery...');
+      console.log('Triggering garbage collection for memory recovery...');
       global.gc();
-      
+
       // Re-check memory after GC
       setTimeout(() => {
         this.checkMemoryHealth();
@@ -316,11 +315,11 @@ class HealthMonitor {
    */
   setupProcessMonitoring() {
     process.on('uncaughtException', (error) => {
-      logger.error('Uncaught Exception detected', { 
-        error: error.message, 
-        stack: error.stack 
+      console.error('Uncaught Exception detected', {
+        error: error.message,
+        stack: error.stack
       });
-      
+
       this.healthStatus.errors.push({
         type: 'UncaughtException',
         message: error.message,
@@ -329,11 +328,11 @@ class HealthMonitor {
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-      logger.error('Unhandled Promise Rejection detected', { 
+      console.error('Unhandled Promise Rejection detected', {
         reason: reason.toString(),
         promise: promise.toString()
       });
-      
+
       this.healthStatus.errors.push({
         type: 'UnhandledRejection',
         message: reason.toString(),
@@ -342,12 +341,12 @@ class HealthMonitor {
     });
 
     process.on('SIGTERM', () => {
-      logger.info('SIGTERM received. Graceful shutdown initiated.');
+      console.log('SIGTERM received. Graceful shutdown initiated.');
       this.stopMonitoring();
     });
 
     process.on('SIGINT', () => {
-      logger.info('SIGINT received. Graceful shutdown initiated.');
+      console.log('SIGINT received. Graceful shutdown initiated.');
       this.stopMonitoring();
     });
   }
@@ -390,7 +389,7 @@ class HealthMonitor {
    */
   getHealthMetrics() {
     const memUsage = process.memoryUsage();
-    
+
     return {
       timestamp: Date.now(),
       uptime: process.uptime(),
