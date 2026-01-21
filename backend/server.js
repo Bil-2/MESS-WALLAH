@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -19,6 +18,17 @@ const {
   requestTimeout,
   memoryMonitor
 } = require('./middleware/productionErrorHandler');
+
+// Routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/userController');
+const roomRoutes = require('./routes/roomController');
+const bookingRoutes = require('./routes/bookings');
+const ownerRoutes = require('./routes/ownerController');
+const paymentRoutes = require('./routes/paymentRoutes');
+const searchRoutes = require('./routes/search'); // Add search routes
+const notificationRoutes = require('./routes/notificationRoutes'); // Add notification routes
+
 const healthMonitor = require('./utils/healthMonitor');
 
 const app = express();

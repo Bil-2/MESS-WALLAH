@@ -693,7 +693,9 @@ const sendBookingNotificationToOwner = async (ownerEmail, ownerPhone, bookingDet
           <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Property</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; font-weight: bold; color: #1f2937;">${roomTitle}</td></tr>
           <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Check-in Date</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; font-weight: bold; color: #1f2937;">${checkIn}</td></tr>
           <tr><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Duration</td><td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #1f2937;">${bookingDetails.duration} months</td></tr>
-          <tr><td style="padding: 10px 0; color: #6b7280;">Amount Received</td><td style="padding: 10px 0; font-weight: bold; font-size: 18px; color: #10b981;">₹${totalAmount.toLocaleString('en-IN')}</td></tr>
+          ${bookingDetails.ownerAmount ? `<tr><td style="padding: 10px 0; color: #6b7280;">Net Amount (After Fees)</td><td style="padding: 10px 0; font-weight: bold; font-size: 18px; color: #10b981;">₹${bookingDetails.ownerAmount.toLocaleString('en-IN')}</td></tr>` :
+      `<tr><td style="padding: 10px 0; color: #6b7280;">Amount Received</td><td style="padding: 10px 0; font-weight: bold; font-size: 18px; color: #10b981;">₹${Math.round(totalAmount * 0.95).toLocaleString('en-IN')}</td></tr>` // Fallback estimation
+    }
         </table>
       </div>
 
@@ -770,6 +772,8 @@ const sendPaymentReceipt = async (customerEmail, receiptDetails) => {
           <table style="width: 100%; border-collapse: collapse;">
             <tr><td style="padding: 8px 0; color: #6b7280;">Monthly Rent (${duration} months)</td><td style="padding: 8px 0; text-align: right; color: #1f2937;">₹${(monthlyRent * duration).toLocaleString('en-IN')}</td></tr>
             <tr><td style="padding: 8px 0; color: #6b7280;">Security Deposit</td><td style="padding: 8px 0; text-align: right; color: #1f2937;">₹${securityDeposit.toLocaleString('en-IN')}</td></tr>
+            ${receiptDetails.platformFee > 0 ? `<tr><td style="padding: 8px 0; color: #6b7280;">Platform Fee</td><td style="padding: 8px 0; text-align: right; color: #1f2937;">₹${receiptDetails.platformFee.toLocaleString('en-IN')}</td></tr>` : ''}
+            ${receiptDetails.tax > 0 ? `<tr><td style="padding: 8px 0; color: #6b7280;">Taxes (GST)</td><td style="padding: 8px 0; text-align: right; color: #1f2937;">₹${receiptDetails.tax.toLocaleString('en-IN')}</td></tr>` : ''}
             <tr style="font-size: 18px; font-weight: bold;"><td style="padding: 15px 0; color: #1f2937; border-top: 2px solid #e5e7eb;">Total Paid</td><td style="padding: 15px 0; text-align: right; color: #10b981; border-top: 2px solid #e5e7eb;">₹${totalAmount.toLocaleString('en-IN')}</td></tr>
           </table>
         </div>

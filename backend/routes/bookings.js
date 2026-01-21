@@ -263,7 +263,20 @@ router.post('/', [
     // Calculate pricing
     const monthlyRent = room.rentPerMonth;
     const securityDeposit = room.securityDeposit;
-    const totalAmount = (monthlyRent * duration) + securityDeposit;
+    const rentTotal = monthlyRent * duration;
+
+    // Platform Revenue Model
+    // 1. Platform Fee: 5% of total rent
+    const platformFee = Math.round(rentTotal * 0.05);
+
+    // 2. Tax: 18% GST on Platform Fee
+    const tax = Math.round(platformFee * 0.18);
+
+    // 3. Owner Amount: Total Rent + Security Deposit
+    const ownerAmount = rentTotal + securityDeposit;
+
+    // 4. Total Amount User Pays
+    const totalAmount = ownerAmount + platformFee + tax;
 
     // Create booking
     const booking = await Booking.create({
@@ -275,6 +288,9 @@ router.post('/', [
       pricing: {
         monthlyRent,
         securityDeposit,
+        platformFee,
+        tax,
+        ownerAmount,
         totalAmount
       },
       seekerInfo,

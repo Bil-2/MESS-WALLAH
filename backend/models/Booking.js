@@ -25,7 +25,7 @@ const BookingSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'Check-in date is required'],
     validate: {
-      validator: function(value) {
+      validator: function (value) {
         // FIXED: Add validation for past dates
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -40,7 +40,7 @@ const BookingSchema = new mongoose.Schema({
     min: [1, 'Duration must be at least 1 month'],
     max: [24, 'Duration cannot exceed 24 months'],
     validate: {
-      validator: function(value) {
+      validator: function (value) {
         // FIXED: Add business logic validation
         // Don't allow unrealistic durations
         return Number.isInteger(value) && value >= 1 && value <= 24;
@@ -59,6 +59,19 @@ const BookingSchema = new mongoose.Schema({
     },
     securityDeposit: {
       type: Number,
+      required: true
+    },
+    // Added for platform revenue model
+    platformFee: {
+      type: Number,
+      default: 0
+    },
+    tax: {
+      type: Number,
+      default: 0
+    },
+    ownerAmount: {
+      type: Number, // Amount owner will receive (Rent - Platform Fee)
       required: true
     },
     totalAmount: {
@@ -147,7 +160,7 @@ const BookingSchema = new mongoose.Schema({
   paidAt: {
     type: Date
   },
-  
+
   // Refund fields
   refundId: String,
   refundAmount: {

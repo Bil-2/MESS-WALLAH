@@ -23,7 +23,8 @@ const getBaseUrl = () => {
     return 'http://localhost:5001/api';
   }
 
-  return 'https://mess-wallah.onrender.com/api';
+  // Fallback to Render URL (Match service name in render.yaml)
+  return 'https://mess-wallah-backend.onrender.com/api';
 };
 
 // Create axios instance with base configuration

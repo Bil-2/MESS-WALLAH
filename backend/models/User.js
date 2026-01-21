@@ -211,6 +211,12 @@ const UserSchema = new mongoose.Schema({
     }
   }],
 
+  notifications: {
+    email: { type: Boolean, default: true },
+    sms: { type: Boolean, default: true },
+    whatsapp: { type: Boolean, default: true }
+  },
+
   createdAt: {
     type: Date,
     default: Date.now

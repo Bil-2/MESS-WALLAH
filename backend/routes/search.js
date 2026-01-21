@@ -8,7 +8,7 @@ const router = express.Router();
 // Apply rate limiting
 router.use(rateLimiters.general);
 
-// @desc    Basic search for rooms
+// @desc    Smart Search with OYO-like Ranking Algorithm
 // @route   GET /api/search
 // @access  Public
 router.get('/', [
@@ -30,11 +30,11 @@ router.get('/', [
     const { q, location, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    // Build search query
-    let searchQuery = { isAvailable: true };
+    // 1. Build Match Stage (Filtering)
+    let matchStage = { isAvailable: true };
 
     if (q) {
-      searchQuery.$or = [
+      matchStage.$or = [
         { title: new RegExp(q, 'i') },
         { description: new RegExp(q, 'i') },
         { 'address.city': new RegExp(q, 'i') },
@@ -44,8 +44,8 @@ router.get('/', [
     }
 
     if (location) {
-      searchQuery.$and = searchQuery.$and || [];
-      searchQuery.$and.push({
+      matchStage.$and = matchStage.$and || [];
+      matchStage.$and.push({
         $or: [
           { 'address.city': new RegExp(location, 'i') },
           { 'address.area': new RegExp(location, 'i') },
@@ -54,18 +54,85 @@ router.get('/', [
       });
     }
 
-    // Execute search with pagination
-    const rooms = await Room.find(searchQuery)
-      .populate('owner', 'name phone email')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    // 2. Execute Aggregation Pipeline
+    // This is the "Brain" of the OYO-like algorithm
+    const pipeline = [
+      { $match: matchStage },
 
-    const total = await Room.countDocuments(searchQuery);
+      // Look up owner to check verification status
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'owner',
+          foreignField: '_id',
+          as: 'ownerDetails'
+        }
+      },
+
+      // Calculate "Smart Score"
+      {
+        $addFields: {
+          ownerVerified: { $arrayElemAt: ["$ownerDetails.isVerified", 0] }, // Extract verification status
+          ownerName: { $arrayElemAt: ["$ownerDetails.name", 0] },
+          ownerEmail: { $arrayElemAt: ["$ownerDetails.email", 0] },
+          ownerPhone: { $arrayElemAt: ["$ownerDetails.phone", 0] },
+
+          // SCORING ALGORITHM
+          smartScore: {
+            $add: [
+              // 1. Verification Boost (Highest Priority): +500
+              { $cond: [{ $eq: [{ $arrayElemAt: ["$ownerDetails.isVerified", 0] }, true] }, 500, 0] },
+
+              // 2. Featured Boost (Paid/Premium): +300
+              { $cond: [{ $eq: ["$featured", true] }, 300, 0] },
+
+              // 3. Quality Score (Rating * 20): Max 100
+              { $multiply: [{ $ifNull: ["$rating", 0] }, 20] },
+
+              // 4. Popularity Score (Logarithmic View Boost): Max ~50
+              { $multiply: [{ $log10: { $add: [{ $ifNull: ["$views", 0] }, 1] } }, 10] },
+
+              // 5. Social Proof (More than 5 reviews): +20
+              { $cond: [{ $gt: [{ $ifNull: ["$totalReviews", 0] }, 5] }, 20, 0] }
+            ]
+          }
+        }
+      },
+
+      // Sort by the calculated Smart Score
+      { $sort: { smartScore: -1, createdAt: -1 } },
+
+      // Pagination
+      { $skip: skip },
+      { $limit: parseInt(limit) },
+
+      // Cleanup: Remove sensitive owner details, keep only necessary
+      {
+        $project: {
+          ownerDetails: 0, // Remove the raw lookup array
+          // Explicitly include calculated fields we want to send
+          owner: {
+            name: "$ownerName",
+            email: "$ownerEmail",
+            phone: "$ownerPhone",
+            isVerified: "$ownerVerified"
+          },
+          // Include original fields
+          title: 1, description: 1, _id: 1, price: 1, rentPerMonth: 1, securityDeposit: 1,
+          address: 1, photos: 1, amenities: 1, roomType: 1, isAvailable: 1,
+          rating: 1, totalReviews: 1, views: 1, featured: 1, smartScore: 1, createdAt: 1
+        }
+      }
+    ];
+
+    const rooms = await Room.aggregate(pipeline);
+
+    // Get total count for pagination (using same match stage)
+    const total = await Room.countDocuments(matchStage);
 
     res.json({
       success: true,
-      message: 'Search completed successfully',
+      message: 'Smart search completed successfully',
       data: rooms,
       pagination: {
         currentPage: parseInt(page),
@@ -73,6 +140,11 @@ router.get('/', [
         totalResults: total,
         hasNextPage: skip + rooms.length < total,
         hasPrevPage: page > 1
+      },
+      // Debug info to show algorithm working
+      algorithm: {
+        type: 'weighted_smart_score',
+        parameters: ['verification', 'featured', 'rating', 'views', 'reviews']
       }
     });
 

@@ -107,6 +107,12 @@ const RoomSchema = new mongoose.Schema({
   }],
   rules: [String],
   preferences: [String],
+  // Added for specific tenant targeting
+  tenantType: {
+    type: [String],
+    enum: ['All', 'Bachelor', 'Family', 'Couples', 'Senior Citizen', 'Student', 'Working Professional'],
+    default: ['All']
+  },
   availableFrom: {
     type: Date,
     default: Date.now
@@ -174,14 +180,14 @@ const RoomSchema = new mongoose.Schema({
     }
   }],
   verified: {
-  type: Boolean,
-  default: false
-},
+    type: Boolean,
+    default: false
+  },
   verificationDate: Date,
   lastUpdated: {
-  type: Date,
-  default: Date.now
-}
+    type: Date,
+    default: Date.now
+  }
 }, {
   timestamps: true
 });
