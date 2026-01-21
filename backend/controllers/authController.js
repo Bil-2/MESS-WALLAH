@@ -150,10 +150,24 @@ const register = async (req, res) => {
         // User already exists with complete registration - cannot link
         console.log(`[WARNING] REGISTRATION BLOCKED: User already exists`);
 
+        // ENHANCED: Provide specific error message for email vs phone duplicates
+        let errorMessage = 'User already exists';
+        let field = null;
+
+        // Check which field is duplicate
+        if (existingUser.email && existingUser.email.toLowerCase() === email.toLowerCase()) {
+          errorMessage = 'This email is already registered in our database. Please change email';
+          field = 'email';
+        } else if (existingUser.phone && phone && existingUser.phone === phone) {
+          errorMessage = 'This mobile number is already registered in our database';
+          field = 'phone';
+        }
+
         return res.status(409).json({
           success: false,
-          message: 'User already exists with this email or phone number',
-          hint: 'An account already exists. Try logging in instead.',
+          message: errorMessage,
+          field: field, // Helps frontend highlight the correct field
+          hint: 'Try logging in instead',
           cannotLink: true
         });
       }
