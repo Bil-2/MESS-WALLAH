@@ -255,8 +255,8 @@ const BookingModal = ({ room, onClose, user }) => {
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${currentStep >= step
-                          ? 'bg-white text-orange-500 shadow-lg scale-110'
-                          : 'bg-white/20 text-white/60'
+                        ? 'bg-white text-orange-500 shadow-lg scale-110'
+                        : 'bg-white/20 text-white/60'
                         }`}
                     >
                       {currentStep > step ? <FiCheck className="w-5 h-5" /> : step}
@@ -277,7 +277,7 @@ const BookingModal = ({ room, onClose, user }) => {
           </div>
 
           {/* Content */}
-          <div className="p-6 max-h-[60vh] overflow-y-auto">
+          <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 280px)' }}>
             {/* Step 1: Booking Details */}
             {currentStep === 1 && (
               <motion.div
