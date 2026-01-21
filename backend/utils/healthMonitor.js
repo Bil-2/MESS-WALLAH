@@ -21,7 +21,7 @@ class HealthMonitor {
     this.isMonitoring = false;
     this.checkInterval = null;
     this.alertThresholds = {
-      memoryUsage: 80, // percentage
+      memoryUsage: 95, // percentage (increased from 80 to avoid false warnings)
       responseTime: 5000, // milliseconds
       errorRate: 10 // percentage
     };
