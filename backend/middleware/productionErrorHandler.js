@@ -4,7 +4,6 @@
  */
 
 const mongoose = require('mongoose');
-const logger = require('../utils/productionLogger');
 
 /**
  * Database connection recovery
@@ -32,17 +31,9 @@ const ensureDatabaseConnection = async () => {
  */
 const gracefulErrorRecovery = async (error, req, res, next) => {
   // Log the error with full context
-  logger.error('API Error Occurred', {
-    error: error.message,
-    stack: error.stack,
+  console.error('[ERROR] API Error:', error.message, {
     url: req.originalUrl,
     method: req.method,
-    params: req.params,
-    query: req.query,
-    body: req.body,
-    headers: req.headers,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip,
     timestamp: new Date().toISOString()
   });
 
@@ -288,18 +279,13 @@ const memoryMonitor = (req, res, next) => {
 
   // Log high memory usage
   if (memoryUsageMB > 500) {
-    logger.warn('High memory usage detected', {
-      heapUsed: memoryUsageMB + 'MB',
-      heapTotal: Math.round(used.heapTotal / 1024 / 1024) + 'MB',
-      url: req.originalUrl,
-      method: req.method
-    });
+    console.warn('[WARNING] High memory usage:', memoryUsageMB + 'MB');
   }
 
   // Force garbage collection if memory is very high
   if (memoryUsageMB > 800 && global.gc) {
     global.gc();
-    logger.info('Garbage collection triggered due to high memory usage');
+    console.log('[INFO] Garbage collection triggered');
   }
 
   next();
