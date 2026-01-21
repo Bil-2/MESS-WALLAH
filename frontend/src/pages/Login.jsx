@@ -39,6 +39,33 @@ const Login = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Check for Google OAuth error (new user trying to sign in)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+
+    if (error === 'registration_required') {
+      toast.error(
+        '⚠️ Please Register First!\n\nContinue with Google is only available for existing users. Please create an account using the Sign-Up form first.',
+        {
+          duration: 6000,
+          icon: '🔒',
+          style: {
+            borderRadius: '12px',
+            background: '#fef3c7',
+            color: '#92400e',
+            border: '2px solid #f59e0b',
+            fontSize: '14px',
+            fontWeight: '500'
+          }
+        }
+      );
+
+      // Clear the error from URL without reload
+      window.history.replaceState({}, document.title, '/login');
+    }
+  }, []);
+
   // Show loading while checking auth status
   if (authLoading) {
     return (
