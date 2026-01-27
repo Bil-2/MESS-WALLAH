@@ -47,6 +47,8 @@ passport.use(
           }
 
           user.verified = true; // Google accounts are pre-verified
+          user.isVerified = true;
+          user.isEmailVerified = true;
           user.lastLogin = new Date();
 
           await user.save();
@@ -54,12 +56,28 @@ passport.use(
           return done(null, user);
         }
 
-        // CRITICAL: Per user requirements, Google OAuth ONLY for existing users
-        // New users MUST register via signup form first
-        console.log(`[AUTH] Rejected Google OAuth for unregistered email: ${email}`);
-        return done(null, false, {
-          message: 'Please register first. Continue with Google only works for existing users.'
+        // NEW: Create new user automatically via Google OAuth
+        console.log('[AUTH] Creating new user via Google OAuth:', email);
+
+        const newUser = await User.create({
+          name: name,
+          email: email,
+          socialAuth: {
+            googleId: googleId,
+            provider: 'google'
+          },
+          profilePicture: profilePicture,
+          verified: true,
+          isVerified: true,
+          isEmailVerified: true,
+          accountType: 'social',
+          registrationMethod: 'google',
+          role: 'user',
+          lastLogin: new Date()
         });
+
+        console.log('[SUCCESS] New user created via Google OAuth:', newUser.email);
+        return done(null, newUser);
 
       } catch (error) {
         console.error('[ERROR] Google OAuth Error:', error);
