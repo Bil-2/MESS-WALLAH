@@ -200,28 +200,39 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    // Enhanced health check endpoint with monitoring
+    // OPTIMIZED: Lightweight health check endpoint for Render (< 100ms response)
     app.get('/health', asyncErrorHandler(async (req, res) => {
-      const healthReport = healthMonitor.getHealthReport();
-      const healthMetrics = healthMonitor.getHealthMetrics();
+      // Skip expensive checks - just return basic status
+      const dbConnected = mongoose.connection.readyState === 1;
 
       res.status(200).json({
         status: 'OK',
         message: 'MESS WALLAH API is running',
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor(process.uptime()),
+        database: dbConnected ? 'Connected' : 'Disconnected'
+      });
+    }));
+
+    // Detailed health monitoring endpoint (for manual checks only)
+    app.get('/health/detailed', asyncErrorHandler(async (req, res) => {
+      const startTime = Date.now();
+      const healthReport = healthMonitor.getHealthReport();
+      const healthMetrics = healthMonitor.getHealthMetrics();
+      const duration = Date.now() - startTime;
+
+      res.status(200).json({
+        status: 'OK',
+        message: 'MESS WALLAH API - Detailed Health Report',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
         health: healthReport,
         metrics: healthMetrics,
         uptime: Math.floor(process.uptime()),
-        version: '1.0.0'
+        version: '1.0.0',
+        checkDuration: duration + 'ms'
       });
-    }));
-
-    // Detailed health monitoring endpoint
-    app.get('/health/detailed', asyncErrorHandler(async (req, res) => {
-      const healthReport = healthMonitor.getHealthReport();
-      res.status(200).json(healthReport);
     }));
 
     // Health metrics endpoint for monitoring tools

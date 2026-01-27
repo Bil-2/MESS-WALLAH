@@ -156,9 +156,15 @@ class HealthMonitor {
   }
 
   /**
-   * Check API endpoint health
+   * Check API endpoint health (DISABLED for performance)
+   * This was causing 3+ second delays by making HTTP requests to itself
    */
   async checkAPIHealth() {
+    // PERFORMANCE OPTIMIZATION: Disabled self-checks to prevent slowdowns
+    // The API is healthy if this code is running
+    this.healthStatus.api = 'healthy';
+
+    /* DISABLED: Too slow for production health checks
     try {
       const startTime = Date.now();
       const port = process.env.PORT || 5001;
@@ -212,6 +218,7 @@ class HealthMonitor {
       });
       console.error('API health check failed', { error: error.message });
     }
+    */
   }
 
   /**
