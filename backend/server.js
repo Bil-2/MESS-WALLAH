@@ -82,9 +82,9 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // Allow any Vercel deployment URL (*.vercel.app)
-    if (origin.endsWith('.vercel.app')) {
-      console.log(`[CORS] Allowing Vercel deployment: ${origin}`);
+    // Allow any Netlify deployment URL (*.netlify.app)
+    if (origin.endsWith('.netlify.app')) {
+      console.log(`[CORS] Allowing Netlify deployment: ${origin}`);
       return callback(null, true);
     }
 
