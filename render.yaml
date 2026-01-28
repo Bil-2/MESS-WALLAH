@@ -28,11 +28,11 @@ services:
       - key: RATE_LIMIT_MAX_REQUESTS
         value: 100
       - key: FRONTEND_URL
-        value: https://frontend-pearl-mu-12.vercel.app
+        value: https://mess-wallah.netlify.app
       - key: CLIENT_URL
-        value: https://frontend-pearl-mu-12.vercel.app
+        value: https://mess-wallah.netlify.app
       - key: ALLOWED_ORIGINS
-        value: https://frontend-pearl-mu-12.vercel.app,http://localhost:5173
+        value: https://mess-wallah.netlify.app,http://localhost:5173
       - key: FROM_EMAIL
         value: biltubag29@gmail.com
       - key: SENDGRID_API_KEY
