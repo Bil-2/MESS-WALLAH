@@ -2,7 +2,7 @@
 
 > **Professional OYO-style booking system for student housing**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Now-success?style=for-the-badge)](https://frontend-pearl-mu-12.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Now-success?style=for-the-badge)](https://mess-wallah.netlify.app)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/Bil-2/MESS-WALLAH)
 [![Backend](https://img.shields.io/badge/Backend-Live-blueviolet?style=for-the-badge)](https://mess-wallah.onrender.com)
 
@@ -13,7 +13,7 @@
 **Access the live application here:**
 
 ### 🌐 Frontend (User Interface)
-**URL**: https://frontend-pearl-mu-12.vercel.app
+**URL**: https://mess-wallah.netlify.app
 
 **Features**:
 - Browse student accommodation
@@ -43,7 +43,7 @@
 
 ## 📱 Quick Demo
 
-1. **Visit**: https://frontend-pearl-mu-12.vercel.app
+1. **Visit**: https://mess-wallah.netlify.app
 2. **Browse Rooms**: No login required
 3. **Register**: Create account (Email + OTP verified)
 4. **Book a Room**: 3-step process (Details → Payment → Confirmation)
@@ -88,7 +88,7 @@
 - **Animations**: Framer Motion
 - **HTTP Client**: Axios
 - **UI Notifications**: React Hot Toast
-- **Deployment**: Vercel
+- **Deployment**: Netlify
 
 ### Backend
 - **Runtime**: Node.js
@@ -102,7 +102,7 @@
 
 ### DevOps
 - **Version Control**: Git + GitHub
-- **CI/CD**: Automated deployment (Vercel + Render)
+- **CI/CD**: Automated deployment (Netlify + Render)
 - **Monitoring**: Backend health checks
 - **Database**: MongoDB Atlas (Cloud)
 
@@ -142,10 +142,10 @@ MESS-WALLAH/
 
 | Resource | URL |
 |----------|-----|
-| **Live Application** | https://frontend-pearl-mu-12.vercel.app |
+| **Live Application** | https://mess-wallah.netlify.app |
 | **Backend API** | https://mess-wallah.onrender.com |
 | **GitHub Repository** | https://github.com/Bil-2/MESS-WALLAH |
-| **Frontend Deployment** | Vercel (Auto-deploy from `main` branch) |
+| **Frontend Deployment** | Netlify (Manual deploy via CLI) |
 | **Backend Deployment** | Render (Auto-deploy from `main` branch) |
 | **Database** | MongoDB Atlas (Cloud) |
 
@@ -204,7 +204,7 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id
 # Server
 PORT=5001
 NODE_ENV=production
-FRONTEND_URL=https://frontend-pearl-mu-12.vercel.app
+FRONTEND_URL=https://mess-wallah.netlify.app
 
 # Database
 MONGODB_URI=your_mongodb_connection_string
@@ -264,10 +264,10 @@ This project is proprietary software developed for MESS WALLAH.
 **Project Name**: MESS WALLAH - Student Accommodation Booking Platform  
 **Role**: Full Stack Developer  
 **Duration**: 2024-Present  
-**Live Demo**: https://frontend-pearl-mu-12.vercel.app  
+**Live Demo**: https://mess-wallah.netlify.app  
 **GitHub**: https://github.com/Bil-2/MESS-WALLAH
 
-**Tech Stack**: React, Node.js, Express, MongoDB, Razorpay, SendGrid, Twilio, Docker, Vercel, Render
+**Tech Stack**: React, Node.js, Express, MongoDB, Razorpay, SendGrid, Twilio, Docker, Netlify, Render
 
 **Key Achievement**:
 - Built complete OYO-style booking system with 3-step payment flow
