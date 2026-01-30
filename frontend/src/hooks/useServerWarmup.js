@@ -32,7 +32,7 @@ const useServerWarmup = () => {
         const startTime = Date.now();
 
         const response = await api.get('/warmup', {
-          timeout: 15000, // 15 second timeout
+          timeout: 45000, // 45 second timeout
         });
 
         const duration = Date.now() - startTime;
