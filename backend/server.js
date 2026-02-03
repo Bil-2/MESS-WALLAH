@@ -161,26 +161,26 @@ const connectDB = async () => {
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      maxPoolSize: 10, // Maximum number of connections in the pool
+      minPoolSize: 2, // Minimum number of connections to maintain
+      serverSelectionTimeoutMS: 5000, // Timeout for selecting a server
+      socketTimeoutMS: 45000, // Socket timeout
+      connectTimeoutMS: 10000, // Initial connection timeout
     });
 
     console.log(`[SUCCESS] MongoDB Connected: ${conn.connection.host}:${conn.connection.port}`);
     console.log(`[INFO] Database: ${conn.connection.name}`);
+    console.log(`[INFO] Connection pool size: ${conn.connection.config?.maxPoolSize || 'default'}`);
 
-    // Check if database has rooms
+    // Check if database has rooms (non-blocking)
     const Room = require('./models/Room');
     const roomCount = await Room.countDocuments();
     console.log(`[INFO] Total rooms in database: ${roomCount}`);
 
-    // Auto-seed if database is empty
+    // Auto-seeding removed from startup for faster cold starts
+    // Use POST /api/admin/seed to manually seed the database
     if (roomCount === 0) {
-      console.log('[INFO] Database is empty. Running auto-seeding...');
-      try {
-        const { seedSampleRooms } = require('./controllers/roomController');
-        await seedSampleRooms();
-        console.log('[SUCCESS] Auto-seeding completed successfully');
-      } catch (seedError) {
-        console.error('[ERROR] Auto-seeding failed:', seedError.message);
-      }
+      console.log('[INFO] Database is empty. Use POST /api/admin/seed to populate sample data');
     }
 
     return conn;
@@ -424,9 +424,12 @@ const startServer = async () => {
     healthMonitor.startMonitoring(30000); // Check every 30 seconds
     console.log('[SUCCESS] Health monitoring system started');
 
-    // Keep-alive now handled by GitHub Actions - see .github/workflows/keep-alive.yml
-    // const { startKeepAlive } = require('./utils/keepAlive');
-    // startKeepAlive();
+    // Keep-alive to prevent cold starts
+    if (process.env.SELF_PING_ENABLED === 'true') {
+      const { startSelfPing } = require('./utils/selfPing');
+      startSelfPing();
+      console.log('[SUCCESS] Self-ping keep-alive system started');
+    }
 
     // Production-ready global error handling middleware
     app.use(gracefulErrorRecovery);

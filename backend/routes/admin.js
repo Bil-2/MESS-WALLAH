@@ -212,4 +212,48 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// @desc    Manually seed database with sample rooms
+// @route   POST /api/admin/seed
+// @access  Private (Admin only)
+router.post('/seed', protect, authorize('admin'), async (req, res) => {
+  try {
+    const roomCount = await Room.countDocuments();
+
+    if (roomCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Database already contains rooms',
+        currentRoomCount: roomCount,
+        hint: 'Delete existing rooms first if you want to re-seed'
+      });
+    }
+
+    console.log('[ADMIN] Manual database seeding initiated by:', req.user.email);
+
+    // Import and execute seeding function
+    const { seedSampleRooms } = require('../controllers/roomController');
+    await seedSampleRooms();
+
+    const newRoomCount = await Room.countDocuments();
+
+    console.log('[ADMIN] Database seeding completed successfully');
+
+    res.json({
+      success: true,
+      message: 'Database seeded successfully',
+      roomsCreated: newRoomCount,
+      seededBy: req.user.email,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[ADMIN] Database seeding failed:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database seeding failed',
+      error: error.message
+    });
+  }
+});
+
+
 module.exports = router;
