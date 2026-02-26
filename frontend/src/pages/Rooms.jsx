@@ -17,7 +17,7 @@ import api from '../utils/api';
 // MARKET-RESEARCH BASED MODERN ROOM CARD
 // Inspired by: OYO, Airbnb, Booking.com, NoBroker
 // ============================================
-const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
+const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone, onShare }) => {
   const [imageIndex, setImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -200,7 +200,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => window.open(`tel:${room.ownerPhone}`, '_self')}
+            onClick={() => onPhone(room)}
             className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
           >
             <FiPhone className="w-5 h-5" />
@@ -209,14 +209,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              navigator.share?.({
-                title: room.title,
-                url: `${window.location.origin}/rooms/${room._id}`
-              }) || navigator.clipboard.writeText(`${window.location.origin}/rooms/${room._id}`);
-              toast.success('Link copied!');
-            }}
+            onClick={(e) => { e.stopPropagation(); onShare(room); }}
             className="p-3 bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           >
             <FiShare2 className="w-5 h-5" />
@@ -351,6 +344,30 @@ const Rooms = () => {
     navigate(`/rooms/${roomId}`);
   };
 
+  const handlePhone = (room) => {
+    if (!user) {
+      toast.error('Please login to contact the owner');
+      navigate('/login');
+      return;
+    }
+    if (room.ownerPhone) {
+      window.open(`tel:${room.ownerPhone}`, '_self');
+    } else {
+      toast.error('Owner contact not available');
+    }
+  };
+
+  const handleShare = (room) => {
+    const url = `${window.location.origin}/rooms/${room._id}`;
+    if (navigator.share) {
+      navigator.share({ title: room.title, url }).catch(() => {
+        navigator.clipboard.writeText(url).then(() => toast.success('Link copied!'));
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => toast.success('Link copied!'));
+    }
+  };
+
   const handleView = (roomId) => navigate(`/rooms/${roomId}`);
 
   const handleFavorite = (roomId) => {
@@ -394,6 +411,11 @@ const Rooms = () => {
     filters.maxRent,
     ...filters.amenities
   ].filter(Boolean).length;
+
+  // Re-fetch when sort changes
+  useEffect(() => {
+    if (rooms.length > 0) fetchRooms(1);
+  }, [filters.sortBy]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-purple-50/20 dark:from-gray-900 dark:via-violet-950/20 dark:to-gray-900">
@@ -521,7 +543,9 @@ const Rooms = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Popular Cities</h2>
-            <button className="text-violet-600 dark:text-violet-400 text-sm font-medium hover:underline flex items-center gap-1">
+            <button
+              onClick={() => { setFilters(prev => ({ ...prev, search: '', location: '' })); }}
+              className="text-violet-600 dark:text-violet-400 text-sm font-medium hover:underline flex items-center gap-1">
               View all <FiChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -553,7 +577,7 @@ const Rooms = () => {
       {/* ============================================ */}
       {/* FILTERS BAR - Sticky */}
       {/* ============================================ */}
-      <section className="sticky top-16 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 py-3">
+      <section className="relative z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             {/* Amenity Filters - Desktop */}
@@ -732,6 +756,8 @@ const Rooms = () => {
                   onView={handleView}
                   onFavorite={handleFavorite}
                   isFavorite={favorites.has(room._id || room.id)}
+                  onPhone={handlePhone}
+                  onShare={handleShare}
                 />
               ))}
             </motion.div>

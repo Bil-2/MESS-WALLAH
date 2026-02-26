@@ -143,6 +143,11 @@ const RoomSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  bookedUntil: {
+    type: Date,
+    default: null
+  },
+
   featured: {
     type: Boolean,
     default: false

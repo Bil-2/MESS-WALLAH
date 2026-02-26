@@ -4,7 +4,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Now-success?style=for-the-badge)](https://mess-wallah.netlify.app)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/Bil-2/MESS-WALLAH)
-[![Backend](https://img.shields.io/badge/Backend-Live-blueviolet?style=for-the-badge)](https://mess-wallah.onrender.com)
+[![Backend](https://img.shields.io/badge/Backend-Live-orange?style=for-the-badge)](https://us-central1-YOUR-FIREBASE-PROJECT-ID.cloudfunctions.net/api)
 
 ---
 
@@ -23,8 +23,8 @@
 - Owner dashboard for property management
 
 ### ⚙️ Backend (API Server)
-**URL**: https://mess-wallah.onrender.com  
-**Health Check**: https://mess-wallah.onrender.com/health
+**URL**: https://us-central1-YOUR-FIREBASE-PROJECT-ID.cloudfunctions.net/api  
+**Health Check**: https://us-central1-YOUR-FIREBASE-PROJECT-ID.cloudfunctions.net/api/health
 
 **Tech Stack**:
 - Node.js + Express
@@ -129,7 +129,7 @@
 - **File Upload**: Multer + Cloudinary
 - **Rate Limiting**: Express-Rate-Limit
 - **Compression**: Compression middleware
-- **Deployment**: Render
+- **Deployment**: Firebase Functions
 
 ### DevOps & Infrastructure
 - **Version Control**: Git + GitHub
@@ -139,7 +139,7 @@
 - **Database**: MongoDB Atlas (Cloud)
 - **Deployment**: 
   - Frontend: Netlify (Auto-deploy)
-  - Backend: Render (Free tier with warmup)
+  - Backend: Firebase Functions
 - **Cold Start Prevention**: Automated warmup every 12 minutes
 
 ---
@@ -234,7 +234,7 @@ MESS-WALLAH/
 │       └── keep-alive.yml   # Automated server warmup (every 12 min)
 │
 ├── docker-compose.yml       # Full-stack Docker orchestration
-├── render.yaml             # Render deployment config
+├── firebase.json           # Firebase deployment config
 ├── LICENSE
 └── README.md               # This file
 ```
@@ -246,10 +246,10 @@ MESS-WALLAH/
 | Resource | URL |
 |----------|-----|
 | **Live Application** | https://mess-wallah.netlify.app |
-| **Backend API** | https://mess-wallah.onrender.com |
+| **Backend API** | https://us-central1-YOUR-FIREBASE-PROJECT-ID.cloudfunctions.net/api |
 | **GitHub Repository** | https://github.com/Bil-2/MESS-WALLAH |
 | **Frontend Deployment** | Netlify (Manual deploy via CLI) |
-| **Backend Deployment** | Render (Auto-deploy from `main` branch) |
+| **Backend Deployment** | Firebase Functions |
 | **Database** | MongoDB Atlas (Cloud) |
 
 ---
@@ -270,7 +270,7 @@ A sophisticated system that prevents duplicate accounts when users sign up using
 ---
 
 ### 2. **Zero Cold Start Architecture** 
-Eliminates Render free tier's cold starts (15-minute timeout) with automated warmup:
+Eliminates Firebase Functions cold starts with automated warmup:
 
 **GitHub Actions Workflow** (`.github/workflows/keep-alive.yml`):
 - Pings server **every 12 minutes** (safer than 15-min limit)
@@ -505,7 +505,7 @@ TWILIO_VERIFY_SERVICE_SID=your_verify_service_sid
 
 **Production Deployment**:
 - Frontend: Netlify (Auto-deploy on push)
-- Backend: Render (Free tier with GitHub Actions warmup)
+- Backend: Firebase Functions
 - Database: MongoDB Atlas (Cloud, Free tier M0)
 - Uptime: 99.9% (with automated keep-alive)
 
@@ -534,7 +534,7 @@ This project is proprietary software developed for MESS WALLAH.
 **Live Demo**: https://mess-wallah.netlify.app  
 **GitHub**: https://github.com/Bil-2/MESS-WALLAH
 
-**Tech Stack**: React 18, Node.js, Express, MongoDB, Razorpay, SendGrid, Twilio, Socket.io, Firebase, Docker, GitHub Actions, Netlify, Render
+**Tech Stack**: React 18, Node.js, Express, MongoDB, Razorpay, SendGrid, Twilio, Socket.io, Firebase Functions, Docker, GitHub Actions, Netlify
 
 **Key Achievements**:
 - Built complete **OYO-style booking system** with 3-step payment flow and Razorpay integration

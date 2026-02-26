@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
@@ -18,16 +17,6 @@ const {
   requestTimeout,
   memoryMonitor
 } = require('./middleware/productionErrorHandler');
-
-// Routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const roomRoutes = require('./routes/rooms');
-const bookingRoutes = require('./routes/bookings');
-const ownerRoutes = require('./routes/owner');
-const paymentRoutes = require('./routes/paymentRoutes');
-const searchRoutes = require('./routes/search'); // Add search routes
-const notificationRoutes = require('./routes/notifications'); // Add notification routes
 
 const healthMonitor = require('./utils/healthMonitor');
 
@@ -194,397 +183,397 @@ const connectDB = async () => {
   }
 };
 
-// Start server
-const startServer = async () => {
+// Connect to database
+connectDB().catch(err => console.error('DB connect error:', err));
+
+// OPTIMIZED: Lightweight health check endpoint for Render (< 100ms response)
+app.get('/health', asyncErrorHandler(async (req, res) => {
+  // Skip expensive checks - just return basic status
+  const dbConnected = mongoose.connection.readyState === 1;
+
+  res.status(200).json({
+    status: 'OK',
+    message: 'MESS WALLAH API is running',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    database: dbConnected ? 'Connected' : 'Disconnected'
+  });
+}));
+
+// Detailed health monitoring endpoint (for manual checks only)
+app.get('/health/detailed', asyncErrorHandler(async (req, res) => {
+  const startTime = Date.now();
+  const healthReport = healthMonitor.getHealthReport();
+  const healthMetrics = healthMonitor.getHealthMetrics();
+  const duration = Date.now() - startTime;
+
+  res.status(200).json({
+    status: 'OK',
+    message: 'MESS WALLAH API - Detailed Health Report',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    health: healthReport,
+    metrics: healthMetrics,
+    uptime: Math.floor(process.uptime()),
+    version: '1.0.0',
+    checkDuration: duration + 'ms'
+  });
+}));
+
+// Health metrics endpoint for monitoring tools
+app.get('/health/metrics', asyncErrorHandler(async (req, res) => {
+  const metrics = healthMonitor.getHealthMetrics();
+  res.status(200).json(metrics);
+}));
+
+// Warmup endpoint to prevent cold starts
+app.get('/api/warmup', asyncErrorHandler(async (req, res) => {
+  const startTime = Date.now();
+
   try {
-    // Connect to database
-    await connectDB();
+    // Check database connection
+    const dbConnected = mongoose.connection.readyState === 1;
 
-    // OPTIMIZED: Lightweight health check endpoint for Render (< 100ms response)
-    app.get('/health', asyncErrorHandler(async (req, res) => {
-      // Skip expensive checks - just return basic status
-      const dbConnected = mongoose.connection.readyState === 1;
-
-      res.status(200).json({
-        status: 'OK',
-        message: 'MESS WALLAH API is running',
-        timestamp: new Date().toISOString(),
-        uptime: Math.floor(process.uptime()),
-        database: dbConnected ? 'Connected' : 'Disconnected'
-      });
-    }));
-
-    // Detailed health monitoring endpoint (for manual checks only)
-    app.get('/health/detailed', asyncErrorHandler(async (req, res) => {
-      const startTime = Date.now();
-      const healthReport = healthMonitor.getHealthReport();
-      const healthMetrics = healthMonitor.getHealthMetrics();
-      const duration = Date.now() - startTime;
-
-      res.status(200).json({
-        status: 'OK',
-        message: 'MESS WALLAH API - Detailed Health Report',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-        health: healthReport,
-        metrics: healthMetrics,
-        uptime: Math.floor(process.uptime()),
-        version: '1.0.0',
-        checkDuration: duration + 'ms'
-      });
-    }));
-
-    // Health metrics endpoint for monitoring tools
-    app.get('/health/metrics', asyncErrorHandler(async (req, res) => {
-      const metrics = healthMonitor.getHealthMetrics();
-      res.status(200).json(metrics);
-    }));
-
-    // Warmup endpoint to prevent cold starts
-    app.get('/api/warmup', asyncErrorHandler(async (req, res) => {
-      const startTime = Date.now();
-
-      try {
-        // Check database connection
-        const dbConnected = mongoose.connection.readyState === 1;
-
-        // Perform lightweight database query to warm connection pool
-        let dbQueryTime = 0;
-        let roomCount = 0;
-        if (dbConnected) {
-          const queryStart = Date.now();
-          const Room = require('./models/Room');
-          roomCount = await Room.countDocuments();
-          dbQueryTime = Date.now() - queryStart;
-        }
-
-        const totalTime = Date.now() - startTime;
-
-        res.status(200).json({
-          status: 'warmed',
-          message: 'Server and database connections are warm',
-          timestamp: new Date().toISOString(),
-          metrics: {
-            totalResponseTime: totalTime + 'ms',
-            databaseQueryTime: dbQueryTime + 'ms',
-            databaseConnected: dbConnected,
-            roomsInDatabase: roomCount,
-            serverUptime: Math.floor(process.uptime()) + 's'
-          },
-          environment: process.env.NODE_ENV || 'development'
-        });
-      } catch (error) {
-        console.error('[WARMUP] Error during warmup:', error.message);
-        res.status(200).json({
-          status: 'partial',
-          message: 'Server is warm but database warmup failed',
-          timestamp: new Date().toISOString(),
-          error: error.message,
-          metrics: {
-            totalResponseTime: (Date.now() - startTime) + 'ms',
-            serverUptime: Math.floor(process.uptime()) + 's'
-          }
-        });
-      }
-    }));
-
-    // Enhanced test endpoint with error recovery
-    app.get('/api/test', asyncErrorHandler(async (req, res) => {
-      // Test database connectivity
-      const dbStatus = mongoose.connection.readyState === 1;
-
-      // Test memory usage
-      const memUsage = process.memoryUsage();
-      const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
-
-      res.json({
-        success: true,
-        message: 'API is working correctly',
-        timestamp: new Date().toISOString(),
-        system: {
-          database: dbStatus ? 'Connected' : 'Disconnected',
-          memory: memUsageMB + 'MB',
-          uptime: Math.floor(process.uptime()) + 's',
-          nodeVersion: process.version,
-          platform: process.platform
-        },
-        environment: process.env.NODE_ENV || 'development'
-      });
-    }));
-
-    // Register API routes
-    console.log('[INIT] Registering API routes...');
-
-    try {
-      const authRoutes = require('./routes/auth');
-      const googleAuthRoutes = require('./routes/googleAuth');
-      app.use('/api/auth', authRoutes);
-      app.use('/api/auth', googleAuthRoutes);
-      console.log('   [OK] /api/auth routes registered');
-      console.log('   [OK] /api/auth/google routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/auth routes:', error.message);
-      // Create fallback auth routes to prevent 404 errors
-      app.use('/api/auth/*', (req, res) => {
-        res.status(503).json({
-          success: false,
-          message: 'Authentication service temporarily unavailable',
-          error: 'Service initialization failed',
-          type: 'ServiceError',
-          retryAfter: 60
-        });
-      });
+    // Perform lightweight database query to warm connection pool
+    let dbQueryTime = 0;
+    let roomCount = 0;
+    if (dbConnected) {
+      const queryStart = Date.now();
+      const Room = require('./models/Room');
+      roomCount = await Room.countDocuments();
+      dbQueryTime = Date.now() - queryStart;
     }
 
-    try {
-      app.use('/api/users', require('./routes/users'));
-      console.log('   [OK] /api/users routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/users routes:', error.message);
-    }
+    const totalTime = Date.now() - startTime;
 
-    try {
-      app.use('/api/rooms', require('./routes/rooms'));
-      console.log('   [OK] /api/rooms routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/rooms routes:', error.message);
-    }
-
-    try {
-      app.use('/api/bookings', require('./routes/bookings'));
-      console.log('   [OK] /api/bookings routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/bookings routes:', error.message);
-    }
-
-    try {
-      app.use('/api/search', require('./routes/search'));
-      console.log('   [OK] /api/search routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/search routes:', error.message);
-    }
-
-    try {
-      // Use the new secure payment routes
-      app.use('/api/payments', require('./routes/paymentRoutes'));
-      console.log('   [OK] /api/payments routes registered (SECURE)');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/payments routes:', error.message);
-      // Fallback to simple routes if new routes fail
-      try {
-        console.warn('   [WARN] Payment routes fallback disabled (simplePaymentRoutes deleted)');
-      } catch (fallbackError) {
-        console.error('   [ERROR] Payment routes completely failed');
-      }
-    }
-
-
-
-    try {
-      app.use('/api/analytics', require('./routes/analytics'));
-      console.log('   [OK] /api/analytics routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/analytics routes:', error.message);
-    }
-
-    try {
-      app.use('/api/owner', require('./routes/owner'));
-      console.log('   [OK] /api/owner routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/owner routes:', error.message);
-    }
-
-    try {
-      app.use('/api/admin', require('./routes/admin'));
-      console.log('   [OK] /api/admin routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/admin routes:', error.message);
-    }
-
-    try {
-      app.use('/api/notifications', require('./routes/notifications'));
-      console.log('   [OK] /api/notifications routes registered');
-    } catch (error) {
-      console.error('   [ERROR] Failed to register /api/notifications routes:', error.message);
-    }
-
-    // Test routes for email and OTP services (development/testing only)
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        app.use('/api/test-services', require('./routes/testServices'));
-        console.log('   [OK] /api/test-services routes registered (DEV ONLY)');
-      } catch (error) {
-        console.error('   [ERROR] Failed to register /api/test-services routes:', error.message);
-      }
-    }
-
-
-    // Start health monitoring system
-    healthMonitor.startMonitoring(30000); // Check every 30 seconds
-    console.log('[SUCCESS] Health monitoring system started');
-
-    // Keep-alive to prevent cold starts
-    if (process.env.SELF_PING_ENABLED === 'true') {
-      const { startSelfPing } = require('./utils/selfPing');
-      startSelfPing();
-      console.log('[SUCCESS] Self-ping keep-alive system started');
-    }
-
-    // Production-ready global error handling middleware
-    app.use(gracefulErrorRecovery);
-
-    // Fallback error handler
-    app.use((err, req, res, next) => {
-      console.error('[ERROR] Global Error Handler:', {
-        message: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        url: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-        userAgent: req.get('User-Agent'),
-        ip: req.ip
-      });
-
-      // Mongoose validation error
-      if (err.name === 'ValidationError') {
-        const errors = Object.values(err.errors).map(e => ({
-          field: e.path,
-          message: e.message,
-          value: e.value
-        }));
-        return res.status(400).json({
-          success: false,
-          message: 'Validation Error',
-          errors,
-          type: 'ValidationError'
-        });
-      }
-
-      // Mongoose duplicate key error
-      if (err.code === 11000) {
-        const field = Object.keys(err.keyValue)[0];
-        const value = err.keyValue[field];
-        return res.status(400).json({
-          success: false,
-          message: `${field} '${value}' already exists`,
-          error: 'Duplicate field value',
-          type: 'DuplicateError',
-          field
-        });
-      }
-
-      // Mongoose cast error (invalid ObjectId)
-      if (err.name === 'CastError') {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid ${err.path}: ${err.value}`,
-          error: 'Invalid ID format',
-          type: 'CastError'
-        });
-      }
-
-      // JWT errors
-      if (err.name === 'JsonWebTokenError') {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid authentication token',
-          error: 'Authentication failed',
-          type: 'AuthenticationError'
-        });
-      }
-
-      if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication token has expired',
-          error: 'Token expired - please login again',
-          type: 'TokenExpiredError'
-        });
-      }
-
-      // Rate limiting error
-      if (err.status === 429) {
-        return res.status(429).json({
-          success: false,
-          message: 'Too many requests, please try again later',
-          error: 'Rate limit exceeded',
-          type: 'RateLimitError',
-          retryAfter: err.retryAfter
-        });
-      }
-
-      // File upload errors
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({
-          success: false,
-          message: 'File size too large',
-          error: 'Maximum file size exceeded',
-          type: 'FileUploadError'
-        });
-      }
-
-      // Default error response
-      const statusCode = err.statusCode || err.status || 500;
-      const message = err.message || 'Internal Server Error';
-
-      res.status(statusCode).json({
-        success: false,
-        message: statusCode === 500 ? 'Internal Server Error' : message,
-        error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
-        type: err.name || 'ServerError',
-        timestamp: new Date().toISOString(),
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-      });
+    res.status(200).json({
+      status: 'warmed',
+      message: 'Server and database connections are warm',
+      timestamp: new Date().toISOString(),
+      metrics: {
+        totalResponseTime: totalTime + 'ms',
+        databaseQueryTime: dbQueryTime + 'ms',
+        databaseConnected: dbConnected,
+        roomsInDatabase: roomCount,
+        serverUptime: Math.floor(process.uptime()) + 's'
+      },
+      environment: process.env.NODE_ENV || 'development'
     });
-
-    // 404 handler
-    app.use('*', (req, res) => {
-      console.log('404 - Route not found:', req.method, req.originalUrl);
-      res.status(404).json({
-        success: false,
-        message: `Route ${req.method} ${req.originalUrl} not found`
-      });
+  } catch (error) {
+    console.error('[WARMUP] Error during warmup:', error.message);
+    res.status(200).json({
+      status: 'partial',
+      message: 'Server is warm but database warmup failed',
+      timestamp: new Date().toISOString(),
+      error: error.message,
+      metrics: {
+        totalResponseTime: (Date.now() - startTime) + 'ms',
+        serverUptime: Math.floor(process.uptime()) + 's'
+      }
     });
+  }
+}));
 
-    const PORT = process.env.PORT || 5001;
+// Enhanced test endpoint with error recovery
+app.get('/api/test', asyncErrorHandler(async (req, res) => {
+  // Test database connectivity
+  const dbStatus = mongoose.connection.readyState === 1;
 
-    const server = app.listen(PORT, () => {
-      console.log(`[SUCCESS] MESS WALLAH Server running on port ${PORT}`);
-      console.log(`[INFO] Environment: ${process.env.NODE_ENV}`);
-      console.log(`[INFO] Client URL: ${process.env.CLIENT_URL}`);
-      console.log(`[INFO] Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
-      console.log(`[TEST] Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
+  // Test memory usage
+  const memUsage = process.memoryUsage();
+  const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+
+  res.json({
+    success: true,
+    message: 'API is working correctly',
+    timestamp: new Date().toISOString(),
+    system: {
+      database: dbStatus ? 'Connected' : 'Disconnected',
+      memory: memUsageMB + 'MB',
+      uptime: Math.floor(process.uptime()) + 's',
+      nodeVersion: process.version,
+      platform: process.platform
+    },
+    environment: process.env.NODE_ENV || 'development'
+  });
+}));
+
+// Register API routes
+console.log('[INIT] Registering API routes...');
+
+try {
+  const authRoutes = require('./routes/auth');
+  const googleAuthRoutes = require('./routes/googleAuth');
+  app.use('/api/auth', authRoutes);
+  app.use('/api/auth', googleAuthRoutes);
+  console.log('   [OK] /api/auth routes registered');
+  console.log('   [OK] /api/auth/google routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/auth routes:', error.message);
+  // Create fallback auth routes to prevent 404 errors
+  app.use('/api/auth/*', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Authentication service temporarily unavailable',
+      error: 'Service initialization failed',
+      type: 'ServiceError',
+      retryAfter: 60
     });
+  });
+}
 
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received. Shutting down gracefully...');
-      server.close(() => {
-        console.log('Process terminated');
-        mongoose.connection.close();
-      });
+try {
+  app.use('/api/users', require('./routes/users'));
+  console.log('   [OK] /api/users routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/users routes:', error.message);
+}
+
+try {
+  app.use('/api/rooms', require('./routes/rooms'));
+  console.log('   [OK] /api/rooms routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/rooms routes:', error.message);
+}
+
+try {
+  app.use('/api/bookings', require('./routes/bookings'));
+  console.log('   [OK] /api/bookings routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/bookings routes:', error.message);
+}
+
+try {
+  app.use('/api/search', require('./routes/search'));
+  console.log('   [OK] /api/search routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/search routes:', error.message);
+}
+
+try {
+  // Use the new secure payment routes
+  app.use('/api/payments', require('./routes/paymentRoutes'));
+  console.log('   [OK] /api/payments routes registered (SECURE)');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/payments routes:', error.message);
+  // Fallback to simple routes if new routes fail
+  try {
+    console.warn('   [WARN] Payment routes fallback disabled (simplePaymentRoutes deleted)');
+  } catch (fallbackError) {
+    console.error('   [ERROR] Payment routes completely failed');
+  }
+}
+
+
+
+try {
+  app.use('/api/analytics', require('./routes/analytics'));
+  console.log('   [OK] /api/analytics routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/analytics routes:', error.message);
+}
+
+try {
+  app.use('/api/owner', require('./routes/owner'));
+  console.log('   [OK] /api/owner routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/owner routes:', error.message);
+}
+
+try {
+  app.use('/api/admin', require('./routes/admin'));
+  console.log('   [OK] /api/admin routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/admin routes:', error.message);
+}
+
+try {
+  app.use('/api/notifications', require('./routes/notifications'));
+  console.log('   [OK] /api/notifications routes registered');
+} catch (error) {
+  console.error('   [ERROR] Failed to register /api/notifications routes:', error.message);
+}
+
+// Test routes for health/status (development only)
+if (process.env.NODE_ENV !== 'production') {
+  const testRouter = express.Router();
+  testRouter.get('/status', (req, res) => {
+    res.json({ success: true, message: 'Test services route active (dev only)', env: process.env.NODE_ENV });
+  });
+  app.use('/api/test-services', testRouter);
+  console.log('   [OK] /api/test-services routes registered (DEV ONLY)');
+}
+
+
+// Start health monitoring system
+healthMonitor.startMonitoring(30000); // Check every 30 seconds
+console.log('[SUCCESS] Health monitoring system started');
+
+// Keep-alive to prevent cold starts
+if (process.env.SELF_PING_ENABLED === 'true') {
+  const { startSelfPing } = require('./utils/selfPing');
+  startSelfPing();
+  console.log('[SUCCESS] Self-ping keep-alive system started');
+}
+
+// Production-ready global error handling middleware
+app.use(gracefulErrorRecovery);
+
+// Fallback error handler
+app.use((err, req, res, next) => {
+  console.error('[ERROR] Global Error Handler:', {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString(),
+    userAgent: req.get('User-Agent'),
+    ip: req.ip
+  });
+
+  // Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map(e => ({
+      field: e.path,
+      message: e.message,
+      value: e.value
+    }));
+    return res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      errors,
+      type: 'ValidationError'
     });
+  }
 
-    process.on('unhandledRejection', (err) => {
-      console.error('Unhandled Promise Rejection:', err);
-      server.close(() => {
-        process.exit(1);
-      });
+  // Mongoose duplicate key error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    const value = err.keyValue[field];
+    return res.status(400).json({
+      success: false,
+      message: `${field} '${value}' already exists`,
+      error: 'Duplicate field value',
+      type: 'DuplicateError',
+      field
     });
+  }
 
-    process.on('uncaughtException', (err) => {
-      console.error('Uncaught Exception:', err);
+  // Mongoose cast error (invalid ObjectId)
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid ${err.path}: ${err.value}`,
+      error: 'Invalid ID format',
+      type: 'CastError'
+    });
+  }
+
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid authentication token',
+      error: 'Authentication failed',
+      type: 'AuthenticationError'
+    });
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication token has expired',
+      error: 'Token expired - please login again',
+      type: 'TokenExpiredError'
+    });
+  }
+
+  // Rate limiting error
+  if (err.status === 429) {
+    return res.status(429).json({
+      success: false,
+      message: 'Too many requests, please try again later',
+      error: 'Rate limit exceeded',
+      type: 'RateLimitError',
+      retryAfter: err.retryAfter
+    });
+  }
+
+  // File upload errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      success: false,
+      message: 'File size too large',
+      error: 'Maximum file size exceeded',
+      type: 'FileUploadError'
+    });
+  }
+
+  // Default error response
+  const statusCode = err.statusCode || err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+  res.status(statusCode).json({
+    success: false,
+    message: statusCode === 500 ? 'Internal Server Error' : message,
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    type: err.name || 'ServerError',
+    timestamp: new Date().toISOString(),
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  console.log('404 - Route not found:', req.method, req.originalUrl);
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.method} ${req.originalUrl} not found`
+  });
+});
+
+// Start local server only if not running in production/Firebase
+if (process.env.NODE_ENV !== 'production' || process.env.RUN_LOCAL === 'true') {
+  const PORT = process.env.PORT || 5001;
+
+  const server = app.listen(PORT, () => {
+    console.log(`[SUCCESS] MESS WALLAH Server running on port ${PORT}`);
+    console.log(`[INFO] Environment: ${process.env.NODE_ENV}`);
+    console.log(`[INFO] Client URL: ${process.env.CLIENT_URL}`);
+    console.log(`[INFO] Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
+    console.log(`[TEST] Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Shutting down gracefully...');
+    server.close(() => {
+      console.log('Process terminated');
+      mongoose.connection.close();
+    });
+  });
+
+  process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Promise Rejection:', err);
+    server.close(() => {
       process.exit(1);
     });
+  });
 
-  } catch (error) {
-    console.error('[ERROR] Server initialization failed:', error.message);
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
     process.exit(1);
-  }
-};
+  });
+}
 
-// Start the server
-startServer();
-
+// Export the app for testing
 module.exports = app;
+
+// Create and export Firebase Function (only in production/Firebase environment)
+try {
+  const functions = require('firebase-functions');
+  exports.api = functions.https.onRequest(app);
+} catch (e) {
+  // firebase-functions not available in local dev - that's fine
+}

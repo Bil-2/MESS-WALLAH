@@ -4,7 +4,8 @@ import { FcGoogle } from 'react-icons/fc';
 const GoogleSignInButton = () => {
   const handleClick = () => {
     // Redirect to backend Google OAuth endpoint with current frontend URL
-    const backendUrl = 'https://mess-wallah.onrender.com/api';
+    const backendUrl = import.meta.env.VITE_API_URL ||
+      (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://mess-wallah.onrender.com/api');
     const currentOrigin = window.location.origin;
     window.location.href = `${backendUrl}/auth/google?redirect_url=${encodeURIComponent(currentOrigin)}`;
   };

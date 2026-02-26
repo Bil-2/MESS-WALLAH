@@ -16,8 +16,10 @@ const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
   const fetchSuggestion = async () => {
     try {
       const token = localStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_API_URL ||
+        (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://mess-wallah.onrender.com/api');
       const response = await axios.get(
-        `https://mess-wallah.onrender.com/api/owner/pricing-suggestions/${roomId}`,
+        `${baseUrl}/owner/pricing-suggestions/${roomId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

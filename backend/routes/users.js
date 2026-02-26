@@ -100,21 +100,35 @@ router.get('/', protect, authorize('admin'), [
 // @desc    Get user favorites (MUST BE BEFORE /:id route)
 // @route   GET /api/users/my-favorites
 // @access  Private
-router.get('/my-favorites', protect, (req, res) => {
-  res.json({
-    success: true,
-    message: 'My favorites endpoint working',
-    data: {
-      rooms: [],
-      pagination: {
-        currentPage: 1,
-        totalPages: 0,
-        totalFavourites: 0,
-        hasNextPage: false,
-        hasPrevPage: false
-      }
+router.get('/my-favorites', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'favourites',
+        select: 'title rentPerMonth address roomType photos isAvailable rating totalReviews'
+      });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-  });
+
+    res.json({
+      success: true,
+      data: {
+        rooms: user.favourites || [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalFavourites: (user.favourites || []).length,
+          hasNextPage: false,
+          hasPrevPage: false
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get favorites error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch favorites' });
+  }
 });
 
 // @desc    Get user profile
@@ -123,7 +137,7 @@ router.get('/my-favorites', protect, (req, res) => {
 router.get('/profile', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password -securityInfo');
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -255,7 +269,7 @@ router.post('/favorites/:roomId', [
     }
     const { roomId } = req.params;
     const userId = req.user._id;
-    
+
     // Simple toggle favorite implementation
     const user = await User.findById(userId);
     if (!user) {
@@ -264,7 +278,7 @@ router.post('/favorites/:roomId', [
         message: 'User not found'
       });
     }
-    
+
     const favoriteIndex = user.favourites.indexOf(roomId);
     if (favoriteIndex > -1) {
       // Remove from favorites
@@ -273,9 +287,9 @@ router.post('/favorites/:roomId', [
       // Add to favorites
       user.favourites.push(roomId);
     }
-    
+
     await user.save();
-    
+
     res.json({
       success: true,
       message: favoriteIndex > -1 ? 'Removed from favorites' : 'Added to favorites',
@@ -319,13 +333,13 @@ router.delete('/favorites/:roomId', [
         message: 'User not found'
       });
     }
-    
+
     const favoriteIndex = user.favourites.indexOf(roomId);
     if (favoriteIndex > -1) {
       // Remove from favorites
       user.favourites.splice(favoriteIndex, 1);
       await user.save();
-      
+
       res.json({
         success: true,
         message: 'Removed from favorites successfully',

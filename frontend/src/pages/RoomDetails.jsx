@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi';
 import { useAuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -15,98 +15,57 @@ const RoomDetails = () => {
   const { user } = useAuthContext();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retrying, setRetrying] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(0);
-  const [bookingStep, setBookingStep] = useState(1);
-  const [bookingData, setBookingData] = useState({
-    checkInDate: '',
-    duration: 1,
-    specialRequests: '',
-    guestDetails: {
-      name: '',
-      email: '',
-      phone: ''
+
+  const fetchRoomDetails = useCallback(async (isRetry = false) => {
+    try {
+      if (isRetry) setRetrying(true);
+      else setLoading(true);
+      setError(null);
+
+      // Use api.get (correct base URL + auth headers)
+      const response = await api.get(`/rooms/${id}`);
+      const data = response.data;
+
+      if (data.success && data.data) {
+        setRoom(data.data);
+        // Check if user has favorited this room
+        if (user && data.data._id) {
+          const favs = user.favourites || [];
+          setIsLiked(favs.includes(id) || favs.some(f => f === id || f?._id === id));
+        }
+      } else {
+        setError('Room not found');
+      }
+    } catch (error) {
+      console.error('Error fetching room details:', error);
+      // Check if it's a connection error (cold start)
+      if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
+        setError('cold_start');
+      } else if (error.response?.status === 404) {
+        setError('not_found');
+      } else {
+        setError('failed');
+      }
+    } finally {
+      setLoading(false);
+      setRetrying(false);
     }
-  });
+  }, [id, user]);
 
   useEffect(() => {
     fetchRoomDetails();
-  }, [id]);
+  }, [fetchRoomDetails]);
 
-  const fetchRoomDetails = async () => {
-    try {
-      setLoading(true);
 
-      // Try to fetch from API
-      const response = await fetch(`/api/rooms/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          setRoom(data.data);
-          toast.success('Room details loaded successfully');
-          return;
-        }
-      }
 
-      // Fallback to mock data if API fails
-      const fallbackRoom = getMockRoomData(id);
-      setRoom(fallbackRoom);
-      toast.error('Failed to load room details. Showing demo data.');
-    } catch (error) {
-      console.error('Error fetching room details:', error);
-      // Final fallback to mock room
-      const fallbackRoom = getMockRoomData(id);
-      setRoom(fallbackRoom);
-      toast.error('Failed to load room details. Showing demo data.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const getMockRoomData = () => ({
-    _id: id,
-    title: 'Cozy Student Room near College',
-    description: 'A comfortable and well-furnished room perfect for students. Located in the heart of Koramangala with easy access to colleges, restaurants, and public transport.',
-    address: {
-      area: 'Koramangala',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560034'
-    },
-    rentPerMonth: 8500,
-    securityDeposit: 5000,
-    rating: 4.5,
-    reviewCount: 23,
-    photos: [
-      { url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', caption: 'Main room view' },
-      { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&h=600&fit=crop', caption: 'Bathroom' },
-      { url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop', caption: 'Common area' },
-      { url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop', caption: 'Kitchen' }
-    ],
-    amenities: ['wifi', 'parking', 'mess', 'laundry', 'security'],
-    roomType: 'single',
-    isAvailable: true,
-    features: [
-      'Fully furnished room',
-      'Attached bathroom',
-      'Study table and chair',
-      'Wardrobe',
-      '24/7 security',
-      'Common kitchen access'
-    ],
-    owner: {
-      _id: 'owner1',
-      name: 'Rajesh Kumar',
-      phone: '+91 9876543210',
-      email: 'rajesh@example.com',
-      verified: true
-    },
-    rules: ['No smoking', 'No pets', 'Visitors allowed till 10 PM'],
-    preferences: ['Students preferred', 'Working professionals welcome']
-  });
 
   const handleBooking = () => {
     if (!user) {
@@ -169,7 +128,28 @@ const RoomDetails = () => {
     );
   }
 
-  if (!room) {
+  // Cold start or connection refused — show retry screen
+  if (error === 'cold_start') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center pt-24">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-6xl mb-6">☕</div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Server is Starting Up</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">Our server was sleeping. Give it a moment to wake up — this usually takes 15-30 seconds.</p>
+          <button
+            onClick={() => fetchRoomDetails(true)}
+            disabled={retrying}
+            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-3 mx-auto"
+          >
+            <FiRefreshCw className={`w-5 h-5 ${retrying ? 'animate-spin' : ''}`} />
+            {retrying ? 'Retrying...' : 'Retry Now'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!room || error === 'not_found') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center pt-24">
         <div className="text-center">
@@ -179,6 +159,23 @@ const RoomDetails = () => {
             onClick={() => navigate('/rooms')}
             className="btn-primary"
           >
+            Back to Rooms
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error === 'failed') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center pt-24">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Something went wrong</h2>
+          <button onClick={() => fetchRoomDetails(true)} disabled={retrying}
+            className="px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold mr-3">
+            {retrying ? 'Retrying...' : 'Try Again'}
+          </button>
+          <button onClick={() => navigate('/rooms')} className="px-6 py-3 border border-gray-300 rounded-xl font-semibold">
             Back to Rooms
           </button>
         </div>

@@ -4,13 +4,8 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const {
-  sendEmail,
-  sendBookingConfirmationToCustomer,
-  sendBookingNotificationToOwner,
-  sendBookingCancellation,
-  sendBookingStatusUpdate
-} = require('../services/notify');
+const { sendBuyerConfirmationEmail, sendOwnerAlertEmail } = require('../utils/email');
+const { generateBookingPDF } = require('../utils/bookingPDF');
 const {
   rateLimiters,
   csrfProtection,
@@ -48,7 +43,7 @@ router.get('/', [
     const skip = (page - 1) * limit;
 
     // Build query for user's own bookings
-    let query = { user: req.user._id };
+    let query = { userId: req.user._id };
     if (status) {
       query.status = status;
     }
@@ -56,7 +51,7 @@ router.get('/', [
     // Get bookings with pagination
     const bookings = await Booking.find(query)
       .populate('userId', 'name email phone role')
-      .populate('roomId', 'title location price roomType')
+      .populate('roomId', 'title address rentPerMonth roomType')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -133,7 +128,7 @@ router.get('/admin', [
     // Get all bookings with pagination
     const bookings = await Booking.find(query)
       .populate('userId', 'name email phone role')
-      .populate('roomId', 'title location price roomType')
+      .populate('roomId', 'title address rentPerMonth roomType')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -309,38 +304,88 @@ router.post('/', [
       { path: 'ownerId', select: 'name email phone' }
     ]);
 
-    // Send email notifications
+    // ── STEP 1: Generate PDF confirmation (like train ticket) ─────
+    let pdfBuffer = null;
     try {
-      // Email to room owner about new booking request
-      await sendEmail(roomOwner.email, `New Booking Request - ${booking.bookingId}`, `
-        <h2>New Booking Request</h2>
-        <p>Hi ${roomOwner.name},</p>
-        <p>You have received a new booking request for "${room.title}".</p>
-        <p><strong>Booking Details:</strong></p>
-        <ul>
-          <li>Booking ID: ${booking.bookingId}</li>
-          <li>Check-in Date: ${checkIn.toLocaleDateString('en-IN')}</li>
-          <li>Duration: ${duration} months</li>
-          <li>Total Amount: ₹${totalAmount.toLocaleString('en-IN')}</li>
-          <li>Seeker: ${seekerInfo.name}</li>
-          <li>Phone: ${seekerInfo.phone}</li>
-          <li>Email: ${seekerInfo.email}</li>
-        </ul>
-        <p>Please log in to your dashboard to review and respond to this request.</p>
-        <p>Best regards,<br>MESS WALLAH Team</p>
-      `);
-    } catch (emailError) {
-      console.error('Email notification failed:', emailError);
+      pdfBuffer = await generateBookingPDF(
+        booking,
+        room,
+        req.user,          // buyer
+        roomOwner           // seller
+      );
+      console.log('[BOOKING CYCLE] PDF generated successfully');
+    } catch (pdfErr) {
+      console.error('[BOOKING CYCLE] PDF generation failed (non-critical):', pdfErr.message);
     }
 
-    // Create in-app notification for owner
+    // ── STEP 2: Email to Buyer (with PDF attached) ────────────────
+    try {
+      await sendBuyerConfirmationEmail({
+        buyer: req.user,
+        owner: roomOwner,
+        room,
+        booking,
+        pdfBuffer
+      });
+      console.log('[BOOKING CYCLE] Buyer confirmation email sent to', req.user.email);
+    } catch (emailErr) {
+      console.error('[BOOKING CYCLE] Buyer email failed (non-critical):', emailErr.message);
+    }
+
+    // ── STEP 3: Email to Owner/Seller ─────────────────────────────
+    try {
+      await sendOwnerAlertEmail({
+        owner: roomOwner,
+        buyer: req.user,
+        room,
+        booking
+      });
+      console.log('[BOOKING CYCLE] Owner alert email sent to', roomOwner.email);
+    } catch (ownerEmailErr) {
+      console.error('[BOOKING CYCLE] Owner email failed (non-critical):', ownerEmailErr.message);
+    }
+
+    // ── STEP 4: Mark Room as UNAVAILABLE in DB ────────────────────
+    try {
+      const checkOut = new Date(checkIn);
+      checkOut.setMonth(checkOut.getMonth() + parseInt(duration));
+      await Room.findByIdAndUpdate(roomId, {
+        isAvailable: false,
+        $set: { bookedUntil: checkOut }
+      });
+      console.log('[BOOKING CYCLE] Room marked unavailable until', checkOut.toLocaleDateString('en-IN'));
+    } catch (roomUpdateErr) {
+      console.error('[BOOKING CYCLE] Room availability update failed:', roomUpdateErr.message);
+    }
+
+    // ── STEP 5: In-app notification → Buyer ──────────────────────
+    try {
+      const Notification = require('../models/Notification');
+      await Notification.createNotification({
+        userId: req.user._id,
+        type: 'booking_confirmed',
+        title: '🎉 Booking Confirmed!',
+        message: `Your booking for ${room.title} is confirmed! Check-in: ${checkIn.toLocaleDateString('en-IN')}. PDF confirmation sent to ${req.user.email}.`,
+        data: {
+          bookingId: booking._id,
+          roomId: room._id,
+          amount: totalAmount,
+          actionUrl: '/bookings'
+        },
+        priority: 'high'
+      });
+    } catch (notifyBuyerErr) {
+      console.error('[BOOKING CYCLE] Buyer in-app notification failed:', notifyBuyerErr.message);
+    }
+
+    // ── STEP 6: In-app notification → Owner ───────────────────────
     try {
       const Notification = require('../models/Notification');
       await Notification.createNotification({
         userId: roomOwner._id,
         type: 'booking_request',
         title: '📋 New Booking Request',
-        message: `${seekerInfo.name} requested to book ${room.title} for ${duration} months starting ${checkIn.toLocaleDateString('en-IN')}`,
+        message: `${seekerInfo.name} booked ${room.title} for ${duration} month${duration > 1 ? 's' : ''} starting ${checkIn.toLocaleDateString('en-IN')}. Total: ₹${totalAmount.toLocaleString('en-IN')}.`,
         data: {
           bookingId: booking._id,
           roomId: room._id,
@@ -349,13 +394,15 @@ router.post('/', [
         },
         priority: 'high'
       });
-    } catch (notifyError) {
-      console.error('In-app notification failed:', notifyError);
+    } catch (notifyOwnerErr) {
+      console.error('[BOOKING CYCLE] Owner in-app notification failed:', notifyOwnerErr.message);
     }
+
+    console.log(`[BOOKING CYCLE] ✅ Complete — Booking ${booking.bookingId} created, emails sent, room updated`);
 
     res.status(201).json({
       success: true,
-      message: 'Booking request submitted successfully',
+      message: 'Booking request submitted successfully. Confirmation email with PDF sent!',
       data: { booking }
     });
 
@@ -368,7 +415,49 @@ router.post('/', [
   }
 });
 
-// @desc    Get user's bookings
+// @desc    Download booking confirmation PDF
+// @route   GET /api/bookings/:id/pdf
+// @access  Private (buyer or owner of the booking only)
+router.get('/:id/pdf', protect, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('roomId')
+      .populate('userId', 'name email phone')
+      .populate('ownerId', 'name email phone');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    // Only buyer or owner can download
+    const isBuyer = booking.userId?._id?.toString() === req.user._id.toString();
+    const isOwner = booking.ownerId?._id?.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isBuyer && !isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: 'Not authorised to download this PDF' });
+    }
+
+    const { generateBookingPDF } = require('../utils/bookingPDF');
+    const pdfBuffer = await generateBookingPDF(
+      booking,
+      booking.roomId,
+      booking.userId,
+      booking.ownerId
+    );
+
+    const filename = `MESS-WALLAH-Booking-${booking.bookingId || booking._id}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+
+  } catch (error) {
+    console.error('PDF download error:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate PDF' });
+  }
+});
+
 // @route   GET /api/bookings/my-bookings
 // @access  Private
 router.get('/my-bookings', protect, [

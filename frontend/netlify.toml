@@ -5,7 +5,7 @@
   
 [build.environment]
   NODE_VERSION = "18"
-  VITE_API_URL = "https://mess-wallah.onrender.com/api"
+  VITE_API_URL = "https://us-central1-YOUR-FIREBASE-PROJECT-ID.cloudfunctions.net/api"
 
 # Redirect all requests to index.html for SPA routing
 [[redirects]]

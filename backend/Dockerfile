@@ -1,20 +1,23 @@
-# Backend Dockerfile for MESS-WALLAH
-FROM node:18-alpine
-
-# Set working directory
+# ---- Base Stage ----
+FROM node:18-alpine AS base
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install production dependencies only
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm install
-
-# Copy backend source code
+# Copy source code
 COPY . .
 
-# Expose port
+# Create uploads directory (for multer file storage)
+RUN mkdir -p uploads
+
+# Expose the backend port
 EXPOSE 5001
 
-# Start the application
-CMD ["npm", "start"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+  CMD curl -f http://localhost:5001/health || exit 1
+
+# Start the server in production mode
+CMD ["node", "server.js"]

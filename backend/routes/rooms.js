@@ -93,7 +93,7 @@ router.use((error, req, res, next) => {
     if (error.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({
         success: false,
-        message: 'Too many files. Maximum 10 files allowed.'
+        message: 'Too many files. Maximum 15 files allowed.'
       });
     }
   }

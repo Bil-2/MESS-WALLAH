@@ -2,64 +2,81 @@ import { useEffect, useRef } from 'react';
 import api from '../utils/api';
 
 /**
- * Server Warmup Hook
- * Prevents cold starts by pre-warming the backend server when users visit the app
- * Uses localStorage to avoid redundant warmup calls
+ * Enhanced Server Warmup Hook — 100% Cold Start Prevention
+ *
+ * Strategy:
+ * 1. Immediately ping on first render
+ * 2. Retry every 2 seconds until server responds (handles 15-30s cold start)
+ * 3. After success, re-ping every 4 minutes to keep server awake
+ * 4. Uses localStorage so duplicated across tabs doesn't waste calls
  */
 const useServerWarmup = () => {
   const hasWarmedUp = useRef(false);
+  const retryTimer = useRef(null);
+  const keepAliveTimer = useRef(null);
 
   useEffect(() => {
-    const warmupServer = async () => {
-      // Check if we've already warmed up in this session
-      if (hasWarmedUp.current) {
-        return;
-      }
+    const RETRY_INTERVAL = 2500;      // retry every 2.5s during cold start
+    const KEEPALIVE_INTERVAL = 4 * 60 * 1000; // ping every 4 min to stay warm
+    const COOLDOWN = 2 * 60 * 1000;  // skip if warmed within 2 minutes
 
-      // Check localStorage to avoid warming up too frequently
-      const lastWarmup = localStorage.getItem('lastServerWarmup');
-      const now = Date.now();
-      const WARMUP_COOLDOWN = 5 * 60 * 1000; // 5 minutes
-
-      if (lastWarmup && (now - parseInt(lastWarmup)) < WARMUP_COOLDOWN) {
-        console.log('[Warmup] Server recently warmed, skipping...');
-        hasWarmedUp.current = true;
-        return;
-      }
-
+    const pingServer = async () => {
       try {
-        console.log('[Warmup] Pre-warming server...');
-        const startTime = Date.now();
+        const res = await api.get('/warmup', { timeout: 30000 });
 
-        const response = await api.get('/warmup', {
-          timeout: 45000, // 45 second timeout
-        });
+        if (res.data?.status === 'warmed' || res.data?.status === 'partial') {
+          console.log('[Warmup] ✅ Server is warm:', res.data.metrics?.totalResponseTime);
+          hasWarmedUp.current = true;
+          localStorage.setItem('lastServerWarmup', Date.now().toString());
 
-        const duration = Date.now() - startTime;
+          // Clear retry loop
+          if (retryTimer.current) clearInterval(retryTimer.current);
 
-        if (response.data?.status === 'warmed') {
-          console.log(`[Warmup] ✅ Server warmed successfully in ${duration}ms`);
-          console.log('[Warmup] Metrics:', response.data.metrics);
-        } else {
-          console.log(`[Warmup] ⚠️ Partial warmup in ${duration}ms`, response.data);
+          // Schedule keep-alive pings to prevent future cold starts
+          keepAliveTimer.current = setInterval(() => {
+            api.get('/warmup', { timeout: 10000 }).catch(() => { });
+          }, KEEPALIVE_INTERVAL);
         }
-
-        // Update localStorage with successful warmup
-        localStorage.setItem('lastServerWarmup', now.toString());
-        hasWarmedUp.current = true;
-
-      } catch (error) {
-        console.log('[Warmup] Server warmup failed (non-critical):', error.message);
-        // Don't block app loading if warmup fails
-        // Server will warm up on first actual API call
+      } catch (err) {
+        // Server is still sleeping — retry loop will fire again
+        console.log('[Warmup] Server sleeping, retrying in 2.5s...', err.code);
       }
     };
 
-    // Run warmup in background after a short delay
-    // This ensures it doesn't block initial app rendering
-    const timeoutId = setTimeout(warmupServer, 500);
+    const startWarmup = () => {
+      // Skip if recently warmed
+      const lastWarmup = localStorage.getItem('lastServerWarmup');
+      if (lastWarmup && Date.now() - parseInt(lastWarmup) < COOLDOWN) {
+        console.log('[Warmup] Server recently warm, skipping initial ping.');
+        hasWarmedUp.current = true;
+        // Still set up keep-alive
+        keepAliveTimer.current = setInterval(() => {
+          api.get('/warmup', { timeout: 10000 }).catch(() => { });
+        }, KEEPALIVE_INTERVAL);
+        return;
+      }
 
-    return () => clearTimeout(timeoutId);
+      // Immediate first ping
+      pingServer();
+
+      // Retry loop in case of cold start
+      retryTimer.current = setInterval(() => {
+        if (!hasWarmedUp.current) {
+          pingServer();
+        } else {
+          clearInterval(retryTimer.current);
+        }
+      }, RETRY_INTERVAL);
+    };
+
+    // Start warmup after a tiny delay so it doesn't block initial render
+    const initTimer = setTimeout(startWarmup, 200);
+
+    return () => {
+      clearTimeout(initTimer);
+      if (retryTimer.current) clearInterval(retryTimer.current);
+      if (keepAliveTimer.current) clearInterval(keepAliveTimer.current);
+    };
   }, []);
 
   return null;

@@ -158,7 +158,78 @@ router.get('/', [
   }
 });
 
-// @desc    Advanced search with filters
+// @desc    Advanced search with filters (GET - frontend compatible)
+// @route   GET /api/search/advanced
+// @access  Public
+router.get('/advanced', [
+  query('city').optional().trim().isLength({ max: 50 }),
+  query('location').optional().trim().isLength({ max: 50 }),
+  query('roomType').optional().isIn(['single', 'shared', 'studio', 'apartment']).withMessage('Invalid room type'),
+  query('minPrice').optional().isNumeric().withMessage('Minimum price must be a number'),
+  query('maxPrice').optional().isNumeric().withMessage('Maximum price must be a number'),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 50 })
+], async (req, res) => {
+  try {
+    const { city, location, roomType, minPrice, maxPrice, amenities, page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const searchLocation = city || location;
+    let searchQuery = { isAvailable: true };
+
+    if (searchLocation) {
+      searchQuery.$or = [
+        { 'address.city': new RegExp(searchLocation, 'i') },
+        { 'address.area': new RegExp(searchLocation, 'i') },
+        { 'address.state': new RegExp(searchLocation, 'i') }
+      ];
+    }
+
+    if (roomType) searchQuery.roomType = roomType;
+
+    if (minPrice || maxPrice) {
+      searchQuery.rentPerMonth = {};
+      if (minPrice) searchQuery.rentPerMonth.$gte = parseInt(minPrice);
+      if (maxPrice) searchQuery.rentPerMonth.$lte = parseInt(maxPrice);
+    }
+
+    if (amenities) {
+      const amenitiesArr = Array.isArray(amenities) ? amenities : amenities.split(',');
+      if (amenitiesArr.length > 0) searchQuery.amenities = { $in: amenitiesArr };
+    }
+
+    const [rooms, total] = await Promise.all([
+      Room.find(searchQuery)
+        .populate('owner', 'name phone email isVerified')
+        .sort({ featured: -1, rating: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Room.countDocuments(searchQuery)
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Advanced search completed successfully',
+      data: rooms,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalResults: total,
+        hasNextPage: skip + rooms.length < total,
+        hasPrevPage: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error('Advanced search GET error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Advanced search failed. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// @desc    Advanced search with filters (POST - for detailed body filters)
 // @route   POST /api/search/advanced
 // @access  Public
 router.post('/advanced', [

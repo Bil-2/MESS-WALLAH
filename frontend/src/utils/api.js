@@ -23,8 +23,10 @@ const getBaseUrl = () => {
     return 'http://localhost:5001/api';
   }
 
-  // Fallback to Render URL (Match service name in render.yaml)
-  return 'https://mess-wallah-backend.onrender.com/api';
+  // Fallback to Firebase Functions URL (will be set in environment variables when deployed, but fallback can be the deployed Firebase URL)
+  // For now, if no env var, we fallback to relative or a placeholder. 
+  // Make sure VITE_API_URL is set in Netlify/Vercel or Firebase Hosting.
+  return import.meta.env.VITE_API_URL || 'https://us-central1-YOUR-FIREBASE-PROJECT-ID.cloudfunctions.net/api';
 };
 
 // Create axios instance with base configuration
