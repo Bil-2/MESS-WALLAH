@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, Clock, Eye, MessageCircle, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../utils/api';
 import ScrollReveal from '../../components/ScrollReveal';
 
 const OwnerBookings = () => {
@@ -16,35 +17,27 @@ const OwnerBookings = () => {
 
   const fetchBookings = async () => {
     try {
-      // TODO: Implement API call to fetch booking requests
-      // For now, showing empty state
-      setBookings([]);
-      setLoading(false);
+      setLoading(true);
+      const response = await api.get('/bookings/owner-bookings');
+      const data = response.data.data;
+      let list = Array.isArray(data) ? data : (data?.bookings || []);
+      if (filter !== 'all') {
+        list = list.filter(b => b.status === filter);
+      }
+      setBookings(list);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       toast.error('Failed to load booking requests');
+    } finally {
       setLoading(false);
     }
   };
 
   const handleApprove = async (bookingId) => {
     try {
-      const token = localStorage.getItem('token');
-      // API call to approve booking
-      const response = await fetch(`/api/bookings/${bookingId}/status`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: 'confirmed' })
-      });
-      if (response.ok) {
-        toast.success('Booking approved! Tenant will be notified.');
-        fetchBookings();
-      } else {
-        throw new Error('Failed to approve');
-      }
+      await api.patch(`/bookings/${bookingId}/status`, { status: 'confirmed' });
+      toast.success('Booking approved! Tenant will be notified.');
+      fetchBookings();
     } catch (error) {
       console.error('Approve error:', error);
       toast.error('Failed to approve booking');
@@ -53,22 +46,9 @@ const OwnerBookings = () => {
 
   const handleReject = async (bookingId) => {
     try {
-      const token = localStorage.getItem('token');
-      // API call to reject booking
-      const response = await fetch(`/api/bookings/${bookingId}/status`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: 'rejected' })
-      });
-      if (response.ok) {
-        toast.success('Booking rejected');
-        fetchBookings();
-      } else {
-        throw new Error('Failed to reject');
-      }
+      await api.patch(`/bookings/${bookingId}/status`, { status: 'rejected' });
+      toast.success('Booking rejected');
+      fetchBookings();
     } catch (error) {
       console.error('Reject error:', error);
       toast.error('Failed to reject booking');
@@ -151,8 +131,8 @@ const OwnerBookings = () => {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === f
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                 >
                   {f.charAt(0).toUpperCase() + f.slice(1)}

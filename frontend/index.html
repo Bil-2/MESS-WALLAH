@@ -134,16 +134,22 @@
 
   <!-- Simple loading screen handler -->
   <script>
-    // Hide loading screen when app loads
-    window.addEventListener('load', () => {
+    function hideLoadingScreen() {
       const loadingScreen = document.getElementById('loading-screen');
+      if (!loadingScreen) return;
+      loadingScreen.classList.add('fade-out');
       setTimeout(() => {
-        loadingScreen.classList.add('fade-out');
-        setTimeout(() => {
-          loadingScreen.style.display = 'none';
-        }, 500);
-      }, 1000);
+        loadingScreen.style.display = 'none';
+      }, 500);
+    }
+
+    // Primary: remove as soon as DOM is ready (fast)
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(hideLoadingScreen, 200);
     });
+
+    // Safety fallback: always remove after 3 seconds no matter what
+    setTimeout(hideLoadingScreen, 3000);
   </script>
 
   <script type="module" src="/src/main.jsx"></script>

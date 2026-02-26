@@ -296,7 +296,7 @@ const OwnerDashboard = () => {
               </a>
 
               <button
-                onClick={() => navigate('/help')}
+                onClick={() => navigate('/support')}
                 className="w-full flex items-center justify-between bg-white/20 backdrop-blur-sm rounded-xl p-5 hover:bg-white/30 transition-all group"
               >
                 <span className="font-semibold text-lg">Visit Help Center</span>

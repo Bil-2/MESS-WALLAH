@@ -101,14 +101,14 @@ router.post('/resend-otp', [
 router.post('/send-otp-sms', [
   rateLimiters.general,
   body('phone')
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number')
+    .matches(/^(\+91|91)?[6-9]\d{9}$$/)
+    .withMessage('Please provide a valid Indian phone number (10 digits)')
 ], sendOtp);
 
 router.post('/verify-otp-sms', [
   body('phone')
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number'),
+    .matches(/^(\+91|91)?[6-9]\d{9}$$/)
+    .withMessage('Please provide a valid Indian phone number (10 digits)'),
   body('otp')
     .isLength({ min: 6, max: 6 })
     .withMessage('OTP must be 6 digits')

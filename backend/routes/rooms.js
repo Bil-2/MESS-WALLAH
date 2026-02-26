@@ -57,6 +57,36 @@ const roomValidation = [
 router.get('/', optionalAuth, getRooms);
 router.get('/stats', getRoomStats);
 router.get('/featured', optionalAuth, getFeaturedRooms);
+
+// @desc    Get rooms belonging to logged-in owner
+// @route   GET /api/rooms/my-rooms
+// @access  Private (Owner)
+router.get('/my-rooms', protect, authorize('owner'), async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const rooms = await require('../models/Room').find({ owner: req.user._id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await require('../models/Room').countDocuments({ owner: req.user._id });
+
+    res.json({
+      success: true,
+      data: { rooms, total },
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get my-rooms error:', error);
+    res.status(500).json({ success: false, message: 'Failed to retrieve rooms' });
+  }
+});
+
 router.get('/:id', optionalAuth, getRoomById);
 
 // Protected routes (require authentication)

@@ -116,10 +116,10 @@ const Navbar = () => {
                             if (!user?.name) return 'U';
                             const fullName = user.name.trim();
                             const words = fullName.split(/\s+/).filter(word => word.length > 0);
-                            
+
                             if (words.length === 0) return 'U';
                             if (words.length === 1) return words[0].charAt(0).toUpperCase();
-                            
+
                             // Get first letter of first word and first letter of last word
                             const firstInitial = words[0].charAt(0).toUpperCase();
                             const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
@@ -150,9 +150,9 @@ const Navbar = () => {
                   {isProfileDropdownOpen && (
                     <div
                       className="absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl border-2 border-orange-500 z-[9999] overflow-hidden bg-white dark:bg-gray-800"
-                      style={{ 
-                        position: 'absolute', 
-                        top: '100%', 
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
                         right: 0,
                         marginTop: '8px'
                       }}
@@ -165,10 +165,10 @@ const Navbar = () => {
                               if (!user?.name) return 'U';
                               const fullName = user.name.trim();
                               const words = fullName.split(/\s+/).filter(word => word.length > 0);
-                              
+
                               if (words.length === 0) return 'U';
                               if (words.length === 1) return words[0].charAt(0).toUpperCase();
-                              
+
                               const firstInitial = words[0].charAt(0).toUpperCase();
                               const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
                               return firstInitial + lastInitial;
@@ -213,7 +213,7 @@ const Navbar = () => {
                           { to: '/profile', icon: User, label: 'My Profile', color: 'orange' },
                           { to: '/bookings', icon: Calendar, label: 'My Bookings', color: 'blue' },
                           { to: '/favorites', icon: Heart, label: 'Favorites', color: 'pink' },
-                          { to: '/settings', icon: Settings, label: 'Settings', color: 'purple' }
+                          { to: '/profile', icon: Settings, label: 'Settings', color: 'purple' }
                         ].map((item, index) => {
                           const Icon = item.icon;
                           return (

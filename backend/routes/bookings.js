@@ -96,6 +96,40 @@ router.get('/', [
   }
 });
 
+// @desc    Get owner's booking requests (bookings for rooms they own)
+// @route   GET /api/bookings/owner-bookings
+// @access  Private (Owner)
+router.get('/owner-bookings', protect, authorize('owner'), async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    let query = { ownerId: req.user._id };
+    if (status && status !== 'all') query.status = status;
+
+    const bookings = await Booking.find(query)
+      .populate('userId', 'name email phone')
+      .populate('roomId', 'title address rentPerMonth photos')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Booking.countDocuments({ ownerId: req.user._id });
+
+    res.json({
+      success: true,
+      data: { bookings, total },
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get owner-bookings error:', error);
+    res.status(500).json({ success: false, message: 'Failed to retrieve bookings' });
+  }
+});
+
 // @desc    Get all bookings (Admin only)
 // @route   GET /api/bookings/admin
 // @access  Private (Admin only)

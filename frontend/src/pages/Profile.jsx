@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ScrollReveal from '../components/ScrollReveal';
-import { 
+import {
   User, Mail, Phone, MapPin, Edit3, Save, X, Camera,
-  Shield, Key, Star, Home, CreditCard, Heart, 
+  Shield, Key, Star, Home, CreditCard, Heart,
   CheckCircle, Eye, EyeOff, Calendar, Clock,
   Settings, Bell, Lock, Smartphone, Trash2,
   Download, Upload, RefreshCw, TrendingUp, Zap,
@@ -66,7 +66,7 @@ const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
             {showPassword.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        
+
         <div className="relative">
           <input
             type={showPassword.new ? "text" : "password"}
@@ -85,7 +85,7 @@ const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
             {showPassword.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        
+
         <div className="relative">
           <input
             type={showPassword.confirm ? "text" : "password"}
@@ -104,16 +104,16 @@ const PasswordChangeForm = ({ onSubmit, onCancel, loading }) => {
             {showPassword.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        
+
         <div className="flex space-x-2">
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Updating...' : 'Update Password'}
           </button>
-          <button 
+          <button
             type="button"
             onClick={onCancel}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
@@ -162,19 +162,19 @@ const Profile = () => {
   // Get user initials (first letter of first name + first letter of last name)
   const getUserInitials = () => {
     if (!user?.name) return 'U';
-    
+
     const fullName = user.name.trim();
     const words = fullName.split(/\s+/).filter(word => word.length > 0);
-    
+
     if (words.length === 0) return 'U';
     if (words.length === 1) return words[0].charAt(0).toUpperCase();
-    
+
     // Get first letter of first word and first letter of last word
     const firstInitial = words[0].charAt(0).toUpperCase();
     const lastInitial = words[words.length - 1].charAt(0).toUpperCase();
     return firstInitial + lastInitial;
   };
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -212,7 +212,7 @@ const Profile = () => {
         city: user.profile?.city || '',
         state: user.profile?.state || ''
       });
-      
+
       setStats({
         totalBookings: user.stats?.totalBookings || 8,
         totalSpent: user.stats?.totalSpent || 45000,
@@ -223,7 +223,7 @@ const Profile = () => {
         averageRating: user.stats?.averageRating || 4.8,
         lastActivity: user.stats?.lastActivity || new Date()
       });
-      
+
       // Calculate profile completion
       const fields = ['name', 'email', 'phone', 'bio', 'city', 'state'];
       const completedFields = fields.filter(field => {
@@ -264,7 +264,7 @@ const Profile = () => {
       toast.error('New passwords do not match');
       return;
     }
-    
+
     if (passwordData.newPassword.length < 8) {
       toast.error('Password must be at least 8 characters long');
       return;
@@ -363,11 +363,11 @@ const Profile = () => {
           </div>
         </div>
       )}
-      
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Enhanced Profile Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-8"
@@ -388,7 +388,7 @@ const Profile = () => {
               <div className="absolute top-8 left-8 w-16 h-16 bg-white/10 rounded-full animate-pulse"></div>
               <div className="absolute bottom-4 right-16 w-8 h-8 bg-white/20 rounded-full animate-bounce"></div>
             </div>
-            
+
             <div className="relative px-6 pb-6">
               <div className="flex flex-col lg:flex-row items-start lg:items-end -mt-16 relative z-10">
                 <div className="relative">
@@ -439,7 +439,7 @@ const Profile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-6 lg:mt-0 lg:ml-8 flex-1">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div>
@@ -462,7 +462,7 @@ const Profile = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="mt-6 lg:mt-0 flex flex-col sm:flex-row gap-3">
                       {!editing ? (
                         <>
@@ -473,7 +473,7 @@ const Profile = () => {
                             <Edit3 className="w-5 h-5 mr-2" />
                             Edit Profile
                           </button>
-                          <button 
+                          <button
                             onClick={handleLogout}
                             className="inline-flex items-center justify-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                           >
@@ -509,41 +509,41 @@ const Profile = () => {
         </motion.div>
 
         {/* Enhanced Stats Cards */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
           {[
-            { 
-              icon: Home, 
-              label: 'Total Bookings', 
-              value: stats.totalBookings, 
+            {
+              icon: Home,
+              label: 'Total Bookings',
+              value: stats.totalBookings,
               subValue: `${stats.activeBookings} active`,
               color: 'blue',
               gradient: 'from-blue-500 to-cyan-500'
             },
-            { 
-              icon: CreditCard, 
-              label: 'Total Spent', 
-              value: `₹${stats.totalSpent.toLocaleString()}`, 
+            {
+              icon: CreditCard,
+              label: 'Total Spent',
+              value: `₹${stats.totalSpent.toLocaleString()}`,
               subValue: 'This year',
               color: 'green',
               gradient: 'from-green-500 to-emerald-500'
             },
-            { 
-              icon: Heart, 
-              label: 'Favorites', 
-              value: stats.favoriteRooms, 
+            {
+              icon: Heart,
+              label: 'Favorites',
+              value: stats.favoriteRooms,
               subValue: 'Saved rooms',
               color: 'pink',
               gradient: 'from-pink-500 to-rose-500'
             },
-            { 
-              icon: Star, 
-              label: 'Rating', 
-              value: stats.averageRating, 
+            {
+              icon: Star,
+              label: 'Rating',
+              value: stats.averageRating,
               subValue: `${stats.reviewsGiven} reviews`,
               color: 'purple',
               gradient: 'from-purple-500 to-indigo-500'
@@ -582,7 +582,7 @@ const Profile = () => {
         </motion.div>
 
         {/* Enhanced Tabs */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -596,11 +596,10 @@ const Profile = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
-                      activeTab === tab.id
+                    className={`flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${activeTab === tab.id
                         ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg transform scale-105'
                         : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-800 hover:shadow-md'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4 mr-2" />
                     {tab.label}
@@ -622,7 +621,7 @@ const Profile = () => {
                 >
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Account Overview</h3>
-                    
+
                     {/* Profile Completion */}
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 mb-6">
                       <div className="flex items-center justify-between mb-4">
@@ -635,7 +634,7 @@ const Profile = () => {
                         </div>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                        <div 
+                        <div
                           className="bg-gradient-to-r from-blue-500 to-indigo-500 h-3 rounded-full transition-all duration-1000"
                           style={{ width: `${profileCompletion}%` }}
                         ></div>
@@ -679,15 +678,16 @@ const Profile = () => {
                         </h4>
                         <div className="grid grid-cols-2 gap-4">
                           {[
-                            { icon: Home, label: 'Browse Rooms', color: 'blue' },
-                            { icon: Heart, label: 'My Favorites', color: 'pink' },
-                            { icon: Calendar, label: 'My Bookings', color: 'green' },
-                            { icon: Settings, label: 'Settings', color: 'purple' }
+                            { icon: Home, label: 'Browse Rooms', color: 'blue', to: '/rooms' },
+                            { icon: Heart, label: 'My Favorites', color: 'pink', to: '/favorites' },
+                            { icon: Calendar, label: 'My Bookings', color: 'green', to: '/bookings' },
+                            { icon: Settings, label: 'Settings', color: 'purple', to: '/profile' }
                           ].map((action) => {
                             const Icon = action.icon;
                             return (
                               <motion.button
                                 key={action.label}
+                                onClick={() => navigate(action.to)}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className={`p-4 bg-${action.color}-50 dark:bg-${action.color}-900/20 rounded-xl hover:shadow-lg transition-all duration-200 group`}
@@ -796,16 +796,16 @@ const Profile = () => {
                           <p className="text-sm text-gray-500 dark:text-gray-400">Keep your account secure with a strong password</p>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setShowPasswordChange(!showPasswordChange)}
                         className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition-colors"
                       >
                         Change Password
                       </button>
                     </div>
-                    
+
                     {showPasswordChange && (
-                      <PasswordChangeForm 
+                      <PasswordChangeForm
                         onSubmit={handlePasswordChange}
                         onCancel={() => setShowPasswordChange(false)}
                         loading={loading}
@@ -834,33 +834,29 @@ const Profile = () => {
                     ].map((setting) => {
                       const Icon = setting.icon;
                       return (
-                        <div key={setting.title} className={`flex items-center justify-between p-6 border rounded-2xl hover:shadow-lg transition-all duration-200 ${
-                          setting.danger 
-                            ? 'border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700' 
+                        <div key={setting.title} className={`flex items-center justify-between p-6 border rounded-2xl hover:shadow-lg transition-all duration-200 ${setting.danger
+                            ? 'border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700'
                             : 'border-gray-200 dark:border-gray-600'
-                        }`}>
+                          }`}>
                           <div className="flex items-center">
-                            <div className={`p-3 rounded-xl mr-4 ${
-                              setting.danger 
-                                ? 'bg-red-100 dark:bg-red-900/50' 
+                            <div className={`p-3 rounded-xl mr-4 ${setting.danger
+                                ? 'bg-red-100 dark:bg-red-900/50'
                                 : 'bg-blue-100 dark:bg-blue-900/50'
-                            }`}>
-                              <Icon className={`w-6 h-6 ${
-                                setting.danger 
-                                  ? 'text-red-600 dark:text-red-400' 
+                              }`}>
+                              <Icon className={`w-6 h-6 ${setting.danger
+                                  ? 'text-red-600 dark:text-red-400'
                                   : 'text-blue-600 dark:text-blue-400'
-                              }`} />
+                                }`} />
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900 dark:text-white">{setting.title}</p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">{setting.description}</p>
                             </div>
                           </div>
-                          <button className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                            setting.danger
+                          <button className={`px-4 py-2 rounded-xl font-medium transition-colors ${setting.danger
                               ? 'bg-red-600 hover:bg-red-700 text-white'
                               : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                          }`}>
+                            }`}>
                             {setting.action}
                           </button>
                         </div>

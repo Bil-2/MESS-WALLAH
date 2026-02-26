@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../utils/api';
 import PricingSuggestion from '../../components/owner/PricingSuggestion';
 import ScrollReveal from '../../components/ScrollReveal';
 
@@ -18,31 +19,32 @@ const ManageRooms = () => {
 
   const fetchMyRooms = async () => {
     try {
-      // TODO: Implement API call to fetch owner's rooms
-      // For now, showing empty state
-      setRooms([]);
-      setLoading(false);
+      setLoading(true);
+      const response = await api.get('/rooms/my-rooms');
+      const data = response.data.data;
+      setRooms(Array.isArray(data) ? data : (data?.rooms || []));
     } catch (error) {
       console.error('Error fetching rooms:', error);
       toast.error('Failed to load rooms');
+    } finally {
       setLoading(false);
     }
   };
 
   const handleToggleAvailability = async (roomId, currentStatus) => {
     try {
-      // TODO: API call to toggle availability
+      await api.patch(`/rooms/${roomId}/availability`, { isAvailable: !currentStatus });
       toast.success(`Room ${currentStatus ? 'marked unavailable' : 'marked available'}`);
+      fetchMyRooms();
     } catch (error) {
       toast.error('Failed to update availability');
     }
   };
 
   const handleDeleteRoom = async (roomId) => {
-    if (!confirm('Are you sure you want to delete this room listing?')) return;
-
+    if (!window.confirm('Are you sure you want to delete this room listing?')) return;
     try {
-      // TODO: API call to delete room
+      await api.delete(`/rooms/${roomId}`);
       toast.success('Room deleted successfully');
       fetchMyRooms();
     } catch (error) {
@@ -142,7 +144,7 @@ const ManageRooms = () => {
             Pricing
           </button>
           <button
-            onClick={() => toast.info('Edit functionality coming soon!')}
+            onClick={() => navigate(`/owner/rooms/edit/${room._id}`)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
           >
             <Edit2 className="w-4 h-4" />

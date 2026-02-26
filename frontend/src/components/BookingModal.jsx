@@ -421,6 +421,27 @@ const BookingModal = ({ room, onClose, user }) => {
 
               {step === 4 && (
                 <>
+                  <button
+                    onClick={async () => {
+                      if (bookingConfirmation) {
+                        try {
+                          const res = await api.get(`/bookings/${bookingConfirmation._id || bookingConfirmation.bookingId}/pdf`, { responseType: 'blob' });
+                          const url = window.URL.createObjectURL(new Blob([res.data]));
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.setAttribute('download', `MESS-WALLAH-Booking-${bookingConfirmation.bookingId || bookingConfirmation._id}.pdf`);
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                        } catch (e) {
+                          toast.error('Failed to download PDF. Check your email instead.');
+                        }
+                      }
+                    }}
+                    className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all text-sm"
+                  >
+                    Download PDF Ticket
+                  </button>
                   <button onClick={() => window.location.href = '/bookings'}
                     className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg transition-all text-sm">
                     View My Bookings
