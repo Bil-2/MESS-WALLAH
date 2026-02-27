@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User, Mail, Lock, Eye, EyeOff, Phone, Shield, ArrowRight,
+  User, Mail, ArrowRight,
   CheckCircle, AlertCircle, UserCheck, Star
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
@@ -14,16 +14,11 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
     role: 'student' // Will be updated based on userIntent
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [phoneVerification, setPhoneVerification] = useState({
+  const [emailVerification, setEmailVerification] = useState({
     sendingOtp: false,
     otpSent: false,
     showOtpInput: false,
@@ -31,13 +26,12 @@ const Register = () => {
     verifying: false,
     isVerified: false
   });
-  const [passwordStrength, setPasswordStrength] = useState(0);
 
   // Prevent duplicate registration requests
   const registrationInProgress = useRef(false);
 
   const navigate = useNavigate();
-  const { register, sendOtp, verifyOtp, user, loading: authLoading, setAuthUser } = useAuthContext();
+  const { registerSendOtp, register, user, loading: authLoading, setAuthUser } = useAuthContext();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -48,27 +42,40 @@ const Register = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Check for email not found error (from Google Auth or Login redirect)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+
+    if (error === 'email_not_found') {
+      toast.error(
+        'Email not saved in database, register again',
+        {
+          duration: 6000,
+          style: {
+            borderRadius: '12px',
+            background: '#fee2e2',
+            color: '#b91c1c',
+            border: '2px solid #f87171',
+            fontSize: '14px',
+            fontWeight: '500'
+          }
+        }
+      );
+
+      // Clear the error from URL without reload
+      window.history.replaceState({}, document.title, '/register');
+    }
+  }, []);
+
   // Anti-autofill protection
   const initialFormData = {
     name: '',
     email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
     role: 'student'
   };
 
   usePreventAutoFill(formData, setFormData, initialFormData);
-
-  // Password strength calculation
-  const calculatePasswordStrength = (password) => {
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
-    return strength;
-  };
 
   // Form validation
   const validateForm = () => {
@@ -83,11 +90,6 @@ const Register = () => {
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!/^[6-9]\d{9}$/.test(formData.phone)) newErrors.phone = 'Invalid Indian phone number';
-    if (!formData.password) newErrors.password = 'Password is required';
-    if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -107,72 +109,37 @@ const Register = () => {
         [name]: ''
       }));
     }
-
-    // Calculate password strength
-    if (name === 'password') {
-      setPasswordStrength(calculatePasswordStrength(value));
-    }
   };
 
   const sendOTP = async () => {
-    if (!formData.phone || !/^[6-9]\d{9}$/.test(formData.phone)) {
-      toast.error('Please enter a valid phone number');
+    if (!validateForm()) {
       return;
     }
 
-    setPhoneVerification(prev => ({ ...prev, sendingOtp: true }));
+    setEmailVerification(prev => ({ ...prev, sendingOtp: true }));
     try {
-      await sendOtp(formData.phone);
-      setPhoneVerification(prev => ({
-        ...prev,
-        sendingOtp: false,
-        otpSent: true,
-        showOtpInput: true
-      }));
-      toast.success('OTP sent successfully!');
+      const result = await registerSendOtp(formData.email);
+      if (result.success) {
+        setEmailVerification(prev => ({
+          ...prev,
+          sendingOtp: false,
+          otpSent: true,
+          showOtpInput: true
+        }));
+        toast.success(result.message || 'OTP sent successfully!');
+      } else {
+        setEmailVerification(prev => ({ ...prev, sendingOtp: false }));
+        toast.error(result.message || 'Failed to send OTP');
+      }
     } catch (error) {
-      setPhoneVerification(prev => ({ ...prev, sendingOtp: false }));
+      setEmailVerification(prev => ({ ...prev, sendingOtp: false }));
       toast.error(error.message || 'Failed to send OTP');
     }
   };
 
-  const verifyOTP = async () => {
-    if (!phoneVerification.otp || phoneVerification.otp.length !== 6) {
+  const verifyOTPAndRegister = async () => {
+    if (!emailVerification.otp || emailVerification.otp.length !== 6) {
       toast.error('Please enter a valid 6-digit OTP');
-      return;
-    }
-
-    setPhoneVerification(prev => ({ ...prev, verifying: true }));
-    try {
-      await verifyOtp(formData.phone, phoneVerification.otp);
-      setPhoneVerification(prev => ({
-        ...prev,
-        verifying: false,
-        isVerified: true,
-        showOtpInput: false
-      }));
-      toast.success('Phone number verified successfully!');
-    } catch (error) {
-      setPhoneVerification(prev => ({ ...prev, verifying: false }));
-      toast.error(error.message || 'Invalid OTP');
-    }
-  };
-
-  const handleOtpChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setPhoneVerification(prev => ({ ...prev, otp: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      toast.error('Please fix the errors below');
-      return;
-    }
-
-    if (!phoneVerification.isVerified) {
-      toast.error('Please verify your phone number first');
       return;
     }
 
@@ -182,17 +149,27 @@ const Register = () => {
       return;
     }
 
-    setLoading(true);
+    setEmailVerification(prev => ({ ...prev, verifying: true }));
     registrationInProgress.current = true;
+
     try {
       // Set role based on user intent
       const registrationData = {
-        ...formData,
-        role: userIntent === 'owner' ? 'owner' : 'student'
+        name: formData.name,
+        email: formData.email,
+        role: userIntent === 'owner' ? 'owner' : 'student',
+        otp: emailVerification.otp
       };
 
       const result = await register(registrationData);
       if (result && result.success) {
+        setEmailVerification(prev => ({
+          ...prev,
+          verifying: false,
+          isVerified: true,
+          showOtpInput: false
+        }));
+
         toast.success('Registration successful! Welcome to MESS WALLAH!');
 
         // Update global auth state immediately if user data returned
@@ -202,28 +179,30 @@ const Register = () => {
 
         navigate('/');
       } else {
-        toast.error(result?.message || 'Registration failed');
+        setEmailVerification(prev => ({ ...prev, verifying: false }));
+        toast.error(result?.message || 'Registration or OTP verification failed');
       }
     } catch (error) {
+      setEmailVerification(prev => ({ ...prev, verifying: false }));
       toast.error(error.message || 'Registration failed');
     } finally {
-      setLoading(false);
       registrationInProgress.current = false;
     }
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength < 25) return 'bg-red-500';
-    if (passwordStrength < 50) return 'bg-yellow-500';
-    if (passwordStrength < 75) return 'bg-blue-500';
-    return 'bg-green-500';
+  const handleOtpChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setEmailVerification(prev => ({ ...prev, otp: value }));
   };
 
-  const getPasswordStrengthText = () => {
-    if (passwordStrength < 25) return 'Weak';
-    if (passwordStrength < 50) return 'Fair';
-    if (passwordStrength < 75) return 'Good';
-    return 'Strong';
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!emailVerification.otpSent) {
+      sendOTP();
+    } else {
+      verifyOTPAndRegister();
+    }
   };
 
   return (
@@ -260,7 +239,7 @@ const Register = () => {
           className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/20 p-8"
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* ROLE SELECTION - NEW */}
+            {/* ROLE SELECTION */}
             <motion.div
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -275,13 +254,13 @@ const Register = () => {
                 {/* Tenant Option */}
                 <motion.button
                   type="button"
-                  onClick={() => setUserIntent('tenant')}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  onClick={() => !emailVerification.otpSent && setUserIntent('tenant')}
+                  whileHover={{ scale: emailVerification.otpSent ? 1 : 1.02 }}
+                  whileTap={{ scale: emailVerification.otpSent ? 1 : 0.98 }}
                   className={`relative p-6 rounded-2xl border-2 transition-all duration-300 ${userIntent === 'tenant'
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg'
                     : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 bg-white dark:bg-gray-800'
-                    }`}
+                    } ${emailVerification.otpSent ? 'opacity-75 cursor-default' : ''}`}
                 >
                   {userIntent === 'tenant' && (
                     <div className="absolute top-3 right-3">
@@ -308,13 +287,13 @@ const Register = () => {
                 {/* Owner Option */}
                 <motion.button
                   type="button"
-                  onClick={() => setUserIntent('owner')}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  onClick={() => !emailVerification.otpSent && setUserIntent('owner')}
+                  whileHover={{ scale: emailVerification.otpSent ? 1 : 1.02 }}
+                  whileTap={{ scale: emailVerification.otpSent ? 1 : 0.98 }}
                   className={`relative p-6 rounded-2xl border-2 transition-all duration-300 ${userIntent === 'owner'
                     ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-lg'
                     : 'border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700 bg-white dark:bg-gray-800'
-                    }`}
+                    } ${emailVerification.otpSent ? 'opacity-75 cursor-default' : ''}`}
                 >
                   {userIntent === 'owner' && (
                     <div className="absolute top-3 right-3">
@@ -338,20 +317,6 @@ const Register = () => {
                   </div>
                 </motion.button>
               </div>
-
-              {userIntent && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl"
-                >
-                  <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
-                    You selected: <span className="font-semibold">
-                      {userIntent === 'tenant' ? 'Find a Room (Tenant)' : 'Rent Out Room (Owner)'}
-                    </span>
-                  </p>
-                </motion.div>
-              )}
             </motion.div>
 
             {/* Only show rest of form if user has selected their intent */}
@@ -377,8 +342,8 @@ const Register = () => {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className={`w-full px-4 py-3 pl-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                          }`}
+                        disabled={emailVerification.otpSent}
+                        className={`w-full px-4 py-3 pl-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'} ${emailVerification.otpSent ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                         placeholder="Enter your full name"
                       />
                     </div>
@@ -394,7 +359,7 @@ const Register = () => {
                     )}
                   </motion.div>
 
-                  {/* Email Field */}
+                  {/* Email Field with OTP Option */}
                   <motion.div
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -403,20 +368,41 @@ const Register = () => {
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Email Address
                     </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="off"
-                        required
-                        value={formData.email}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-3 pl-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                          }`}
-                        placeholder="Enter your email address"
-                      />
+                    <div className="flex gap-3">
+                      <div className="relative flex-1">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                          id="email"
+                          name="email"
+                          type="email"
+                          autoComplete="off"
+                          required
+                          value={formData.email}
+                          onChange={handleChange}
+                          disabled={emailVerification.otpSent}
+                          className={`w-full px-4 py-3 pl-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'} ${emailVerification.otpSent ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                          placeholder="Enter your email address"
+                        />
+                        {emailVerification.isVerified && (
+                          <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
+                        )}
+                      </div>
+                      {!emailVerification.isVerified && (
+                        <button
+                          type="button"
+                          onClick={sendOTP}
+                          disabled={emailVerification.sendingOtp || !formData.email || emailVerification.otpSent}
+                          className={`px-4 py-3 text-white rounded-xl font-medium transition-colors whitespace-nowrap ${emailVerification.otpSent ? 'bg-gray-400 cursor-default' : 'bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'}`}
+                        >
+                          {emailVerification.sendingOtp ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                          ) : emailVerification.otpSent ? (
+                            'OTP Sent'
+                          ) : (
+                            'Send OTP'
+                          )}
+                        </button>
+                      )}
                     </div>
                     {errors.email && (
                       <motion.div
@@ -428,67 +414,10 @@ const Register = () => {
                         {errors.email}
                       </motion.div>
                     )}
-                  </motion.div>
-
-                  {/* Phone Field with OTP */}
-                  <motion.div
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Phone Number
-                    </label>
-                    <div className="flex gap-3">
-                      <div className="relative flex-1">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          autoComplete="off"
-                          required
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className={`w-full px-4 py-3 pl-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                            }`}
-                          placeholder="Enter 10-digit phone number"
-                        />
-                        {phoneVerification.isVerified && (
-                          <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
-                        )}
-                      </div>
-                      {!phoneVerification.isVerified && (
-                        <button
-                          type="button"
-                          onClick={sendOTP}
-                          disabled={phoneVerification.sendingOtp || !formData.phone}
-                          className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                        >
-                          {phoneVerification.sendingOtp ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                          ) : phoneVerification.otpSent ? (
-                            'Resend OTP'
-                          ) : (
-                            'Send OTP'
-                          )}
-                        </button>
-                      )}
-                    </div>
-                    {errors.phone && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 text-red-500 text-sm mt-1"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.phone}
-                      </motion.div>
-                    )}
 
                     {/* OTP Input */}
                     <AnimatePresence>
-                      {phoneVerification.showOtpInput && (
+                      {emailVerification.showOtpInput && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -502,7 +431,7 @@ const Register = () => {
                             <input
                               id="otp"
                               type="text"
-                              value={phoneVerification.otp}
+                              value={emailVerification.otp}
                               onChange={handleOtpChange}
                               className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white text-center text-lg tracking-widest font-medium"
                               placeholder="000000"
@@ -510,15 +439,26 @@ const Register = () => {
                             />
                             <button
                               type="button"
-                              onClick={verifyOTP}
-                              disabled={phoneVerification.verifying || phoneVerification.otp.length !== 6}
+                              onClick={verifyOTPAndRegister}
+                              disabled={emailVerification.verifying || emailVerification.otp.length !== 6 || registrationInProgress.current}
                               className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {phoneVerification.verifying ? (
+                              {emailVerification.verifying ? (
                                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
                               ) : (
-                                'Verify'
+                                'Verify & Register'
                               )}
+                            </button>
+                          </div>
+                          <div className="mt-2 text-sm text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEmailVerification(prev => ({ ...prev, otpSent: false, showOtpInput: false, otp: '' }));
+                              }}
+                              className="text-orange-600 hover:text-orange-700 font-medium"
+                            >
+                              Edit Email Adddress
                             </button>
                           </div>
                         </motion.div>
@@ -526,143 +466,29 @@ const Register = () => {
                     </AnimatePresence>
                   </motion.div>
 
-                  {/* Password Field */}
-                  <motion.div
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.7 }}
-                  >
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        id="password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="off"
-                        required
-                        value={formData.password}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-3 pl-10 pr-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                          }`}
-                        placeholder="Create a strong password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-
-                    {/* Password Strength Indicator */}
-                    {formData.password && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="mt-2"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Password Strength</span>
-                          <span className={`text-xs font-medium ${passwordStrength < 25 ? 'text-red-500' :
-                            passwordStrength < 50 ? 'text-yellow-500' :
-                              passwordStrength < 75 ? 'text-blue-500' : 'text-green-500'
-                            }`}>
-                            {getPasswordStrengthText()}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${passwordStrength}%` }}
-                            className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {errors.password && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 text-red-500 text-sm mt-1"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.password}
-                      </motion.div>
-                    )}
-                  </motion.div>
-
-                  {/* Confirm Password Field */}
-                  <motion.div
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.8 }}
-                  >
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        autoComplete="off"
-                        required
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        className={`w-full px-4 py-3 pl-10 pr-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.confirmPassword ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'
-                          }`}
-                        placeholder="Confirm your password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                      {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                        <CheckCircle className="absolute right-10 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
+                  {/* Submit Button (Only visible before OTP is sent) */}
+                  {!emailVerification.showOtpInput && (
+                    <motion.button
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.9 }}
+                      type="submit"
+                      disabled={emailVerification.sendingOtp}
+                      className="w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      {emailVerification.sendingOtp ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
+                          Sending OTP...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-5 h-5 mr-2" />
+                          Send Verification OTP
+                        </>
                       )}
-                    </div>
-                    {errors.confirmPassword && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 text-red-500 text-sm mt-1"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.confirmPassword}
-                      </motion.div>
-                    )}
-                  </motion.div>
-
-                  {/* Submit Button */}
-                  <motion.button
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.9 }}
-                    type="submit"
-                    disabled={loading || !phoneVerification.isVerified}
-                    className="w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-orange-600 to-pink-600 hover:from-orange-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      <>
-                        <Star className="w-5 h-5 mr-2" />
-                        Create Account
-                      </>
-                    )}
-                  </motion.button>
+                    </motion.button>
+                  )}
                 </>
               )}
             </AnimatePresence>

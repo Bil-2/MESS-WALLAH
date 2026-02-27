@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight, Home, 
 import { useAuthContext } from '../context/AuthContext.jsx';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import toast from 'react-hot-toast';
+import api from '../utils/api';
 
 const Login = () => {
   const [loginMethod, setLoginMethod] = useState('otp');
@@ -19,11 +20,12 @@ const Login = () => {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Prevent duplicate OTP requests
+  // OTPless - store requestId between send and verify steps
+  const requestIdRef = useRef(null);
   const otpRequestInProgress = useRef(false);
 
   const navigate = useNavigate();
-  const { sendOtp, verifyOtp, login, user, loading: authLoading, setAuthUser } = useAuthContext();
+  const { sendOtpEmail, verifyOtpEmail, login, user, loading: authLoading, setAuthUser } = useAuthContext();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -46,10 +48,10 @@ const Login = () => {
 
     if (error === 'registration_required') {
       toast.error(
-        '⚠️ Please Register First!\n\nContinue with Google is only available for existing users. Please create an account using the Sign-Up form first.',
+        'Please Register First!\n\nContinue with Google is only available for existing users. Please create an account using the Sign-Up form first.',
         {
           duration: 6000,
-          icon: '🔒',
+          icon: 'Lock',
           style: {
             borderRadius: '12px',
             background: '#fef3c7',
@@ -100,47 +102,62 @@ const Login = () => {
     e.preventDefault();
     setErrors({});
 
-    if (!formData.phone) {
-      setErrors({ phone: 'Phone number is required' });
-      toast.error('Phone number is required');
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+      setErrors({ email: 'Please enter a valid email address' });
+      toast.error('Please enter a valid email address');
       return;
     }
 
-    if (formData.phone.length !== 10) {
-      setErrors({ phone: 'Please enter a valid 10-digit phone number' });
-      toast.error('Please enter a valid 10-digit phone number');
-      return;
-    }
-
-    // Prevent duplicate requests
-    if (otpRequestInProgress.current) {
-      console.log('[OTP] Request already in progress, ignoring duplicate click');
-      return;
-    }
+    if (otpRequestInProgress.current) return;
 
     try {
       otpRequestInProgress.current = true;
       setLoading(true);
-      console.log('[OTP] Sending OTP to:', formData.phone);
-      const result = await sendOtp(formData.phone);
-      console.log('[OTP] OTP Send Result:', result);
 
-      if (result && result.success) {
-        console.log('[SUCCESS] OTP sent successfully, showing input field');
+      const response = await sendOtpEmail(formData.email);
+
+      if (response.success) {
+        // We don't need a requestId for email OTP
         setOtpSent(true);
-
-        toast.success('OTP sent successfully! Check your phone.');
+        toast.success(response.message || 'OTP sent via Email!');
       } else {
-        console.error('[ERROR] OTP send failed:', result);
-        const errorMsg = result?.message || 'Failed to send OTP';
-        setErrors({ phone: errorMsg });
-        toast.error(errorMsg);
+        // Redirect to register if email not found
+        if (response.action === 'registration_required' || response.message?.includes('not saved')) {
+          toast.error(
+            'Email not saved in database, register again',
+            {
+              duration: 5000,
+              icon: 'ClipboardList',
+              style: {
+                borderRadius: '12px',
+                background: '#fee2e2',
+                color: '#b91c1c',
+                border: '1px solid #f87171',
+                fontSize: '14px',
+                fontWeight: '500'
+              }
+            }
+          );
+          setTimeout(() => navigate('/register?error=email_not_found'), 1500);
+          return;
+        }
+
+        setErrors({ email: response.message || 'Failed to send OTP' });
+        toast.error(response.message || 'Failed to send OTP');
       }
     } catch (error) {
-      console.error('[ERROR] Error sending OTP:', error);
-      const errorMsg = error.message || 'Failed to send OTP';
-      setErrors({ phone: errorMsg });
-      toast.error(errorMsg);
+      console.error('[EmailOTP] Send error:', error);
+
+      const errorData = error.response?.data;
+      if (errorData?.action === 'registration_required' || errorData?.message?.includes('not saved')) {
+        toast.error('Email not saved in database, register again');
+        setTimeout(() => navigate('/register?error=email_not_found'), 1500);
+        return;
+      }
+
+      const msg = error.message || 'Failed to send OTP. Try again.';
+      setErrors({ email: msg });
+      toast.error(msg);
     } finally {
       setLoading(false);
       otpRequestInProgress.current = false;
@@ -152,42 +169,35 @@ const Login = () => {
     setErrors({});
 
     if (!otp || otp.length !== 6) {
-      setErrors({ otp: 'Please enter a valid 6-digit OTP' });
+      setErrors({ otp: 'Please enter the 6-digit OTP' });
       return;
     }
 
     try {
       setVerifyingOtp(true);
-      const result = await verifyOtp(formData.phone, otp);
 
-      if (result.success) {
-        toast.success('Login successful!');
+      const response = await verifyOtpEmail(formData.email, otp);
 
-        // Update global auth state immediately
-        if (setAuthUser && result.user) {
-          setAuthUser(result.user);
-        }
-
-        const userRole = result.user?.role || result.role || 'user';
-        if (userRole === 'owner') {
-          navigate('/owner-dashboard');
-        } else {
-          // If profile completed, go home, else maybe profile?
-          // For now keep standard redirect
-          navigate('/');
-        }
+      if (response.success) {
+        toast.success(response.message || 'Login successful!');
+        if (setAuthUser && response.user) setAuthUser(response.user);
+        // Note: verifyOtpEmail already sets the token in localStorage
+        const role = response.user?.role || 'user';
+        navigate(role === 'owner' ? '/owner-dashboard' : '/');
       } else {
-        setErrors({ otp: result.message || 'Invalid OTP' });
-        toast.error(result.message || 'Invalid OTP');
+        setErrors({ otp: response.message || 'Invalid OTP' });
+        toast.error(response.message || 'Invalid OTP');
         setVerifyingOtp(false);
       }
     } catch (error) {
-      console.error('Error verifying OTP:', error);
-      setErrors({ otp: error.message || 'Invalid OTP' });
-      toast.error(error.message || 'Invalid OTP');
+      console.error('[EmailOTP] Verify error:', error);
+      const msg = error.message || 'Verification failed. Try again.';
+      setErrors({ otp: msg });
+      toast.error(msg);
       setVerifyingOtp(false);
     }
   };
+
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
@@ -343,8 +353,8 @@ const Login = () => {
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                   }`}
               >
-                <Phone className="w-4 h-4 inline mr-2" />
-                Login with OTP
+                <Mail className="w-4 h-4 inline mr-2" />
+                Login with Email
               </button>
               <button
                 type="button"
@@ -358,7 +368,7 @@ const Login = () => {
                   }`}
               >
                 <Lock className="w-4 h-4 inline mr-2" />
-                Login with Password
+                Continue with Google
               </button>
             </div>
           </div>
@@ -368,34 +378,33 @@ const Login = () => {
             <form className="space-y-4" onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} autoComplete="off" noValidate>
               {!otpSent ? (
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Phone Number
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email Address
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
+                      id="email"
+                      name="email"
+                      type="email"
                       autoComplete="off"
                       autoCorrect="off"
                       autoCapitalize="off"
                       spellCheck="false"
                       required
-                      value={formData.phone}
+                      value={formData.email}
                       onChange={handleChange}
-                      maxLength="10"
-                      className={`w-full px-4 py-3 pl-10 border ${errors.phone
+                      className={`w-full px-4 py-3 pl-10 border ${errors.email
                         ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                         : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
                         } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white input-focus`}
-                      placeholder="Enter your phone number"
+                      placeholder="Enter your email address"
                     />
                   </div>
-                  {errors.phone && (
+                  {errors.email && (
                     <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
                       <AlertCircle className="w-4 h-4" />
-                      {errors.phone}
+                      {errors.email}
                     </div>
                   )}
                 </div>
@@ -432,7 +441,7 @@ const Login = () => {
                   )}
                   <div className="mt-3 text-center">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      OTP sent to <span className="font-medium text-orange-600">+91 {formData.phone}</span>
+                      OTP sent to <span className="font-medium text-orange-600">{formData.email}</span>
                     </p>
                     <button
                       type="button"
@@ -443,7 +452,7 @@ const Login = () => {
                       }}
                       className="mt-1 text-purple-600 dark:text-purple-400 hover:underline font-medium text-sm hover-lift"
                     >
-                      Change number
+                      Change email
                     </button>
                   </div>
                 </div>
@@ -463,141 +472,19 @@ const Login = () => {
                   </>
                 ) : (
                   <>
-                    <Phone className="w-5 h-5 mr-2" />
+                    <Mail className="w-5 h-5 mr-2" />
                     Send OTP
                   </>
                 )}
               </button>
             </form>
           ) : (
-            /* Password Login Form */
-            <form className="space-y-4" onSubmit={handlePasswordLogin} autoComplete="off" noValidate>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-3 pl-10 border ${errors.email
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                      } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white input-focus`}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                {errors.email && (
-                  <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.email}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck="false"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-3 pl-10 pr-10 border ${errors.password
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500'
-                      } rounded-lg placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white input-focus`}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 scale-hover"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.password}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <Link
-                    to="/forgot-password"
-                    className="font-medium text-orange-600 hover:text-orange-500 dark:text-orange-400 dark:hover:text-orange-300 hover-lift"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-base font-medium rounded-lg text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed btn-hover"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                ) : (
-                  <>
-                    <Lock className="w-5 h-5 mr-2" />
-                    Sign In
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* Google Sign-In - Only show for password login */}
-          {loginMethod === 'password' && (
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 font-medium">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4">
+            /* Google Login Tab */
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Sign in quickly and securely using your Google account.
+                </p>
                 <GoogleSignInButton />
               </div>
             </div>

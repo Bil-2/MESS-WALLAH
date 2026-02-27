@@ -15,8 +15,7 @@ const Rooms = lazy(() => import('./pages/Rooms'));
 const RoomDetails = lazy(() => import('./pages/RoomDetails'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+
 const Profile = lazy(() => import('./pages/Profile'));
 const Bookings = lazy(() => import('./pages/Bookings'));
 const About = lazy(() => import('./pages/About'));
@@ -129,8 +128,7 @@ function App() {
                   <Route path="/search-results" element={<SearchResults />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
+
                   <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
                   <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
                   <Route path="/profile" element={<Profile />} />

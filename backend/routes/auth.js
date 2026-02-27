@@ -20,7 +20,10 @@ const {
 const { sendOtp, verifyOtp, resendOtp } = require('../controllers/otpController');
 
 // Import auth controller
-const { register, login, forgotPassword, resetPassword, changePassword, getProfile, logout, checkUserExists } = require('../controllers/authController');
+const { registerSendOtp, register, login, changePassword, getProfile, logout, checkUserExists } = require('../controllers/authController');
+// OTPless WhatsApp OTP Service (free, 100/day, no card)
+const { sendOtpWhatsApp, verifyOtpWhatsApp } = require('../services/otplessService');
+
 
 const router = express.Router();
 
@@ -30,7 +33,18 @@ router.use(sanitizeInput);
 // Apply rate limiting to all auth routes
 router.use(rateLimiters.auth);
 
-// @desc    Register new user
+// @desc    Send OTP for registration
+// @route   POST /api/auth/register-send-otp
+// @access  Public
+router.post('/register-send-otp', [
+  rateLimiters.general,
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address')
+], require('../controllers/authController').registerSendOtp);
+
+// @desc    Verify OTP and register new user
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', [
@@ -43,13 +57,9 @@ router.post('/register', [
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email address'),
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long'),
-  body('phone')
-    .optional()
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number')
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
 ], register);
 
 // @desc    Login user
@@ -114,6 +124,119 @@ router.post('/verify-otp-sms', [
     .withMessage('OTP must be 6 digits')
 ], verifyOtp);
 
+// ─── OTPless WhatsApp OTP (Free, 100/day) ─────────────────────────
+
+// @desc    Send OTP via WhatsApp using OTPless
+// @route   POST /api/auth/send-otp-whatsapp
+// @access  Public
+router.post('/send-otp-whatsapp', [
+  rateLimiters.general,
+  body('phone')
+    .matches(/^(\+91|91)?[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian phone number'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: errors.array()[0].msg });
+    }
+
+    const phone = req.body.phone.replace(/^\+?91/, '');
+    const result = await sendOtpWhatsApp(phone);
+
+    if (result.success) {
+      return res.status(200).json({
+        success: true,
+        message: result.dev ? 'Dev mode: use OTP 123456' : 'OTP sent via WhatsApp! Check your WhatsApp.',
+        requestId: result.requestId,
+        dev: result.dev || false,
+      });
+    }
+
+    return res.status(500).json({ success: false, message: result.message });
+  } catch (error) {
+    console.error('[OTPless] Send route error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+});
+
+// @desc    Verify OTP and login/register user
+// @route   POST /api/auth/verify-otp-whatsapp
+// @access  Public
+router.post('/verify-otp-whatsapp', [
+  body('phone')
+    .matches(/^(\+91|91)?[6-9]\d{9}$/)
+    .withMessage('Please provide a valid Indian phone number'),
+  body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+  body('requestId').notEmpty().withMessage('requestId is required'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: errors.array()[0].msg });
+    }
+
+    const { otp, requestId } = req.body;
+    const phone = req.body.phone.replace(/^\+?91/, '');
+    const fullPhone = `+91${phone}`;
+
+    const result = await verifyOtpWhatsApp(requestId, otp, phone);
+    if (!result.success) {
+      return res.status(400).json({ success: false, message: result.message || 'Invalid OTP' });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ $or: [{ phone }, { phone: fullPhone }] });
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      user = new User({
+        phone,
+        name: `User${phone.slice(-4)}`,
+        role: 'user',
+        isPhoneVerified: true,
+        registrationMethod: 'otpless',
+        isActive: true,
+        lastLogin: new Date(),
+      });
+      await user.save();
+    } else {
+      user.isPhoneVerified = true;
+      user.lastLogin = new Date();
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, phone: user.phone, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: isNewUser ? 'Account created!' : 'Login successful!',
+      data: {
+        user: { id: user._id, name: user.name, phone: user.phone, email: user.email, role: user.role, isNewUser },
+        token,
+      }
+    });
+  } catch (error) {
+    console.error('[OTPless] Verify route error:', error);
+    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
+  }
+});
+
+
+
+
 // @desc    Send OTP to email address
 // @route   POST /api/auth/send-otp-email
 // @access  Public
@@ -135,6 +258,17 @@ router.post('/send-otp-email', [
     }
 
     const { email } = req.body;
+    const normalizedEmail = email.toLowerCase();
+
+    // NEW: Check if user exists before sending OTP
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Email not saved in database, register again',
+        action: 'registration_required'
+      });
+    }
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

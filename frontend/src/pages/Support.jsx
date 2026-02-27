@@ -134,8 +134,8 @@ const Support = () => {
           answer: 'Go to your profile section, click "Edit Profile", make the necessary changes, and save. Some changes may require verification.'
         },
         {
-          question: 'I forgot my password. How do I reset it?',
-          answer: 'Click "Forgot Password" on the login page, enter your email, and follow the instructions sent to your email to reset your password.'
+          question: 'I forgot my password. How do I access my account?',
+          answer: 'We now use a secure passwordless login system! You don\'t need to remember any passwords. Just enter your registered email address on the login page to receive a secure OTP, or use Continue with Google.'
         },
         {
           question: 'Can I have multiple bookings?',

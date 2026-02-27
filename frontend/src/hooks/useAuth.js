@@ -55,6 +55,39 @@ const useAuth = () => {
     }
   };
 
+  // Send Email OTP
+  const sendOtpEmail = async (email) => {
+    setOtpLoading(true);
+    try {
+      const response = await api.post('/auth/send-otp-email', { email });
+
+      if (response.data.success) {
+        console.log(`OTP sent to ${email}`);
+        return {
+          success: true,
+          message: response.data.message,
+          data: response.data.data
+        };
+      } else {
+        console.error(response.data.message || 'Failed to send Email OTP');
+        return { success: false, message: response.data.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send Email OTP';
+      console.error(message);
+      return { success: false, message };
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Resend Email OTP
+  const resendOtpEmail = async (email) => {
+    // We can reuse the same endpoint for sending/resending
+    return sendOtpEmail(email);
+  };
+
+
   // Resend OTP
   const resendOtp = async (phone) => {
     setOtpLoading(true);
@@ -88,7 +121,7 @@ const useAuth = () => {
     try {
       console.log('OTP VERIFICATION: Verifying OTP for phone:', phone);
 
-      const response = await api.post('/auth/verify-otp', { phone, otp });
+      const response = await await api.post('/auth/verify-otp', { phone, otp });
 
       if (response.data.success) {
         const { token, user: userData } = response.data.data;
@@ -127,6 +160,47 @@ const useAuth = () => {
     } catch (error) {
       const message = error.response?.data?.message || 'Invalid OTP';
       console.error('OTP verification error:', message);
+      return { success: false, message };
+    }
+  };
+
+  const verifyOtpEmail = async (email, otp) => {
+    try {
+      console.log('OTP EMAIL VERIFICATION: Verifying Email OTP for:', email);
+
+      const response = await api.post('/auth/verify-otp-email', { email, otp });
+
+      if (response.data.success) {
+        const { token, user: userData } = response.data.data;
+
+        console.log('EMAIL OTP VERIFICATION SUCCESSFUL:', {
+          userId: userData.id,
+          name: userData.name,
+          email: userData.email,
+          accountType: userData.accountType,
+          isNewUser: userData.isNewUser
+        });
+
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        // Let the state catch up to prevent react router's weird race condition issues
+        setUser(userData);
+
+        return {
+          success: true,
+          user: userData,
+          role: userData.role,
+          accountType: userData.accountType || 'email-only',
+          isNewUser: userData.isNewUser
+        };
+      } else {
+        console.error('Email OTP verification failed:', response.data.message);
+        return { success: false, message: response.data.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Invalid OTP';
+      console.error('Email OTP verification error:', message);
       return { success: false, message };
     }
   };
@@ -206,91 +280,46 @@ const useAuth = () => {
     return user?.verified === true || user?.isVerified === true;
   };
 
-  // Forgot password
-  const forgotPassword = async (email) => {
+
+  // Send OTP for new registration
+  const registerSendOtp = async (email) => {
     setLoading(true);
     try {
-      const response = await api.post('/auth/forgot-password', { email });
-
+      const response = await api.post('/auth/register-send-otp', { email });
       if (response.data.success) {
-        console.log('Password reset link sent to your email!');
         return { success: true, message: response.data.message };
       } else {
-        console.error(response.data.message || 'Failed to send reset email');
         return { success: false, message: response.data.message };
       }
     } catch (error) {
-      const message = error.response?.data?.message || error.message || 'Failed to send reset email';
-      console.error(message);
+      const errorData = error.response?.data;
+      const message = errorData?.message || error.message || 'Failed to send OTP';
       return { success: false, message };
     } finally {
       setLoading(false);
     }
   };
 
-  // ENHANCED: Unified registration with account linking support
+  // Register with OTP
   const register = async (userData) => {
     setLoading(true);
     try {
-      console.log('UNIFIED REGISTRATION: Starting registration process...', {
-        hasEmail: !!userData.email,
-        hasPhone: !!userData.phone,
-        hasPassword: !!userData.password
-      });
-
       const response = await api.post('/auth/register', userData);
 
       if (response.data.success) {
-        console.log('Registration API call successful');
-
-        // CRITICAL: Handle unified account linking
-        if (response.data.accountLinked) {
-          console.log('ACCOUNT LINKING DETECTED: Unifying existing OTP account with email');
-          console.log('Linking details:', response.data.linkingDetails);
-
-          // Store unified account data
+        // Immediate login on successful registration
+        if (response.data.token && response.data.user) {
           const { token, user } = response.data;
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
           setUser(user);
 
-          console.log('UNIFIED ACCOUNT CREATED:', {
-            userId: user.id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            accountType: response.data.accountType,
-            hasUnifiedAuth: true
-          });
-
           return {
             success: true,
-            message: response.data.message || 'Account successfully linked! Your phone and email are now unified.',
-            accountLinked: true,
-            accountType: 'unified',
+            message: response.data.message || 'Account created successfully!',
             user: user,
-            token: token,
-            linkingDetails: response.data.linkingDetails
+            token: token
           };
-        } else {
-          // New account created (not linked)
-          console.log('NEW ACCOUNT CREATED: Fresh registration');
-
-          // Check if we got token and user data for immediate login
-          if (response.data.token && response.data.user) {
-            const { token, user } = response.data;
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setUser(user);
-
-            return {
-              success: true,
-              message: response.data.message || 'Account created successfully!',
-              accountLinked: false,
-              user: user,
-              token: token
-            };
-          }
         }
 
         return {
@@ -298,20 +327,12 @@ const useAuth = () => {
           message: response.data.message || 'Registration successful!'
         };
       } else {
-        console.error('Registration failed:', response.data.message);
         return { success: false, message: response.data.message };
       }
     } catch (error) {
       const errorData = error.response?.data;
       const message = errorData?.message || error.message || 'Registration failed';
-      console.error('Registration error:', message, errorData);
-
-      return {
-        success: false,
-        message,
-        accountLinked: errorData?.accountLinked || false,
-        hint: errorData?.hint
-      };
+      return { success: false, message };
     } finally {
       setLoading(false);
     }
@@ -449,11 +470,15 @@ const useAuth = () => {
     loading,
     otpLoading,
     sendOtp,
+    sendOtpEmail,
     resendOtp,
+    resendOtpEmail,
     verifyOtp,
+    verifyOtpEmail,
     login,
+    registerSendOtp,
     register,
-    forgotPassword,
+
     updateProfile,
     refreshProfile,
     logout,

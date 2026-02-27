@@ -30,19 +30,26 @@ router.get('/google', (req, res, next) => {
  * @desc    Google OAuth callback
  * @access  Public
  */
-router.get('/google/callback',
-  passport.authenticate('google', {
-    session: false,
-    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=registration_required`
-  }),
-  async (req, res) => {
+router.get('/google/callback', (req, res, next) => {
+  passport.authenticate('google', { session: false }, async (err, user, info) => {
     try {
-      const user = req.user;
-
-      if (!user) {
-        console.error('[ERROR] No user found after Google authentication');
+      if (err) {
+        console.error('[ERROR] Error in Google callback:', err);
         const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
         const frontendBase = frontendUrl.replace(/\/$/, '');
+        return res.redirect(`${frontendBase}/login?error=server_error`);
+      }
+
+      if (!user) {
+        const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendBase = frontendUrl.replace(/\/$/, '');
+
+        if (info && info.message === 'email_not_found') {
+          console.error('[ERROR] Google user not found in DB, redirecting to register');
+          return res.redirect(`${frontendBase}/register?error=email_not_found`);
+        }
+
+        console.error('[ERROR] No user found after Google authentication');
         return res.redirect(`${frontendBase}/login?error=auth_failed`);
       }
 
@@ -123,8 +130,8 @@ router.get('/google/callback',
       const frontendBase = frontendUrl.replace(/\/$/, '');
       res.redirect(`${frontendBase}/login?error=server_error`);
     }
-  }
-);
+  })(req, res, next);
+});
 
 /**
  * @route   GET /api/auth/google/status

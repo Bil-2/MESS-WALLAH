@@ -56,28 +56,9 @@ passport.use(
           return done(null, user);
         }
 
-        // NEW: Create new user automatically via Google OAuth
-        console.log('[AUTH] Creating new user via Google OAuth:', email);
-
-        const newUser = await User.create({
-          name: name,
-          email: email,
-          socialAuth: {
-            googleId: googleId,
-            provider: 'google'
-          },
-          profilePicture: profilePicture,
-          verified: true,
-          isVerified: true,
-          isEmailVerified: true,
-          accountType: 'social',
-          registrationMethod: 'google',
-          role: 'user',
-          lastLogin: new Date()
-        });
-
-        console.log('[SUCCESS] New user created via Google OAuth:', newUser.email);
-        return done(null, newUser);
+        // NEW: Reject new users and return an error message to the callback
+        console.log('[AUTH] Google OAuth: User not found in database, rejecting:', email);
+        return done(null, false, { message: 'email_not_found' });
 
       } catch (error) {
         console.error('[ERROR] Google OAuth Error:', error);

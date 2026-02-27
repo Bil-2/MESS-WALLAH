@@ -8,7 +8,7 @@ import api from '../utils/api';
 // 1. Fill Details (date, duration, name, email, phone, notes)
 // 2. Review Summary (no API yet)
 // 3. API: create booking → Razorpay payment (or skip if not configured)
-// 4. Booking Confirmed ✅
+// 4. Booking Confirmed
 
 const STEPS = ['Details', 'Review', 'Payment', 'Done'];
 
@@ -131,7 +131,7 @@ const BookingModal = ({ room, onClose, user }) => {
             });
             if (verifyRes.data.success) {
               setStep(4);
-              toast.success('Payment successful! Booking confirmed. 🎉');
+              toast.success('Payment successful! Booking confirmed.');
             } else {
               toast.error('Payment verification failed. Contact support with your booking ID.');
             }
@@ -358,7 +358,7 @@ const BookingModal = ({ room, onClose, user }) => {
                   <FiCheck className="w-10 h-10 text-white" />
                 </div>
                 <h4 className="text-2xl font-black bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
-                  {paymentSkipped ? 'Booking Request Sent!' : 'Booking Confirmed! 🎉'}
+                  {paymentSkipped ? 'Booking Request Sent!' : 'Booking Confirmed!'}
                 </h4>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {paymentSkipped

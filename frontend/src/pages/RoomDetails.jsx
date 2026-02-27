@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi';
+import { Coffee } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -133,7 +134,9 @@ const RoomDetails = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center pt-24">
         <div className="text-center max-w-md mx-auto p-8">
-          <div className="text-6xl mb-6">☕</div>
+          <div className="flex justify-center mb-6 text-orange-500">
+            <Coffee className="w-16 h-16 animate-pulse" />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Server is Starting Up</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">Our server was sleeping. Give it a moment to wake up — this usually takes 15-30 seconds.</p>
           <button

@@ -23,7 +23,7 @@ const OtpSchema = new mongoose.Schema({
   },
   method: {
     type: String,
-    enum: ['sms', 'email'],
+    enum: ['sms', 'email', 'email-register'],
     default: 'sms'
   },
   verificationSid: {
@@ -35,7 +35,7 @@ const OtpSchema = new mongoose.Schema({
 });
 
 // Validation: Either phone or email must be provided
-OtpSchema.pre('save', function(next) {
+OtpSchema.pre('save', function (next) {
   if (!this.phone && !this.email) {
     next(new Error('Either phone or email must be provided'));
   } else {

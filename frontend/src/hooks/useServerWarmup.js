@@ -25,7 +25,7 @@ const useServerWarmup = () => {
         const res = await api.get('/warmup', { timeout: 30000 });
 
         if (res.data?.status === 'warmed' || res.data?.status === 'partial') {
-          console.log('[Warmup] ✅ Server is warm:', res.data.metrics?.totalResponseTime);
+          console.log('[Warmup] Server is warm:', res.data.metrics?.totalResponseTime);
           hasWarmedUp.current = true;
           localStorage.setItem('lastServerWarmup', Date.now().toString());
 

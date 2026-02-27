@@ -62,152 +62,156 @@ const calculatePasswordStrength = (password) => {
   return 'strong';
 };
 
-// Enhanced registration with security features
+const Otp = require('../models/Otp'); // Ensure this is available
+
+// Ensure Otp is required if not at the top
+// const Otp = require('../models/Otp'); // Add this to the top of the file manually if it breaks
+
+// Send OTP for registration
+const registerSendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'This email is already registered. Please log in.',
+        action: 'login'
+      });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Remove any existing OTPs for this email to prevent spam
+    await Otp.deleteMany({ email: normalizedEmail, method: 'email-register' });
+
+    // Save OTP to database
+    const otpRecord = new Otp({
+      email: normalizedEmail,
+      codeHash: await bcrypt.hash(otp, 10),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      attempts: 0,
+      method: 'email-register'
+    });
+    await otpRecord.save();
+
+    // Log OTP for testing purposes
+    console.log(`[TESTING] Generated OTP for ${normalizedEmail}: ${otp}`);
+
+    // Send OTP email
+    try {
+      const { sendOTPEmail } = require('../services/notify');
+      await sendOTPEmail(normalizedEmail, otp);
+      console.log(`[SUCCESS] Registration OTP email sent to: ${normalizedEmail}`);
+    } catch (emailError) {
+      console.error('[ERROR] Failed to send registration OTP email:', emailError.message);
+      await Otp.deleteOne({ _id: otpRecord._id });
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email. Please try again.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent to your email address. Please check your inbox.',
+      data: { email: normalizedEmail, expiresIn: 10 }
+    });
+
+  } catch (error) {
+    console.error('Registration send OTP error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+// Enhanced registration with OTP verification
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, phone, college, course, year } = req.body;
+    const { name, email, otp, role } = req.body;
 
     // Input validation
-    if (!name || !email || !password) {
+    if (!name || !email || !otp) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required'
+        message: 'Name, email, and OTP are required'
       });
     }
 
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Verify OTP first
+    const otpRecord = await Otp.findOne({
+      email: normalizedEmail,
+      method: 'email-register',
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!otpRecord) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid email address'
+        message: 'Invalid or expired OTP. Please request a new one.'
       });
     }
 
-    // Simplified password validation for testing - SECURITY: Minimum 8 characters
-    if (password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 8 characters long'
-      });
-    }
+    const isValidOTP = await bcrypt.compare(otp, otpRecord.codeHash);
 
-    // ENHANCED: Use comprehensive account linking service
-    console.log(`[INFO] UNIFIED REGISTRATION: Starting comprehensive account search...`);
-    const accountSearch = await AccountLinkingService.findExistingUser(email, phone);
+    if (!isValidOTP) {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
 
-    // SECURITY: Don't log sensitive account details
-    console.log(`[INFO] ACCOUNT SEARCH RESULT: found=${accountSearch.found}, canLink=${accountSearch.canLink}`);
-
-    // ENHANCED: Handle account linking using comprehensive service
-    if (accountSearch.found) {
-      const existingUser = accountSearch.user;
-
-      if (accountSearch.shouldLink && accountSearch.canLink) {
-        console.log(`[INFO] ACCOUNT LINKING: ${accountSearch.linkingType} - ${accountSearch.reason}`);
-        console.log(`[INFO] Confidence Level: ${accountSearch.confidence}`);
-
-        // Use the account linking service to perform the linking
-        const linkedUser = await AccountLinkingService.linkAccounts(existingUser, {
-          name, email, password, phone, role, college, course, year
-        });
-
-        // Generate JWT token for linked account
-        const token = jwt.sign(
-          {
-            userId: linkedUser._id,
-            email: linkedUser.email,
-            phone: linkedUser.phone,
-            role: linkedUser.role
-          },
-          process.env.JWT_SECRET,
-          { expiresIn: process.env.JWT_EXPIRE || '30d' }
-        );
-
-        // Remove password from response
-        const userResponse = linkedUser.toObject();
-        delete userResponse.password;
-
-        return res.status(200).json({
-          success: true,
-          message: 'Account successfully linked! Your phone and email are now unified in one account.',
-          token,
-          user: userResponse,
-          accountLinked: true,
-          accountType: 'unified',
-          linkingDetails: {
-            previousAccountType: accountSearch.linkingType.split('-')[0],
-            newAccountType: 'unified',
-            linkedAt: new Date().toISOString(),
-            hasPhone: !!userResponse.phone,
-            hasEmail: !!userResponse.email,
-            isComplete: true,
-            confidence: accountSearch.confidence,
-            method: 'comprehensive-service'
-          }
-        });
-      } else {
-        // User already exists with complete registration - cannot link
-        console.log(`[WARNING] REGISTRATION BLOCKED: User already exists`);
-
-        // ENHANCED: Provide specific error message for email vs phone duplicates
-        let errorMessage = 'User already exists';
-        let field = null;
-
-        // Check which field is duplicate
-        if (existingUser.email && existingUser.email.toLowerCase() === email.toLowerCase()) {
-          errorMessage = 'This email is already registered in our database. Please change email';
-          field = 'email';
-        } else if (existingUser.phone && phone && existingUser.phone === phone) {
-          errorMessage = 'This mobile number is already registered in our database';
-          field = 'phone';
-        }
-
-        return res.status(409).json({
+      if (otpRecord.attempts >= 3) {
+        await Otp.deleteOne({ _id: otpRecord._id });
+        return res.status(400).json({
           success: false,
-          message: errorMessage,
-          field: field, // Helps frontend highlight the correct field
-          hint: 'Try logging in instead',
-          cannotLink: true
+          message: 'Too many failed attempts. Please request a new OTP.'
         });
       }
+
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP. Please try again.',
+        attemptsLeft: 3 - otpRecord.attempts
+      });
     }
 
-    // Create user with additional security fields
-    // Note: Password will be hashed by the User model's pre-save hook
+    // OTP is valid, clean up
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    // Double check user doesn't exist
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'This email is already registered. Please log in.'
+      });
+    }
+
+    // Create user without password (passwordless flow)
     const userData = {
       name,
-      email,
-      password: password, // Plain password - model will hash it
+      email: normalizedEmail,
       role: role || 'user',
       isActive: true,
-      loginAttempts: 0,
-      accountLockUntil: undefined,
-      profile: {
-        college,
-        course,
-        year
-      }
+      isEmailVerified: true,
+      registrationMethod: 'email-otp',
+      accountType: 'email-only',
+      loginAttempts: 0
     };
-
-    // Only add phone if it's provided to avoid null constraint issues
-    if (phone) {
-      // Format phone number to international format if it's not already
-      let formattedPhone = phone;
-      if (phone && !phone.startsWith('+')) {
-        // Assume Indian number if no country code provided
-        formattedPhone = `+91${phone}`;
-      }
-      userData.phone = formattedPhone;
-    }
 
     const user = new User(userData);
 
     user.securityInfo = {
       registrationIP: req.ip,
-      registrationDate: new Date(),
-      passwordStrength: 'medium',
-      lastPasswordChange: new Date()
+      registrationDate: new Date()
     };
 
     await user.save();
@@ -218,7 +222,6 @@ const register = async (req, res) => {
       console.log(`Welcome email sent to: ${user.email}`);
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError.message);
-      // Don't fail registration if email fails
     }
 
     // Generate JWT token
@@ -236,35 +239,22 @@ const register = async (req, res) => {
       }
     );
 
-    // Log successful registration (without sensitive data)
-    console.log(`New user registered: ${user._id} (${user.email?.substring(0, 3)}***)`);
-
-    // Remove password from response
+    // Remove internal data from response
     const userResponse = user.toObject();
-    delete userResponse.password;
     delete userResponse.securityInfo;
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'User registered successfully!',
       token,
       user: userResponse
     });
 
   } catch (error) {
-    console.error('Registration error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      code: error.code
-    });
+    console.error('Registration error details:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error during registration',
-      ...(process.env.NODE_ENV === 'development' && {
-        error: error.message,
-        details: error.stack
-      })
+      message: 'Internal server error during registration'
     });
   }
 };
@@ -570,182 +560,6 @@ const logout = async (req, res) => {
   }
 };
 
-// Forgot password - send reset email
-const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    // Input validation
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide a valid email address'
-      });
-    }
-
-    // Find user - Return explicit error if not found (per user requirements)
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-
-    if (!user) {
-      console.log(`Password reset requested for non-existent email: ${email}`);
-      return res.status(404).json({
-        success: false,
-        message: 'Email not found. Please register first.'
-      });
-    }
-
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-    // Set reset token and expiry (1 hour)
-    user.passwordResetToken = resetTokenHash;
-    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-    await user.save();
-
-    // Send reset email
-    try {
-      await sendPasswordResetEmail(user.email, resetToken, user.name);
-      console.log(`Password reset email sent to user: ${user._id}`);
-    } catch (emailError) {
-      console.error('Failed to send password reset email:', emailError);
-      // Clear reset token if email fails
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save();
-
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send password reset email. Please try again.'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Password reset link has been sent to your email address.'
-    });
-
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error during password reset request'
-    });
-  }
-};
-
-// Reset password with token
-const resetPassword = async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-
-    // Input validation
-    if (!token || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Reset token and new password are required'
-      });
-    }
-
-    // Simplified password validation
-    if (newPassword.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 8 characters long'
-      });
-    }
-
-    // Hash the token to compare with stored hash
-    const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
-
-    // Find user with valid reset token
-    const user = await User.findOne({
-      passwordResetToken: resetTokenHash,
-      passwordResetExpires: { $gt: new Date() }
-    }).select('+password +securityInfo');
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired reset token'
-      });
-    }
-
-    // Check if new password is same as current (only if user has a password)
-    if (user.password) {
-      const isSamePassword = await bcrypt.compare(newPassword, user.password);
-      if (isSamePassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'New password must be different from current password'
-        });
-      }
-
-      // Check if new password was used in the past
-      const isInHistory = await user.isPasswordInHistory(newPassword);
-      if (isInHistory) {
-        return res.status(400).json({
-          success: false,
-          message: 'You cannot reuse a previous password. Please choose a new password that you haven\'t used before.'
-        });
-      }
-    }
-
-    // Hash new password
-    const saltRounds = 12;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password and clear reset token
-    user.password = hashedNewPassword;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-
-    // Update security info
-    if (!user.securityInfo) {
-      user.securityInfo = {};
-    }
-    user.securityInfo.lastPasswordChange = new Date();
-    user.securityInfo.passwordStrength = 'medium';
-    user.securityInfo.failedLoginAttempts = 0; // Reset failed attempts
-    user.securityInfo.accountLocked = false;
-    user.securityInfo.lockUntil = null;
-
-    await user.save();
-
-    // Send confirmation email
-    try {
-      await sendPasswordResetSuccessEmail(user.email, user.name);
-    } catch (emailError) {
-      console.error('Failed to send password reset success email:', emailError);
-      // Don't fail the request if email fails
-    }
-
-    // Log password reset (without sensitive data)
-    console.log(`Password reset successful for user: ${user._id}`);
-
-    res.json({
-      success: true,
-      message: 'Password has been reset successfully. You can now login with your new password.'
-    });
-
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error during password reset'
-    });
-  }
-};
 
 // Check if user exists (for frontend to guide user)
 const checkUserExists = async (req, res) => {
@@ -825,13 +639,11 @@ const checkUserExists = async (req, res) => {
 };
 
 module.exports = {
+  registerSendOtp,
   register,
   login,
   changePassword,
   getProfile,
   logout,
-  forgotPassword,
-  resetPassword,
-  validatePasswordStrength,
   checkUserExists
 };

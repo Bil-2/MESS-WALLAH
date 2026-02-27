@@ -196,6 +196,16 @@ export const apiHelpers = {
     }
   },
 
+  async registerSendOtp(email) {
+    try {
+      const response = await api.post('/auth/register-send-otp', { email });
+      return response.data;
+    } catch (error) {
+      console.error('Registration send OTP API error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to send registration OTP');
+    }
+  },
+
   async register(userData) {
     try {
       const response = await api.post('/auth/register', userData);
@@ -206,25 +216,6 @@ export const apiHelpers = {
     }
   },
 
-  async forgotPassword(email) {
-    try {
-      const response = await api.post('/auth/forgot-password', { email });
-      return response.data;
-    } catch (error) {
-      console.error('Forgot password API error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to send password reset email');
-    }
-  },
-
-  async resetPassword(token, newPassword) {
-    try {
-      const response = await api.post('/auth/reset-password', { token, newPassword });
-      return response.data;
-    } catch (error) {
-      console.error('Reset password API error:', error);
-      throw new Error(error.response?.data?.message || 'Failed to reset password');
-    }
-  },
 
   async logout() {
     localStorage.removeItem('token');
