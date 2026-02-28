@@ -48,7 +48,7 @@ const Home = () => {
           const transformedRooms = roomsData.data.rooms.slice(0, 6).map(room => ({
             id: room._id,
             title: room.title,
-            location: `${room.address.area}, ${room.address.city}`,
+            location: `${room.address?.area || 'India'}, ${room.address?.city || 'India'}`,
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
             photos: room.photos || [], // Pass the entire photos array

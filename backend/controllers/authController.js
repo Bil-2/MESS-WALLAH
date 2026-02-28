@@ -136,7 +136,7 @@ const registerSendOtp = async (req, res) => {
 // Enhanced registration with OTP verification
 const register = async (req, res) => {
   try {
-    const { name, email, otp, role } = req.body;
+    const { name, email, otp, role, phone } = req.body;
 
     // Input validation
     if (!name || !email || !otp) {
@@ -199,10 +199,11 @@ const register = async (req, res) => {
     const userData = {
       name,
       email: normalizedEmail,
+      phone,
       role: role || 'user',
       isActive: true,
       isEmailVerified: true,
-      registrationMethod: 'email-otp',
+      registrationMethod: 'email',
       accountType: 'email-only',
       loginAttempts: 0
     };

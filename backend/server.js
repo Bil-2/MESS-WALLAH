@@ -332,6 +332,7 @@ try {
 
 try {
   app.use('/api/rooms', require('./routes/rooms'));
+app.use('/api/testowner', require('./routes/testowner'));
   console.log('   [OK] /api/rooms routes registered');
 } catch (error) {
   console.error('   [ERROR] Failed to register /api/rooms routes:', error.message);
@@ -351,49 +352,11 @@ try {
   console.error('   [ERROR] Failed to register /api/search routes:', error.message);
 }
 
-try {
-  // Use the new secure payment routes
-  app.use('/api/payments', require('./routes/paymentRoutes'));
-  console.log('   [OK] /api/payments routes registered (SECURE)');
-} catch (error) {
-  console.error('   [ERROR] Failed to register /api/payments routes:', error.message);
-  // Fallback to simple routes if new routes fail
-  try {
-    console.warn('   [WARN] Payment routes fallback disabled (simplePaymentRoutes deleted)');
-  } catch (fallbackError) {
-    console.error('   [ERROR] Payment routes completely failed');
-  }
-}
 
 
 
-try {
-  app.use('/api/analytics', require('./routes/analytics'));
-  console.log('   [OK] /api/analytics routes registered');
-} catch (error) {
-  console.error('   [ERROR] Failed to register /api/analytics routes:', error.message);
-}
 
-try {
-  app.use('/api/owner', require('./routes/owner'));
-  console.log('   [OK] /api/owner routes registered');
-} catch (error) {
-  console.error('   [ERROR] Failed to register /api/owner routes:', error.message);
-}
 
-try {
-  app.use('/api/admin', require('./routes/admin'));
-  console.log('   [OK] /api/admin routes registered');
-} catch (error) {
-  console.error('   [ERROR] Failed to register /api/admin routes:', error.message);
-}
-
-try {
-  app.use('/api/notifications', require('./routes/notifications'));
-  console.log('   [OK] /api/notifications routes registered');
-} catch (error) {
-  console.error('   [ERROR] Failed to register /api/notifications routes:', error.message);
-}
 
 // Test routes for health/status (development only)
 if (process.env.NODE_ENV !== 'production') {

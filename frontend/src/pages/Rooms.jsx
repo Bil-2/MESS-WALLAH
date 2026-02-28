@@ -43,7 +43,8 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone,
       transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setImageIndex(0); }}
-      className="group bg-white dark:bg-gray-800/90 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm"
+      onClick={() => onView(room._id || room.id)}
+      className="group bg-white dark:bg-gray-800/90 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm cursor-pointer"
     >
       {/* Image Section - Airbnb Style */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -141,7 +142,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone,
 
         {/* Title */}
         <h3
-          onClick={() => onView(room._id || room.id)}
+          onClick={(e) => { e.stopPropagation(); onView(room._id || room.id); }}
           className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 cursor-pointer hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
         >
           {room.title}
@@ -191,7 +192,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone,
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onBook(room._id || room.id)}
+            onClick={(e) => { e.stopPropagation(); onBook(room._id || room.id); }}
             className="flex-1 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-violet-500/25 transition-all"
           >
             Book Now
@@ -200,7 +201,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone,
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => onPhone(room)}
+            onClick={(e) => { e.stopPropagation(); onPhone(room); }}
             className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
           >
             <FiPhone className="w-5 h-5" />
@@ -299,9 +300,9 @@ const Rooms = () => {
           city: room.address?.city || '',
           rent: room.rentPerMonth,
           image: room.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600',
-          verified: true,
-          ownerPhone: room.owner?.phone || '+91 9876543210',
-          ownerName: room.owner?.name || 'Property Owner',
+          verified: room.roomOwner?.verified || true,
+          ownerPhone: room.roomOwner?.phone || '+91 9876543210',
+          ownerName: room.roomOwner?.name || 'Property Owner',
         }));
 
         if (append) {
@@ -341,7 +342,7 @@ const Rooms = () => {
       navigate('/login');
       return;
     }
-    navigate(`/rooms/${roomId}`);
+    navigate(`/rooms/${roomId}?autoBook=true`);
   };
 
   const handlePhone = (room) => {

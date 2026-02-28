@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi';
 import { Coffee } from 'lucide-react';
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuthContext();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,20 @@ const RoomDetails = () => {
   useEffect(() => {
     fetchRoomDetails();
   }, [fetchRoomDetails]);
+
+  // Handle auto-booking from URL parameters
+  useEffect(() => {
+    if (searchParams.get('autoBook') === 'true' && room && !loading && user) {
+      setShowBookingModal(true);
+
+      // Clean up URL so it doesn't trigger again on refresh
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    } else if (searchParams.get('autoBook') === 'true' && room && !loading && !user) {
+      toast.error('Please login to book this room');
+      navigate('/login');
+    }
+  }, [searchParams, room, loading, user, navigate]);
 
 
 
@@ -560,7 +575,7 @@ const RoomDetails = () => {
               </motion.button>
 
               {/* Owner Info */}
-              {room.owner && (
+              {room.roomOwner && (
                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
                     Property Owner
@@ -571,24 +586,24 @@ const RoomDetails = () => {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-gray-900 dark:text-white">
-                        {room.owner.name}
-                        {room.owner.verified && (
+                        {room.roomOwner.name}
+                        {room.roomOwner.verified && (
                           <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                             Verified
                           </span>
                         )}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                        {room.owner.phone && (
+                        {room.roomOwner.phone && (
                           <div className="flex items-center">
                             <FiPhone className="w-3 h-3 mr-1" />
-                            {room.owner.phone}
+                            {room.roomOwner.phone}
                           </div>
                         )}
-                        {room.owner.email && (
+                        {room.roomOwner.email && (
                           <div className="flex items-center">
                             <FiMail className="w-3 h-3 mr-1" />
-                            {room.owner.email}
+                            {room.roomOwner.email}
                           </div>
                         )}
                       </div>

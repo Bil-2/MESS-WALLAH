@@ -16,13 +16,9 @@ const {
   sanitizeInput
 } = require('../middleware/advancedSecurity');
 
-// Import enhanced OTP controller
-const { sendOtp, verifyOtp, resendOtp } = require('../controllers/otpController');
-
 // Import auth controller
 const { registerSendOtp, register, login, changePassword, getProfile, logout, checkUserExists } = require('../controllers/authController');
-// OTPless WhatsApp OTP Service (free, 100/day, no card)
-const { sendOtpWhatsApp, verifyOtpWhatsApp } = require('../services/otplessService');
+
 
 
 const router = express.Router();
@@ -74,165 +70,6 @@ router.post('/login', [
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long')
 ], login);
-
-// @desc    Send OTP to phone number
-// @route   POST /api/auth/send-otp
-// @access  Public
-router.post('/send-otp', [
-  rateLimiters.general,
-  body('phone')
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number')
-], sendOtp);
-
-// @desc    Verify OTP and authenticate user
-// @route   POST /api/auth/verify-otp
-// @access  Public
-router.post('/verify-otp', [
-  body('phone')
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number'),
-  body('otp')
-    .isLength({ min: 6, max: 6 })
-    .withMessage('OTP must be 6 digits')
-], verifyOtp);
-
-// @desc    Resend OTP to phone number
-// @route   POST /api/auth/resend-otp
-// @access  Public
-router.post('/resend-otp', [
-  rateLimiters.general,
-  body('phone')
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number')
-], resendOtp);
-
-// Alias routes for SMS OTP (for API test compatibility)
-router.post('/send-otp-sms', [
-  rateLimiters.general,
-  body('phone')
-    .matches(/^(\+91|91)?[6-9]\d{9}$$/)
-    .withMessage('Please provide a valid Indian phone number (10 digits)')
-], sendOtp);
-
-router.post('/verify-otp-sms', [
-  body('phone')
-    .matches(/^(\+91|91)?[6-9]\d{9}$$/)
-    .withMessage('Please provide a valid Indian phone number (10 digits)'),
-  body('otp')
-    .isLength({ min: 6, max: 6 })
-    .withMessage('OTP must be 6 digits')
-], verifyOtp);
-
-// ─── OTPless WhatsApp OTP (Free, 100/day) ─────────────────────────
-
-// @desc    Send OTP via WhatsApp using OTPless
-// @route   POST /api/auth/send-otp-whatsapp
-// @access  Public
-router.post('/send-otp-whatsapp', [
-  rateLimiters.general,
-  body('phone')
-    .matches(/^(\+91|91)?[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number'),
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: errors.array()[0].msg });
-    }
-
-    const phone = req.body.phone.replace(/^\+?91/, '');
-    const result = await sendOtpWhatsApp(phone);
-
-    if (result.success) {
-      return res.status(200).json({
-        success: true,
-        message: result.dev ? 'Dev mode: use OTP 123456' : 'OTP sent via WhatsApp! Check your WhatsApp.',
-        requestId: result.requestId,
-        dev: result.dev || false,
-      });
-    }
-
-    return res.status(500).json({ success: false, message: result.message });
-  } catch (error) {
-    console.error('[OTPless] Send route error:', error);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
-  }
-});
-
-// @desc    Verify OTP and login/register user
-// @route   POST /api/auth/verify-otp-whatsapp
-// @access  Public
-router.post('/verify-otp-whatsapp', [
-  body('phone')
-    .matches(/^(\+91|91)?[6-9]\d{9}$/)
-    .withMessage('Please provide a valid Indian phone number'),
-  body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
-  body('requestId').notEmpty().withMessage('requestId is required'),
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: errors.array()[0].msg });
-    }
-
-    const { otp, requestId } = req.body;
-    const phone = req.body.phone.replace(/^\+?91/, '');
-    const fullPhone = `+91${phone}`;
-
-    const result = await verifyOtpWhatsApp(requestId, otp, phone);
-    if (!result.success) {
-      return res.status(400).json({ success: false, message: result.message || 'Invalid OTP' });
-    }
-
-    // Find or create user
-    let user = await User.findOne({ $or: [{ phone }, { phone: fullPhone }] });
-    let isNewUser = false;
-
-    if (!user) {
-      isNewUser = true;
-      user = new User({
-        phone,
-        name: `User${phone.slice(-4)}`,
-        role: 'user',
-        isPhoneVerified: true,
-        registrationMethod: 'otpless',
-        isActive: true,
-        lastLogin: new Date(),
-      });
-      await user.save();
-    } else {
-      user.isPhoneVerified = true;
-      user.lastLogin = new Date();
-      await user.save();
-    }
-
-    const token = jwt.sign(
-      { userId: user._id, phone: user.phone, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
-    );
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: isNewUser ? 'Account created!' : 'Login successful!',
-      data: {
-        user: { id: user._id, name: user.name, phone: user.phone, email: user.email, role: user.role, isNewUser },
-        token,
-      }
-    });
-  } catch (error) {
-    console.error('[OTPless] Verify route error:', error);
-    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
-  }
-});
 
 
 
@@ -399,7 +236,7 @@ router.post('/verify-otp-email', [
         name: `User${Date.now()}`, // Default name
         role: 'user',
         isEmailVerified: true,
-        registrationMethod: 'email-otp',
+        registrationMethod: 'email',
         isActive: true
       });
       await user.save();
@@ -542,29 +379,7 @@ router.put('/profile', [
   }
 });
 
-// @desc    Forgot password - send reset email
-// @route   POST /api/auth/forgot-password
-// @access  Public
-router.post('/forgot-password', [
-  rateLimiters.general,
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Please provide a valid email address')
-], forgotPassword);
 
-// @desc    Reset password with token
-// @route   POST /api/auth/reset-password
-// @access  Public
-router.post('/reset-password', [
-  rateLimiters.general,
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token is required'),
-  body('newPassword')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-], resetPassword);
 
 // @desc    Logout user
 // @route   POST /api/auth/logout

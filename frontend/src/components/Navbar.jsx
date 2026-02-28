@@ -17,7 +17,6 @@ import {
 import AppIcon from './AppIcon';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import ThemeToggle from './ThemeToggle';
-import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
   const { user, logout } = useAuthContext();
@@ -89,8 +88,6 @@ const Navbar = () => {
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Notification Bell - Only show when logged in */}
-            {user && <NotificationBell />}
 
             {/* Revolutionary 2025 Profile Area */}
             {user ? (
