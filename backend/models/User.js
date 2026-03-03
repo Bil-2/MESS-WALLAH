@@ -48,7 +48,7 @@ const UserSchema = new mongoose.Schema({
   },
   registrationMethod: {
     type: String,
-    enum: ['otp', 'email', 'complete', 'google', 'facebook', 'social'],
+    enum: ['otp', 'email', 'email-otp', 'otpless', 'complete', 'google', 'facebook', 'social'],
     default: 'email'
   },
   profileCompleted: {
@@ -90,8 +90,13 @@ const UserSchema = new mongoose.Schema({
   profile: {
     age: {
       type: Number,
-      min: [18, 'Age must be at least 18'],
+      min: [16, 'Age must be at least 16'],
       max: [100, 'Age cannot exceed 100']
+    },
+    aadharNo: {
+      type: String,
+      maxlength: [12, 'Aadhar Number cannot exceed 12 characters'],
+      minlength: [12, 'Aadhar Number must be 12 characters']
     },
     occupation: {
       type: String,

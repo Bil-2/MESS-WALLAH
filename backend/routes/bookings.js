@@ -392,45 +392,7 @@ router.post('/', [
       console.error('[BOOKING CYCLE] Room availability update failed:', roomUpdateErr.message);
     }
 
-    // ── STEP 5: In-app notification → Buyer ──────────────────────
-    try {
-      const Notification = require('../models/Notification');
-      await Notification.createNotification({
-        userId: req.user._id,
-        type: 'booking_confirmed',
-        title: '🎉 Booking Confirmed!',
-        message: `Your booking for ${room.title} is confirmed! Check-in: ${checkIn.toLocaleDateString('en-IN')}. PDF confirmation sent to ${req.user.email}.`,
-        data: {
-          bookingId: booking._id,
-          roomId: room._id,
-          amount: totalAmount,
-          actionUrl: '/bookings'
-        },
-        priority: 'high'
-      });
-    } catch (notifyBuyerErr) {
-      console.error('[BOOKING CYCLE] Buyer in-app notification failed:', notifyBuyerErr.message);
-    }
 
-    // ── STEP 6: In-app notification → Owner ───────────────────────
-    try {
-      const Notification = require('../models/Notification');
-      await Notification.createNotification({
-        userId: roomOwner._id,
-        type: 'booking_request',
-        title: '📋 New Booking Request',
-        message: `${seekerInfo.name} booked ${room.title} for ${duration} month${duration > 1 ? 's' : ''} starting ${checkIn.toLocaleDateString('en-IN')}. Total: ₹${totalAmount.toLocaleString('en-IN')}.`,
-        data: {
-          bookingId: booking._id,
-          roomId: room._id,
-          amount: totalAmount,
-          actionUrl: '/owner/bookings'
-        },
-        priority: 'high'
-      });
-    } catch (notifyOwnerErr) {
-      console.error('[BOOKING CYCLE] Owner in-app notification failed:', notifyOwnerErr.message);
-    }
 
     console.log(`[BOOKING CYCLE] ✅ Complete — Booking ${booking.bookingId} created, emails sent, room updated`);
 
@@ -711,26 +673,7 @@ router.patch('/:id/status', [
       console.error('Status update notification failed:', notifyError);
     }
 
-    // Create in-app notification
-    try {
-      const Notification = require('../models/Notification');
-      await Notification.createNotification({
-        userId: booking.userId._id,
-        type: status === 'confirmed' ? 'booking_confirmed' : 'booking_rejected',
-        title: status === 'confirmed' ? '✅ Booking Confirmed!' : '❌ Booking Rejected',
-        message: status === 'confirmed'
-          ? `Great news! Your booking for ${booking.roomId.title} has been confirmed. Please complete the payment.`
-          : `Your booking request for ${booking.roomId.title} was rejected.${reason ? ` Reason: ${reason}` : ''}`,
-        data: {
-          bookingId: booking._id,
-          roomId: booking.roomId._id,
-          actionUrl: `/bookings/${booking._id}`
-        },
-        priority: 'high'
-      });
-    } catch (notifyError) {
-      console.error('In-app notification failed:', notifyError);
-    }
+
 
     res.status(200).json({
       success: true,
@@ -834,24 +777,7 @@ router.patch('/:id/cancel', [
       console.error('Cancellation notification failed:', notifyError);
     }
 
-    // Create in-app notification
-    try {
-      const Notification = require('../models/Notification');
-      await Notification.createNotification({
-        userId: notifyUser._id,
-        type: 'booking_cancelled',
-        title: '❌ Booking Cancelled',
-        message: `Booking ${booking.bookingId} for ${booking.roomId.title} has been cancelled by the ${cancelledBy}.${reason ? ` Reason: ${reason}` : ''}`,
-        data: {
-          bookingId: booking._id,
-          roomId: booking.roomId._id,
-          actionUrl: cancelledByUser ? '/owner/bookings' : '/bookings'
-        },
-        priority: 'high'
-      });
-    } catch (notifyError) {
-      console.error('In-app notification failed:', notifyError);
-    }
+
 
     res.status(200).json({
       success: true,

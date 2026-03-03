@@ -14,7 +14,6 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     role: 'student' // Will be updated based on userIntent
   });
   const [loading, setLoading] = useState(false);
@@ -73,7 +72,6 @@ const Register = () => {
   const initialFormData = {
     name: '',
     email: '',
-    phone: '',
     role: 'student'
   };
 
@@ -91,9 +89,8 @@ const Register = () => {
 
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.phone.trim()) newErrors.phone = 'Mobile Number is required';
-    else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Please enter a valid 10-digit mobile number';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
+    if (!formData.phone || formData.phone.length !== 10) newErrors.phone = 'Valid 10-digit number required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -158,18 +155,10 @@ const Register = () => {
 
     try {
       // Set role based on user intent
-      // Format phone number to include +91 if needed
-      let formattedPhone = formData.phone.replace(/\D/g, '');
-      if (formattedPhone.length === 10) {
-        formattedPhone = `+91${formattedPhone}`;
-      } else if (!formattedPhone.startsWith('+')) {
-        formattedPhone = `+${formattedPhone}`;
-      }
-
       const registrationData = {
         name: formData.name,
         email: formData.email,
-        phone: formattedPhone,
+        phone: formData.phone, // Added phone to registrationData
         role: userIntent === 'owner' ? 'owner' : 'student',
         otp: emailVerification.otp
       };
@@ -372,6 +361,45 @@ const Register = () => {
                     )}
                   </motion.div>
 
+                  {/* Mobile Number Field */}
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.45 }}
+                  >
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Mobile Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                      </div>
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        autoComplete="off"
+                        maxLength={10}
+                        required
+                        value={formData.phone}
+                        onChange={handleChange}
+                        disabled={emailVerification.otpSent}
+                        className={`w-full px-4 py-3 pl-10 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'} ${emailVerification.otpSent ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                        placeholder="10-digit mobile number"
+                      />
+                    </div>
+                    {errors.phone && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 text-red-500 text-sm mt-1"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.phone}
+                      </motion.div>
+                    )}
+                  </motion.div>
+
                   {/* Email Field with OTP Option */}
                   <motion.div
                     initial={{ x: -20, opacity: 0 }}
@@ -427,47 +455,6 @@ const Register = () => {
                         {errors.email}
                       </motion.div>
                     )}
-
-                    {/* Mobile Number Field */}
-                    <motion.div
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                      className="mt-6"
-                    >
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Mobile Number
-                      </label>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center text-gray-400">
-                          <span>+91</span>
-                          <div className="h-4 w-px bg-gray-300 mx-2"></div>
-                        </div>
-                        <input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          autoComplete="off"
-                          required
-                          value={formData.phone}
-                          onChange={handleChange}
-                          disabled={emailVerification.otpSent}
-                          className={`w-full px-4 py-3 pl-16 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white transition-all duration-200 ${errors.phone ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600'} ${emailVerification.otpSent ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
-                          placeholder="Enter your 10-digit mobile number"
-                          maxLength="10"
-                        />
-                      </div>
-                      {errors.phone && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex items-center gap-2 text-red-500 text-sm mt-1"
-                        >
-                          <AlertCircle className="w-4 h-4" />
-                          {errors.phone}
-                        </motion.div>
-                      )}
-                    </motion.div>
 
                     {/* OTP Input */}
                     <AnimatePresence>

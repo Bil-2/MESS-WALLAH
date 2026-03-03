@@ -69,7 +69,8 @@ const ResponsiveRoomCard = ({
       transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setImageIndex(0); }}
-      className="group bg-white dark:bg-gray-800/90 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm w-full"
+      onClick={() => onViewDetails(room._id || room.id)}
+      className="group bg-white dark:bg-gray-800/90 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm w-full cursor-pointer"
     >
       {/* Image Section */}
       <div className="relative aspect-[4/3] overflow-hidden">

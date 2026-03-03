@@ -18,6 +18,15 @@ const Register = lazy(() => import('./pages/Register'));
 
 const Profile = lazy(() => import('./pages/Profile'));
 const Bookings = lazy(() => import('./pages/Bookings'));
+const About = lazy(() => import('./pages/About'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+const Safety = lazy(() => import('./pages/Safety'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const BookingPolicy = lazy(() => import('./pages/BookingPolicy'));
+const Support = lazy(() => import('./pages/Support'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Report = lazy(() => import('./pages/Report'));
 const Favorites = lazy(() => import('./pages/Favorites'));
 const GoogleAuthSuccess = lazy(() => import('./pages/GoogleAuthSuccess'));
 
@@ -26,8 +35,7 @@ const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
 const AddRoom = lazy(() => import('./pages/owner/AddRoom'));
 const ManageRooms = lazy(() => import('./pages/owner/ManageRooms'));
 const OwnerBookings = lazy(() => import('./pages/owner/OwnerBookings'));
-
-// Notifications removed
+// Owner Pages
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
@@ -112,11 +120,21 @@ function App() {
                   } />
 
                   {/* Public/Shared Routes */}
+                  <Route path="/search" element={<Navigate to="/rooms" replace />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
                   <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/safety" element={<Safety />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/booking-policy" element={<BookingPolicy />} />
+                  <Route path="/support" element={<Support />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/report" element={<Report />} />
                 </Routes>
               </Suspense>
             </main>

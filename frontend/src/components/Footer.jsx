@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FiMail, 
-  FiPhone, 
-  FiMapPin, 
-  FiSearch, 
-  FiShield, 
-  FiUsers, 
-  FiHome, 
+import {
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiSearch,
+  FiShield,
+  FiUsers,
+  FiHome,
   FiStar,
   FiExternalLink,
   FiAlertTriangle,
@@ -77,7 +77,7 @@ const Footer = () => {
 
             {/* Contact Info */}
             <div className="space-y-3 mb-6">
-              <button 
+              <button
                 onClick={handleEmailClick}
                 className="group flex items-center gap-3 text-gray-300 hover:text-orange-400 transition-colors btn-hover"
               >
@@ -87,7 +87,7 @@ const Footer = () => {
                 <span className="text-sm">support@messwallah.com</span>
               </button>
 
-              <button 
+              <button
                 onClick={handlePhoneClick}
                 className="group flex items-center gap-3 text-gray-300 hover:text-green-400 transition-colors btn-hover"
               >
@@ -97,7 +97,7 @@ const Footer = () => {
                 <span className="text-sm">+91 9946 66 0012</span>
               </button>
 
-              <button 
+              <button
                 onClick={handleMapClick}
                 className="group flex items-start gap-3 text-gray-300 hover:text-blue-400 transition-colors text-left btn-hover"
               >
@@ -119,19 +119,19 @@ const Footer = () => {
 
             {/* Social Media */}
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={() => handleSocialClick('facebook')}
                 className="w-8 h-8 bg-blue-600/20 hover:bg-blue-600/30 rounded-lg flex items-center justify-center transition-colors scale-hover"
               >
                 <FiFacebook className="w-4 h-4 text-blue-400" />
               </button>
-              <button 
+              <button
                 onClick={() => handleSocialClick('instagram')}
                 className="w-8 h-8 bg-pink-600/20 hover:bg-pink-600/30 rounded-lg flex items-center justify-center transition-colors scale-hover"
               >
                 <FiInstagram className="w-4 h-4 text-pink-400" />
               </button>
-              <button 
+              <button
                 onClick={() => handleSocialClick('twitter')}
                 className="w-8 h-8 bg-blue-400/20 hover:bg-blue-400/30 rounded-lg flex items-center justify-center transition-colors scale-hover"
               >
@@ -145,88 +145,88 @@ const Footer = () => {
             <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <button 
-                  onClick={() => handleNavigation('/')} 
+                <button
+                  onClick={() => handleNavigation('/')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Home
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/rooms')} 
+                <button
+                  onClick={() => handleNavigation('/rooms')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Rooms
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/about')} 
+                <button
+                  onClick={() => handleNavigation('/about')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   About Us
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/how-it-works')} 
+                <button
+                  onClick={() => handleNavigation('/how-it-works')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   How It Works
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/safety')} 
+                <button
+                  onClick={() => handleNavigation('/safety')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Safety Guidelines
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/privacy')} 
+                <button
+                  onClick={() => handleNavigation('/privacy')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Privacy Policy
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/terms')} 
+                <button
+                  onClick={() => handleNavigation('/terms')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Terms & Conditions
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/booking-policy')} 
+                <button
+                  onClick={() => handleNavigation('/booking-policy')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Booking Policy
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/support')} 
+                <button
+                  onClick={() => handleNavigation('/support')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Support
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/contact')} 
+                <button
+                  onClick={() => handleNavigation('/contact')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Contact Us
                 </button>
               </li>
               <li>
-                <button 
-                  onClick={() => handleNavigation('/report')} 
+                <button
+                  onClick={() => handleNavigation('/report')}
                   className="hover:text-orange-400 transition-colors text-left hover-lift"
                 >
                   Report Issue
@@ -297,28 +297,28 @@ const Footer = () => {
                   </p>
                 </div>
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <button 
+                  <button
                     onClick={() => window.location.href = 'tel:1091'}
                     className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
                   >
                     <FiPhone className="w-4 h-4" />
                     Women Helpline: 1091
                   </button>
-                  <button 
+                  <button
                     onClick={() => window.location.href = 'tel:100'}
                     className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
                   >
                     <FiPhone className="w-4 h-4" />
                     Police: 100
                   </button>
-                  <button 
+                  <button
                     onClick={() => window.location.href = 'tel:1098'}
                     className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
                   >
                     <FiPhone className="w-4 h-4" />
                     Child Helpline: 1098
                   </button>
-                  <button 
+                  <button
                     onClick={() => window.location.href = 'tel:181'}
                     className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center gap-2"
                   >
@@ -342,10 +342,10 @@ const Footer = () => {
                 Made with care for safe student housing
               </p>
             </div>
-            
+
             <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-             
-              
+
+
             </div>
           </div>
         </div>

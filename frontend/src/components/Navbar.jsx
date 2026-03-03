@@ -14,8 +14,8 @@ import {
   Heart,
   Star
 } from '../utils/iconMappings';
-import AppIcon from './AppIcon';
 import { useAuthContext } from '../context/AuthContext.jsx';
+import AppIcon from './AppIcon';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
@@ -87,7 +87,6 @@ const Navbar = () => {
           <div className="flex items-center space-x-3">
             {/* Theme Toggle */}
             <ThemeToggle />
-
 
             {/* Revolutionary 2025 Profile Area */}
             {user ? (

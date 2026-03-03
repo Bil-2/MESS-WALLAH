@@ -332,7 +332,6 @@ try {
 
 try {
   app.use('/api/rooms', require('./routes/rooms'));
-app.use('/api/testowner', require('./routes/testowner'));
   console.log('   [OK] /api/rooms routes registered');
 } catch (error) {
   console.error('   [ERROR] Failed to register /api/rooms routes:', error.message);
@@ -352,11 +351,7 @@ try {
   console.error('   [ERROR] Failed to register /api/search routes:', error.message);
 }
 
-
-
-
-
-
+// Removed unused routes: payments, analytics, owner, admin, notifications
 
 // Test routes for health/status (development only)
 if (process.env.NODE_ENV !== 'production') {

@@ -265,11 +265,11 @@ const Home = () => {
                   <div className="text-sm text-gray-400 font-semibold">Happy Students</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-pink-400 mb-1">4,500+</div>
+                  <div className="text-3xl font-black text-pink-400 mb-1">7,500+</div>
                   <div className="text-sm text-gray-400 font-semibold">Verified Rooms</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-purple-400 mb-1">1,500+</div>
+                  <div className="text-3xl font-black text-purple-400 mb-1">3,734+</div>
                   <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
                 </div>
                 <div className="text-center">

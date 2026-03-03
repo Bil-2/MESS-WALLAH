@@ -91,6 +91,18 @@ const BookingSchema = new mongoose.Schema({
     email: {
       type: String,
       required: true
+    },
+    aadharNo: {
+      type: String,
+      required: true
+    },
+    profession: {
+      type: String,
+      required: true
+    },
+    age: {
+      type: Number,
+      required: true
     }
   },
   specialRequests: {

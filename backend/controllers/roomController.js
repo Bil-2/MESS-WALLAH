@@ -136,7 +136,8 @@ const getRooms = async (req, res) => {
         .populate('owner', 'name phone email isVerified')
         .sort(sort)
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),
       Room.countDocuments(filter)
     ]);
 
@@ -184,7 +185,8 @@ const getFeaturedRooms = async (req, res) => {
     })
       .populate('owner', 'name phone email verified')
       .sort({ rating: -1, createdAt: -1 })
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
 
     console.log('Found featured rooms:', rooms.length);
 

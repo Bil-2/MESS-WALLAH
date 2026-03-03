@@ -136,13 +136,13 @@ const registerSendOtp = async (req, res) => {
 // Enhanced registration with OTP verification
 const register = async (req, res) => {
   try {
-    const { name, email, otp, role, phone } = req.body;
+    const { name, email, otp, role, phone, aadharNo, age } = req.body;
 
     // Input validation
-    if (!name || !email || !otp) {
+    if (!name || !email || !otp || !phone || !aadharNo || !age || !role) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and OTP are required'
+        message: 'Name, email, phone, role, aadharNo, age, and OTP are required'
       });
     }
 
@@ -201,9 +201,13 @@ const register = async (req, res) => {
       email: normalizedEmail,
       phone,
       role: role || 'user',
+      profile: {
+        age: Number(age),
+        aadharNo: aadharNo
+      },
       isActive: true,
       isEmailVerified: true,
-      registrationMethod: 'email',
+      registrationMethod: 'email-otp',
       accountType: 'email-only',
       loginAttempts: 0
     };

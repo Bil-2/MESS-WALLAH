@@ -13,7 +13,6 @@ export { default as Navbar } from './Navbar';
 export { default as OfflinePage } from './OfflinePage';
 export { default as OfflineWrapper } from './OfflineWrapper';
 export { default as OptimizedImage } from './OptimizedImage';
-export { default as OtpInput } from './OtpInput';
 export { default as PerformanceMonitor } from './PerformanceMonitor';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as ResponsiveContainer } from './ResponsiveContainer';

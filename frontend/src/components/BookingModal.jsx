@@ -25,6 +25,9 @@ const BookingModal = ({ room, onClose, user }) => {
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
+    aadharNo: '',
+    profession: '',
+    age: '',
   });
 
   // ─── Pricing Calculation ──────────────────────────────
@@ -50,6 +53,13 @@ const BookingModal = ({ room, onClose, user }) => {
     if (!emailOk) { toast.error('Please enter a valid email address'); return false; }
     const phoneOk = /^[6-9]\d{9}$/.test(form.phone.replace(/\s/g, ''));
     if (!phoneOk) { toast.error('Please enter a valid 10-digit Indian mobile number'); return false; }
+
+    // Safety identity validations
+    const aadharOk = /^\d{12}$/.test(form.aadharNo.replace(/\s/g, ''));
+    if (!aadharOk) { toast.error('Please enter a valid 12-digit Aadhar number for safety purposes'); return false; }
+    if (!form.profession || form.profession.trim().length < 2) { toast.error('Please enter your profession (e.g., Student, Software Engineer)'); return false; }
+    if (!form.age || isNaN(form.age) || form.age < 16 || form.age > 100) { toast.error('Please enter a valid age (16-100)'); return false; }
+
     return true;
   };
 
@@ -63,7 +73,14 @@ const BookingModal = ({ room, onClose, user }) => {
         roomId: room._id,
         checkInDate: form.checkInDate,
         duration: form.duration,
-        seekerInfo: { name: form.name, email: form.email, phone: form.phone },
+        seekerInfo: {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          aadharNo: form.aadharNo,
+          profession: form.profession,
+          age: Number(form.age)
+        },
         specialRequests: form.specialRequests,
       });
 
@@ -237,10 +254,6 @@ const BookingModal = ({ room, onClose, user }) => {
         >
           {/* ── Header ── */}
           <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 p-6 text-white relative flex-shrink-0">
-            <button onClick={onClose}
-              className="absolute top-4 right-4 text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-full transition-colors">
-              <FiX className="w-5 h-5" />
-            </button>
             <h3 className="text-xl font-bold mb-1 pr-8">
               {room?.title?.length > 40 ? room.title.slice(0, 40) + '…' : room?.title}
             </h3>
@@ -281,27 +294,31 @@ const BookingModal = ({ room, onClose, user }) => {
                   </div>
                 </div>
 
-                {[
-                  { label: 'Full Name', key: 'name', icon: <FiUser className="w-4 h-4" />, type: 'text', placeholder: 'Your full name' },
-                  { label: 'Email', key: 'email', icon: <FiMail className="w-4 h-4" />, type: 'email', placeholder: 'your@email.com' },
-                  { label: 'Phone', key: 'phone', icon: <FiPhone className="w-4 h-4" />, type: 'tel', placeholder: '10-digit mobile number', maxLength: 10 },
-                ].map(({ label, key, icon, type, placeholder, maxLength }) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {label} <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
-                      <input type={type} value={form[key]}
-                        onChange={e => updateForm(key, e.target.value)}
-                        maxLength={maxLength}
-                        className="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
-                        placeholder={placeholder}
-                      />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { label: 'Full Name', key: 'name', icon: <FiUser className="w-4 h-4" />, type: 'text', placeholder: 'Your full name' },
+                    { label: 'Email', key: 'email', icon: <FiMail className="w-4 h-4" />, type: 'email', placeholder: 'your@email.com' },
+                    { label: 'Phone', key: 'phone', icon: <FiPhone className="w-4 h-4" />, type: 'tel', placeholder: '10-digit mobile number', maxLength: 10 },
+                    { label: 'Aadhar No (Safety)', key: 'aadharNo', icon: <FiCheck className="w-4 h-4" />, type: 'text', placeholder: '12-digit Aadhar No', maxLength: 12 },
+                    { label: 'Profession', key: 'profession', icon: <FiUser className="w-4 h-4" />, type: 'text', placeholder: 'e.g. Student, Engineer' },
+                    { label: 'Age', key: 'age', icon: <FiCalendar className="w-4 h-4" />, type: 'number', placeholder: 'Age (e.g. 22)', maxLength: 3 },
+                  ].map(({ label, key, icon, type, placeholder, maxLength }) => (
+                    <div key={key}>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        {label} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
+                        <input type={type} value={form[key]}
+                          onChange={e => updateForm(key, e.target.value)}
+                          maxLength={maxLength}
+                          className="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
+                          placeholder={placeholder}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
-
+                  ))}
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Special Requests <span className="text-gray-400">(optional)</span></label>
                   <textarea value={form.specialRequests} onChange={e => updateForm('specialRequests', e.target.value)}

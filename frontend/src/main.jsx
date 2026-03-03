@@ -112,16 +112,20 @@ root.render(
       position="top-right"
       toastOptions={{
         duration: 4000,
-        style: {
-          background: '#363636',
-          color: '#fff',
-        },
+        className: '!bg-white dark:!bg-gray-800 !text-gray-900 dark:!text-white !shadow-xl !border !border-gray-200 dark:!border-gray-700',
         success: {
           duration: 3000,
-          theme: {
-            primary: 'green',
-            secondary: 'black',
+          iconTheme: {
+            primary: '#10B981',
+            secondary: 'white',
           },
+        },
+        error: {
+          duration: 4000,
+          iconTheme: {
+            primary: '#EF4444',
+            secondary: 'white',
+          }
         },
       }}
     />

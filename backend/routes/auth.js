@@ -19,8 +19,6 @@ const {
 // Import auth controller
 const { registerSendOtp, register, login, changePassword, getProfile, logout, checkUserExists } = require('../controllers/authController');
 
-
-
 const router = express.Router();
 
 // Apply security middleware to all auth routes
@@ -70,9 +68,6 @@ router.post('/login', [
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long')
 ], login);
-
-
-
 
 // @desc    Send OTP to email address
 // @route   POST /api/auth/send-otp-email
@@ -236,7 +231,7 @@ router.post('/verify-otp-email', [
         name: `User${Date.now()}`, // Default name
         role: 'user',
         isEmailVerified: true,
-        registrationMethod: 'email',
+        registrationMethod: 'email-otp',
         isActive: true
       });
       await user.save();
@@ -378,7 +373,6 @@ router.put('/profile', [
     });
   }
 });
-
 
 
 // @desc    Logout user
