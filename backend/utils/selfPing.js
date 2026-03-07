@@ -54,15 +54,16 @@ const startSelfPing = () => {
     return;
   }
 
-  // 8 minutes (reduced from 10) — keeps Render free tier alive reliably
-  const interval = parseInt(process.env.SELF_PING_INTERVAL) || 480000;
+  // 5 minutes — Render free tier spins down after 15 min of inactivity
+  const interval = parseInt(process.env.SELF_PING_INTERVAL) || 300000;
   const intervalMinutes = Math.round(interval / 60000);
 
   console.log(`[SELF-PING] Starting keep-alive service`);
   console.log(`[SELF-PING] Ping interval: ${intervalMinutes} minutes`);
+  console.log(`[SELF-PING] Pinging: ${process.env.BASE_URL || 'localhost'}`);
 
-  // First ping after 30 seconds (server is fully ready by then)
-  setTimeout(selfPing, 30000);
+  // First ping after 15 seconds (server is ready)
+  setTimeout(selfPing, 15000);
 
   // Recurring pings
   intervalId = setInterval(selfPing, interval);
