@@ -145,41 +145,30 @@ const connectDB = async () => {
   try {
     console.log('[DB] Connecting to MongoDB...');
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah';
-    console.log(`[DB] MongoDB URI: ${mongoURI}`);
+    console.log(`[DB] MongoDB URI: ${mongoURI.substring(0, 60)}...`);
 
     const conn = await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10, // Maximum number of connections in the pool
-      minPoolSize: 2, // Minimum number of connections to maintain
-      serverSelectionTimeoutMS: 5000, // Timeout for selecting a server
-      socketTimeoutMS: 45000, // Socket timeout
-      connectTimeoutMS: 10000, // Initial connection timeout
+      serverSelectionTimeoutMS: 30000, // 30s — enough for Render cold start
+      socketTimeoutMS: 60000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      retryWrites: true,
     });
 
-    console.log(`[SUCCESS] MongoDB Connected: ${conn.connection.host}:${conn.connection.port}`);
+    console.log(`[SUCCESS] MongoDB Connected: ${conn.connection.host}`);
     console.log(`[INFO] Database: ${conn.connection.name}`);
-    console.log(`[INFO] Connection pool size: ${conn.connection.config?.maxPoolSize || 'default'}`);
 
-    // Check if database has rooms (non-blocking)
     const Room = require('./models/Room');
     const roomCount = await Room.countDocuments();
     console.log(`[INFO] Total rooms in database: ${roomCount}`);
 
-    // Auto-seeding removed from startup for faster cold starts
-    // Use POST /api/admin/seed to manually seed the database
-    if (roomCount === 0) {
-      console.log('[INFO] Database is empty. Use POST /api/admin/seed to populate sample data');
-    }
-
     return conn;
   } catch (error) {
     console.error('[ERROR] MongoDB connection failed:', error.message);
-    console.error('[HELP] Troubleshooting steps:');
-    console.error('   1. Make sure MongoDB is running: npm run mongo:start');
-    console.error('   2. Check MongoDB status: npm run mongo:status');
-    console.error('   3. Verify connection string in .env file');
-    process.exit(1);
+    console.error('[WARN] Server will continue running - retrying connection in background...');
+    // Retry connection after 10 seconds instead of crashing
+    setTimeout(() => connectDB(), 10000);
   }
 };
 
