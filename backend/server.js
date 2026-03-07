@@ -497,39 +497,37 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start local server only if not running in production/Firebase
-if (process.env.NODE_ENV !== 'production' || process.env.RUN_LOCAL === 'true') {
-  const PORT = process.env.PORT || 5001;
+// Start server — always listen (Render requires this in production too)
+const PORT = process.env.PORT || 5001;
 
-  const server = app.listen(PORT, () => {
-    console.log(`[SUCCESS] MESS WALLAH Server running on port ${PORT}`);
-    console.log(`[INFO] Environment: ${process.env.NODE_ENV}`);
-    console.log(`[INFO] Client URL: ${process.env.CLIENT_URL}`);
-    console.log(`[INFO] Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
-    console.log(`[TEST] Test endpoint: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/test`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[SUCCESS] MESS WALLAH Server running on port ${PORT}`);
+  console.log(`[INFO] Environment: ${process.env.NODE_ENV}`);
+  console.log(`[INFO] Client URL: ${process.env.CLIENT_URL}`);
+  console.log(`[INFO] Health check: ${process.env.BASE_URL || `http://localhost:${PORT}`}/health`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Process terminated');
+    mongoose.connection.close();
   });
+});
 
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
-    server.close(() => {
-      console.log('Process terminated');
-      mongoose.connection.close();
-    });
-  });
-
-  process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Promise Rejection:', err);
-    server.close(() => {
-      process.exit(1);
-    });
-  });
-
-  process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
+  server.close(() => {
     process.exit(1);
   });
-}
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
 
 // Export the app for testing
 module.exports = app;
