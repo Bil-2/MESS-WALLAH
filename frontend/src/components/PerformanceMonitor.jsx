@@ -1,5 +1,5 @@
 // MESS WALLAH - Rocket-Speed Performance Monitor
-import React, { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { usePerformance } from '../hooks/usePerformance';
 
 const PerformanceMonitor = memo(() => {
@@ -10,7 +10,7 @@ const PerformanceMonitor = memo(() => {
 
   useEffect(() => {
     // Show only in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.MODE === 'development') {
       setIsVisible(true);
     }
 
@@ -21,7 +21,7 @@ const PerformanceMonitor = memo(() => {
         await fetch('/api/health', { method: 'HEAD' });
         const endTime = Date.now();
         const speed = endTime - startTime;
-        
+
         if (speed < 100) setNetworkSpeed('Fast');
         else if (speed < 300) setNetworkSpeed('Good');
         else if (speed < 1000) setNetworkSpeed('Slow');

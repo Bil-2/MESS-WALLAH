@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -53,13 +53,13 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
-  const navLinks = [
+  const _navLinks = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Rooms', href: '/rooms', icon: MapPin },
     { name: 'About', href: '/about', icon: Shield }
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const _isActive = (path) => location.pathname === path;
 
   return (
     <nav

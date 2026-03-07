@@ -340,18 +340,35 @@ try {
 try {
   app.use('/api/bookings', require('./routes/bookings'));
   console.log('   [OK] /api/bookings routes registered');
-} catch (error) {
-  console.error('   [ERROR] Failed to register /api/bookings routes:', error.message);
-}
-
-try {
   app.use('/api/search', require('./routes/search'));
-  console.log('   [OK] /api/search routes registered');
+  app.use('/api/payments', require('./routes/payments'));
+
+  console.log('   [OK] All core API routes registered');
 } catch (error) {
-  console.error('   [ERROR] Failed to register /api/search routes:', error.message);
+  console.error('   [ERROR] Failed to register core API routes:', error.message);
+  // Create fallback auth routes to prevent 404 errors if auth fails
+  app.use('/api/auth/*', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Authentication service temporarily unavailable',
+      error: 'Service initialization failed',
+      type: 'ServiceError',
+      retryAfter: 60
+    });
+  });
+  // Fallback for other API routes
+  app.use('/api/*', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'API service temporarily unavailable',
+      error: 'Service initialization failed',
+      type: 'ServiceError',
+      retryAfter: 60
+    });
+  });
 }
 
-// Removed unused routes: payments, analytics, owner, admin, notifications
+// Removed unused routes: analytics, owner, admin, notifications
 
 // Test routes for health/status (development only)
 if (process.env.NODE_ENV !== 'production') {

@@ -1,76 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FiHeart, FiSearch, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiHeart, FiSearch, FiTrash2 } from 'react-icons/fi';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
 import { useAuthContext } from '../context/AuthContext';
-import ScrollReveal from '../components/ScrollReveal';
+import api from '../utils/api';
 
 const Favorites = () => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState(new Set());
   const [favoriteRooms, setFavoriteRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchFavorites = useCallback(async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get('/users/my-favorites');
+      if (response.data.success) {
+        setFavoriteRooms(response.data.data.rooms || []);
+      } else {
+        setError('Failed to load favorites');
+      }
+    } catch (err) {
+      console.error('Favorites fetch error:', err);
+      setError('Could not load your favorites. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
-    // Load favorites from localStorage
-    const savedFavorites = localStorage.getItem('mess-wallah-favorites');
-    if (savedFavorites) {
-      const favSet = new Set(JSON.parse(savedFavorites));
-      setFavorites(favSet);
+    fetchFavorites();
+  }, [fetchFavorites]);
 
-      // For demo purposes, create some mock favorite rooms
-      const mockFavoriteRooms = Array.from(favSet).slice(0, 6).map((id, index) => ({
-        _id: id,
-        id: id,
-        title: `Favorite Room ${index + 1}`,
-        location: ['Koramangala, Bangalore', 'Whitefield, Bangalore', 'BTM Layout, Bangalore'][index % 3],
-        rent: [12000, 15000, 10000][index % 3],
-        rating: 4.5 + (index % 3) * 0.2,
-        ownerName: ['Rajesh Kumar', 'Priya Sharma', 'Amit Singh'][index % 3],
-        ownerPhone: '+91 9876543210',
-        verified: true,
-        amenities: ['wifi', 'mess', 'security', 'laundry'],
-        image: `https://images.unsplash.com/photo-${1522708323590 + index}?w=400&h=300&fit=crop`
-      }));
-
-      setFavoriteRooms(mockFavoriteRooms);
+  const handleToggleFavorite = async (roomId) => {
+    try {
+      await api.post(`/users/favorites/${roomId}`);
+      // Remove from UI immediately
+      setFavoriteRooms(prev => prev.filter(room => (room._id || room.id) !== roomId));
+    } catch (err) {
+      console.error('Toggle favorite error:', err);
     }
-    setLoading(false);
-  }, []);
+  };
 
-  const handleToggleFavorite = (roomId) => {
-    const newFavorites = new Set(favorites);
-    if (newFavorites.has(roomId)) {
-      newFavorites.delete(roomId);
-      setFavoriteRooms(prev => prev.filter(room => room._id !== roomId));
-    } else {
-      newFavorites.add(roomId);
+  const handleClearAll = async () => {
+    try {
+      // Remove all one by one
+      await Promise.all(
+        favoriteRooms.map(room => api.delete(`/users/favorites/${room._id || room.id}`))
+      );
+      setFavoriteRooms([]);
+    } catch (err) {
+      console.error('Clear all favorites error:', err);
     }
-    setFavorites(newFavorites);
-    localStorage.setItem('mess-wallah-favorites', JSON.stringify([...newFavorites]));
   };
 
-  const handleViewDetails = (roomId) => {
-    navigate(`/rooms/${roomId}`);
-  };
-
-  const handleBookNow = (roomId) => {
-    navigate(`/rooms/${roomId}`);
-  };
-
-  const clearAllFavorites = () => {
-    setFavorites(new Set());
-    setFavoriteRooms([]);
-    localStorage.removeItem('mess-wallah-favorites');
-  };
+  const handleViewDetails = (roomId) => navigate(`/rooms/${roomId}`);
+  const handleBookNow = (roomId) => navigate(`/rooms/${roomId}`);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 pt-20 pb-24 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-lg font-medium mb-4">{error}</p>
+          <button
+            onClick={fetchFavorites}
+            className="px-6 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -90,12 +104,11 @@ const Favorites = () => {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Favorites</h1>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              {favoriteRooms.length} saved accommodations
+              {favoriteRooms.length} saved accommodation{favoriteRooms.length !== 1 ? 's' : ''}
             </p>
           </motion.div>
 
           {favoriteRooms.length === 0 ? (
-            /* Empty State */
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -129,14 +142,12 @@ const Favorites = () => {
                 transition={{ delay: 0.1 }}
                 className="flex justify-between items-center mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {favoriteRooms.length} room{favoriteRooms.length !== 1 ? 's' : ''} saved
-                  </span>
-                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  {favoriteRooms.length} room{favoriteRooms.length !== 1 ? 's' : ''} saved
+                </span>
                 <button
                   type="button"
-                  onClick={clearAllFavorites}
+                  onClick={handleClearAll}
                   className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                 >
                   <FiTrash2 className="w-4 h-4" />
@@ -153,7 +164,7 @@ const Favorites = () => {
               >
                 {favoriteRooms.map((room, index) => (
                   <motion.div
-                    key={room._id}
+                    key={room._id || room.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * index }}
@@ -163,13 +174,13 @@ const Favorites = () => {
                       onBookNow={handleBookNow}
                       onViewDetails={handleViewDetails}
                       onToggleFavorite={handleToggleFavorite}
-                      isFavorite={favorites.has(room._id)}
+                      isFavorite={true}
                     />
                   </motion.div>
                 ))}
               </motion.div>
 
-              {/* Bottom Actions */}
+              {/* Bottom Action */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

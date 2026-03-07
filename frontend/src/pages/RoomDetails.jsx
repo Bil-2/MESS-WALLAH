@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiCalendar, FiDollarSign, FiCheck, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi';
+import { FiArrowLeft, FiHeart, FiShare2, FiPhone, FiMapPin, FiStar, FiWifi, FiShield, FiUsers, FiX, FiTruck, FiMail, FiMaximize2, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi';
 import { Coffee } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ScrollReveal from '../components/ScrollReveal';
 import BookingModal from '../components/BookingModal';
 import toast from 'react-hot-toast';
 

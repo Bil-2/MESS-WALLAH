@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiCalendar, FiUser, FiMail, FiPhone, FiCheck, FiAlertCircle, FiChevronRight, FiChevronLeft, FiLoader } from 'react-icons/fi';
+import { FiCalendar, FiUser, FiMail, FiPhone, FiCheck, FiAlertCircle, FiChevronRight, FiChevronLeft, FiLoader } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 

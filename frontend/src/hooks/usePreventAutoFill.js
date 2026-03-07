@@ -24,9 +24,9 @@ export const usePreventAutoFill = (formData, setFormData, initialData) => {
         
         // Find all inputs and randomize their attributes
         const inputs = form.querySelectorAll('input');
-        inputs.forEach((input, index) => {
+        inputs.forEach((input, _index) => {
           // Add random name attributes
-          const randomInputName = input.name + '_' + Math.random().toString(36).substr(2, 5);
+          const _randomInputName = input.name + '_' + Math.random().toString(36).substr(2, 5);
           input.setAttribute('data-original-name', input.name);
           input.setAttribute('autocomplete', 'new-password'); // Trick browsers
           

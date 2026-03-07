@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiMail,
@@ -52,7 +51,7 @@ const Footer = () => {
   };
 
   // Handle report issue
-  const handleReportIssue = () => {
+  const _handleReportIssue = () => {
     const subject = encodeURIComponent('Issue Report - MESS WALLAH');
     const body = encodeURIComponent('Please describe your issue here...');
     window.location.href = `mailto:support@messwallah.com?subject=${subject}&body=${body}`;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,7 +10,7 @@ const ManageRooms = () => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [_viewMode, _setViewMode] = useState('grid'); // grid or list
   const [showPricingFor, setShowPricingFor] = useState(null);
 
   useEffect(() => {

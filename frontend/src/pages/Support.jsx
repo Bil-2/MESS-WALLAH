@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Phone,
@@ -297,7 +297,7 @@ const Support = () => {
               </motion.div>
             ) : (
               <AnimatePresence>
-                {filteredFaqs.map((category, catIndex) => {
+                {filteredFaqs.map((category, _catIndex) => {
                   const CategoryIcon = category.icon;
                   return (
                     <motion.div

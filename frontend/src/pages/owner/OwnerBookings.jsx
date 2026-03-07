@@ -89,7 +89,7 @@ const OwnerBookings = () => {
         No Booking Requests Yet
       </h3>
       <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-        When tenants request to book your rooms, they'll appear here for your approval.
+        When tenants request to book your rooms, they&apos;ll appear here for your approval.
       </p>
     </div>
   );

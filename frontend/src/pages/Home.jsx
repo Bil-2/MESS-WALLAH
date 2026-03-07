@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -7,8 +7,6 @@ import {
   Shield,
   Users,
   Home as HomeIcon,
-  Mail,
-  Phone,
   Trophy,
   Medal,
   Building2,
@@ -17,16 +15,14 @@ import {
   Waves
 } from 'lucide-react';
 import SuccessStories from '../components/SuccessStories';
-import ResponsiveContainer from '../components/ResponsiveContainer';
-import ResponsiveRoomCard from '../components/ResponsiveRoomCard';
-import ScrollReveal from '../components/ScrollReveal';
+import ScrollReveal, { ScrollRevealGroup } from '../components/ScrollReveal';
 import api from '../utils/api';
 
 const Home = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [featuredRooms, setFeaturedRooms] = useState([]);
-  const [stats, setStats] = useState({
+  const [searchQuery, _setSearchQuery] = useState('');
+  const [_featuredRooms, setFeaturedRooms] = useState([]);
+  const [_stats, setStats] = useState({
     totalRooms: 4500,
     happyUsers: 25000,
     cities: 1500,
@@ -89,7 +85,7 @@ const Home = () => {
     }
   };
 
-  const handleSearch = () => {
+  const _handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/rooms?search=${encodeURIComponent(searchQuery)}`);
     } else {
@@ -291,12 +287,12 @@ const Home = () => {
                 Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Student Housing</span>
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Discover premium student accommodations in India's top educational and professional hubs
+                Discover premium student accommodations in India&apos;s top educational and professional hubs
               </p>
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+          <ScrollRevealGroup staggerDelay={100} duration={600} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
             {[
               {
                 name: 'Kolkata',
@@ -338,59 +334,54 @@ const Home = () => {
                 gradient: 'from-indigo-500 to-blue-500',
                 bgGradient: 'from-indigo-500/20 to-blue-500/20'
               }
-            ].map((city, index) => {
+            ].map((city, _index) => {
               const CityIcon = city.icon;
               return (
                 <div
                   key={city.name}
-                  className="group relative stagger-item"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => handleQuickSearch(city.name)}
+                  className={`group relative bg-gradient-to-br ${city.bgGradient} backdrop-blur-xl rounded-3xl p-8 text-center cursor-pointer hover:scale-105 hover:-translate-y-2 transition-all duration-200 shadow-2xl border border-white/10 hover:border-white/30 overflow-hidden`}
                 >
-                  <div
-                    onClick={() => handleQuickSearch(city.name)}
-                    className={`group relative bg-gradient-to-br ${city.bgGradient} backdrop-blur-xl rounded-3xl p-8 text-center cursor-pointer hover:scale-105 hover:-translate-y-2 transition-all duration-200 shadow-2xl border border-white/10 hover:border-white/30 overflow-hidden`}
-                  >
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -translate-y-10 translate-x-10"></div>
-                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full translate-y-8 -translate-x-8"></div>
-                    </div>
-
-                    {/* City Icon */}
-                    <div className="relative z-10 mb-6">
-                      <div className="flex justify-center mb-4 transform group-hover:scale-105 transition-transform duration-200">
-                        <CityIcon className="w-16 h-16 text-white drop-shadow-lg" />
-                      </div>
-                      <div className={`w-16 h-1 bg-gradient-to-r ${city.gradient} rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200`}></div>
-                    </div>
-
-                    {/* City Info */}
-                    <div className="relative z-10">
-                      <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-200 transition-all duration-300">
-                        {city.name}
-                      </h3>
-                      <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-bold text-lg mb-3 shadow-lg`}>
-                        <HomeIcon className="w-4 h-4 mr-2" />
-                        {city.rooms}
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-4">{city.popular}</p>
-
-                      {/* Action Button */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className={`inline-flex items-center px-6 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow duration-300`}>
-                          <Search className="w-4 h-4 mr-2" />
-                          Explore Rooms
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Hover Glow Effect */}
-                    <div className={`absolute inset-0 bg-gradient-to-r ${city.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-3xl`}></div>
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white rounded-full -translate-y-10 translate-x-10"></div>
+                    <div className="absolute bottom-0 left-0 w-16 h-16 bg-white rounded-full translate-y-8 -translate-x-8"></div>
                   </div>
+
+                  {/* City Icon */}
+                  <div className="relative z-10 mb-6">
+                    <div className="flex justify-center mb-4 transform group-hover:scale-105 transition-transform duration-200">
+                      <CityIcon className="w-16 h-16 text-white drop-shadow-lg" />
+                    </div>
+                    <div className={`w-16 h-1 bg-gradient-to-r ${city.gradient} rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200`}></div>
+                  </div>
+
+                  {/* City Info */}
+                  <div className="relative z-10">
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-white group-hover:to-gray-200 transition-all duration-300">
+                      {city.name}
+                    </h3>
+                    <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-bold text-lg mb-3 shadow-lg`}>
+                      <HomeIcon className="w-4 h-4 mr-2" />
+                      {city.rooms}
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-4">{city.popular}</p>
+
+                    {/* Action Button */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className={`inline-flex items-center px-6 py-2 bg-gradient-to-r ${city.gradient} text-white rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-shadow duration-300`}>
+                        <Search className="w-4 h-4 mr-2" />
+                        Explore Rooms
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hover Glow Effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-r ${city.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-3xl`}></div>
                 </div>
               );
             })}
-          </div>
+          </ScrollRevealGroup>
 
           {/* Additional Info */}
           <ScrollReveal animation="fade-up" delay={600}>
@@ -437,7 +428,7 @@ const Home = () => {
           </ScrollReveal>
 
           {/* Enhanced Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <ScrollRevealGroup staggerDelay={150} animation="fade-up" duration={800} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
                 icon: Users,
@@ -472,8 +463,8 @@ const Home = () => {
                 description: "Trusted & verified"
               }
             ].map((stat, index) => (
-              <div key={index} className="group">
-                <div className={`relative ${stat.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/50`}>
+              <div key={index} className="group h-full">
+                <div className={`h-full relative ${stat.bgColor} rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/50`}>
                   {/* Gradient Background Effect */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity duration-500`}></div>
 
@@ -502,7 +493,7 @@ const Home = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </ScrollRevealGroup>
 
           {/* Bottom CTA */}
           <div className="text-center mt-16">
@@ -520,10 +511,8 @@ const Home = () => {
         </div>
       </section>
 
-
       {/* Success Stories - Auto-rotating Reviews */}
       <SuccessStories />
-
 
     </div>
   );

@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Phone, Shield, AlertCircle, ArrowRight, Home, Key, BedDouble } from 'lucide-react';
+import { Mail, Lock, Shield, AlertCircle, ArrowRight, Home, Key, BedDouble } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import toast from 'react-hot-toast';
-import api from '../utils/api';
 
 const Login = () => {
   const [loginMethod, setLoginMethod] = useState('otp');
@@ -13,7 +12,7 @@ const Login = () => {
     password: '',
     phone: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
+  const [_showPassword, _setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
@@ -21,7 +20,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
 
   // OTPless - store requestId between send and verify steps
-  const requestIdRef = useRef(null);
+  const _requestIdRef = useRef(null);
   const otpRequestInProgress = useRef(false);
 
   const navigate = useNavigate();
@@ -199,7 +198,7 @@ const Login = () => {
   };
 
 
-  const handlePasswordLogin = async (e) => {
+  const _handlePasswordLogin = async (e) => {
     e.preventDefault();
     setErrors({});
 
@@ -498,7 +497,7 @@ const Login = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white/90 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400 font-medium">
-                  Don't have an account?
+                  Don&apos;t have an account?
                 </span>
               </div>
             </div>

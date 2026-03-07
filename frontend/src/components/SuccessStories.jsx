@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiStar, FiUsers, FiHeart, FiAward } from 'react-icons/fi';
 
 const SuccessStories = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
-  const [currentCategory, setCurrentCategory] = useState(0);
+  const [_currentCategory, setCurrentCategory] = useState(0);
 
   const reviewCategories = [
     {
@@ -227,7 +227,7 @@ const SuccessStories = () => {
 
               {/* Review Content */}
               <blockquote className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed italic">
-                "{currentReview?.review}"
+                &quot;{currentReview?.review}&quot;
               </blockquote>
 
               {/* Category Badge */}

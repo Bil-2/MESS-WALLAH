@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Calendar, MapPin, Clock, CreditCard, Eye, Download, Filter, Search, Home
+  Calendar, MapPin, Clock, CreditCard, Eye, Download, Filter, Search
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import api from '../utils/api';
@@ -9,7 +9,7 @@ import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
 
 const Bookings = () => {
-  const { user } = useAuthContext();
+  const { _user } = useAuthContext();
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [bookings, setBookings] = useState([]);

@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiSearch, FiMapPin, FiStar, FiHeart, FiChevronDown, FiGrid, FiList,
-  FiWifi, FiShield, FiCoffee, FiWind, FiTruck, FiX, FiPhone, FiShare2,
-  FiCheck, FiClock, FiUsers, FiHome, FiZap, FiAward, FiTrendingUp,
-  FiFilter, FiChevronRight, FiPlay, FiCamera
+  FiWifi, FiShield, FiCoffee, FiWind, FiTruck, FiX, FiPhone, FiShare2, FiUsers, FiHome, FiZap, FiAward,
+  FiFilter, FiChevronRight, FiCamera
 } from 'react-icons/fi';
 import { useAuthContext } from '../context/AuthContext';
 import { useDebounce } from '../hooks/usePerformance';
-import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 
@@ -724,7 +722,7 @@ const Rooms = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No rooms found</h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                We couldn't find any rooms matching your criteria. Try adjusting your filters or search for a different location.
+                We couldn&apos;t find any rooms matching your criteria. Try adjusting your filters or search for a different location.
               </p>
               <button
                 onClick={clearFilters}
@@ -835,7 +833,7 @@ const Rooms = () => {
               Why Students Love Us
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              We're not just another room booking platform. We're your trusted partner in finding the perfect home away from home.
+              We&apos;re not just another room booking platform. We&apos;re your trusted partner in finding the perfect home away from home.
             </p>
           </div>
 

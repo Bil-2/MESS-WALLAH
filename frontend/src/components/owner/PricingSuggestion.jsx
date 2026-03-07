@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 
-const PricingSuggestion = ({ roomId, currentPrice, onClose }) => {
+const PricingSuggestion = ({ roomId, _currentPrice, _onClose }) => {
   const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

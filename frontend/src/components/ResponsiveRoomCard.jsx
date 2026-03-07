@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -10,7 +10,6 @@ import {
   Shield,
   Users,
   Home as HomeIcon,
-  Share2,
   Camera,
   Award,
   Zap
@@ -47,7 +46,7 @@ const ResponsiveRoomCard = ({
     }
   }, [isHovered, images.length]);
 
-  const amenityIcons = {
+  const _amenityIcons = {
     wifi: Wifi,
     security: Shield,
     mess: Users,

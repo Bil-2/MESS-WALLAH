@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -9,13 +8,9 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  MapPin,
   Users,
   Heart,
-  Star,
-  Eye,
-  Headphones,
-  FileCheck
+  Star
 } from 'lucide-react';
 
 const fadeInUp = {

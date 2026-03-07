@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCheck, FiLink, FiPhone, FiMail, FiUser, FiShield, FiX, FiArrowRight } from 'react-icons/fi';
 
@@ -16,7 +16,7 @@ const AccountLinkingNotification = ({
   onProceedToLogin,
   accountStatus
 }) => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [_currentStep, setCurrentStep] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const { createSafeSearchQuery, createTextSearchQuery } = require('../utils/regexSecurity');
+const LifecycleService = require('../services/LifecycleService');
 
 // Get all rooms with filtering and pagination
 const getRooms = async (req, res) => {
@@ -239,6 +240,14 @@ const getRoomById = async (req, res) => {
       });
     }
 
+    // Track analytics event (non-blocking)
+    LifecycleService.trackEvent({
+      event: 'room_viewed',
+      roomId: id,
+      userId: req.user?.id,
+      req
+    }).catch(err => console.error('Analytics tracking failed:', err));
+
     res.status(200).json({
       success: true,
       data: room
@@ -267,7 +276,12 @@ const createRoom = async (req, res) => {
 
     const roomData = {
       ...req.body,
-      owner: req.user.id
+      owner: req.user.id,
+      ownerDetails: {
+        name: req.body.ownerName || req.user.name,
+        phone: req.body.ownerPhone || req.user.phone,
+        email: req.body.ownerEmail || req.user.email
+      }
     };
 
     // Get IP address and metadata for security
@@ -275,9 +289,23 @@ const createRoom = async (req, res) => {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const device = req.headers['sec-ch-ua-platform'] || 'Unknown';
 
+    // Handle Aadhar Document
+    if (req.files && req.files.aadharDocument && req.files.aadharDocument[0]) {
+      roomData.ownerAadharInfo = {
+        url: `/uploads/${req.files.aadharDocument[0].filename}`,
+        uploadedAt: new Date()
+      };
+    }
+
+    // Capture security context (IP address logging)
+    roomData.securityContext = { ipAddress };
+
+    // Explicitly parse livePhotosCount
+    roomData.livePhotosCount = parseInt(req.body.livePhotosCount) || 0;
+
     // Handle file uploads with IP tracking
-    if (req.files && req.files.length > 0) {
-      roomData.photos = req.files.map((file, index) => ({
+    if (req.files && req.files.photos && req.files.photos.length > 0) {
+      roomData.photos = req.files.photos.map((file, index) => ({
         url: `/uploads/${file.filename}`,
         publicId: file.filename,
         caption: `Photo ${index + 1}`,
@@ -293,8 +321,9 @@ const createRoom = async (req, res) => {
       }));
 
       // Log photo upload for security audit (without exposing full IP)
-      console.log(`📸 Room photos uploaded by user ${req.user.id}`);
-      console.log(`   - Total photos: ${req.files.length}`);
+      console.log(`Room photos uploaded by user ${req.user.id}`);
+      console.log(`   - Total photos: ${req.files.photos.length}`);
+      console.log(`   - Live photos: ${roomData.livePhotosCount}`);
       console.log(`   - Device: ${device}`);
     }
 
@@ -304,8 +333,19 @@ const createRoom = async (req, res) => {
     const populatedRoom = await Room.findById(room._id)
       .populate('owner', 'name phone email verified');
 
+    // Record room creation lifecycle event (non-blocking)
+    LifecycleService.recordRoomStatusChange({
+      roomId: room._id,
+      eventType: 'room_listed',
+      previousValue: null,
+      newValue: { isAvailable: room.isAvailable, rentPerMonth: room.rentPerMonth },
+      triggeredBy: req.user.id,
+      reason: 'Initial creation',
+      req
+    }).catch(err => console.error('Lifecycle tracking failed:', err));
+
     // Log successful room creation
-    logger.info('Room created successfully', {
+    console.log('Room created successfully', {
       roomId: room._id,
       ownerId: req.user.id,
       ipAddress: ipAddress,
@@ -324,7 +364,7 @@ const createRoom = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in createRoom:', error);
-    logger.error('Room creation failed', {
+    console.error('Room creation failed', {
       error: error.message,
       userId: req.user?.id,
       ipAddress: req.ip
@@ -369,9 +409,17 @@ const updateRoom = async (req, res) => {
 
     const updateData = { ...req.body };
 
-    // Handle new file uploads
-    if (req.files && req.files.length > 0) {
-      const newPhotos = req.files.map(file => ({
+    // Handle new Aadhar document upload
+    if (req.files && req.files.aadharDocument && req.files.aadharDocument[0]) {
+      updateData.ownerAadharInfo = {
+        url: `/uploads/${req.files.aadharDocument[0].filename}`,
+        uploadedAt: new Date()
+      };
+    }
+
+    // Handle new file uploads for room photos
+    if (req.files && req.files.photos && req.files.photos.length > 0) {
+      const newPhotos = req.files.photos.map(file => ({
         url: `/uploads/${file.filename}`,
         filename: file.filename
       }));
@@ -382,6 +430,22 @@ const updateRoom = async (req, res) => {
       new: true,
       runValidators: true
     }).populate('owner', 'name phone email verified');
+
+    // Track price changes if rentPerMonth was modified
+    if (req.body.rentPerMonth && Number(req.body.rentPerMonth) !== room.rentPerMonth) {
+      const oldPrice = room.rentPerMonth;
+      const newPrice = Number(req.body.rentPerMonth);
+
+      LifecycleService.recordRoomStatusChange({
+        roomId: room._id,
+        eventType: newPrice > oldPrice ? 'price_increased' : 'price_decreased',
+        previousValue: oldPrice,
+        newValue: newPrice,
+        triggeredBy: req.user.id,
+        reason: 'Owner updated listing',
+        req
+      }).catch(err => console.error('Lifecycle tracking failed:', err));
+    }
 
     res.status(200).json({
       success: true,
@@ -456,8 +520,20 @@ const toggleAvailability = async (req, res) => {
       });
     }
 
-    room.isAvailable = !room.isAvailable;
+    const newStatus = !room.isAvailable;
+    room.isAvailable = newStatus;
     await room.save();
+
+    // Record lifecycle event
+    LifecycleService.recordRoomStatusChange({
+      roomId: room._id,
+      eventType: newStatus ? 'marked_available' : 'marked_unavailable',
+      previousValue: { isAvailable: !newStatus },
+      newValue: { isAvailable: newStatus },
+      triggeredBy: req.user.id,
+      reason: 'Owner manual toggle',
+      req
+    }).catch(err => console.error('Lifecycle tracking failed:', err));
 
     res.status(200).json({
       success: true,
@@ -620,6 +696,33 @@ const seedSampleRooms = async () => {
   }
 };
 
+// Get room contact details (real or fake generated)
+const getRoomContact = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const room = await Room.findById(id).populate('owner', 'name phone email');
+
+    if (!room) {
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    // Return fake owner data if it exists, otherwise return real owner
+    const contactData = room.fakeOwnerData || {
+      name: room.owner?.name || 'Unknown Owner',
+      phone: room.owner?.phone || 'Not provided',
+      email: room.owner?.email || 'Not provided'
+    };
+
+    res.status(200).json({
+      success: true,
+      data: contactData
+    });
+  } catch (error) {
+    console.error('Error fetching room contact:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch contact details' });
+  }
+};
+
 module.exports = {
   getRooms,
   getRoomById,
@@ -629,5 +732,6 @@ module.exports = {
   getRoomStats,
   toggleAvailability,
   getFeaturedRooms,
-  seedSampleRooms
+  seedSampleRooms,
+  getRoomContact
 };

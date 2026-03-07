@@ -1,5 +1,6 @@
 'use strict';
 const nodemailer = require('nodemailer');
+const NotificationLog = require('../models/NotificationLog');
 
 // ─────────────────────────────────────────────────────────────────
 // Transporter Factory
@@ -44,6 +45,29 @@ const sendEmail = async (options) => {
 
   const result = await transporter.sendMail(mailOptions);
   console.log('[EMAIL SENT]', { to: options.to, subject: options.subject, id: result.messageId });
+
+  // Track in NotificationLog
+  try {
+    const logMetadata = options.metadata || { type: 'welcome_message' };
+    await NotificationLog.create({
+      type: logMetadata.type,
+      channel: 'email',
+      toEmail: options.to,
+      subject: options.subject,
+      body: options.text || '',
+      htmlBody: options.html || '',
+      status: 'delivered',
+      externalMessageId: result.messageId,
+      sentAt: new Date(),
+      deliveredAt: new Date(),
+      toUserId: logMetadata.toUserId,
+      bookingId: logMetadata.bookingId,
+      roomId: logMetadata.roomId
+    });
+  } catch (logErr) {
+    console.error('[EMAIL LOG ERROR]', logErr.message);
+  }
+
   return result;
 };
 
@@ -102,26 +126,26 @@ const sendBuyerConfirmationEmail = async ({ buyer, owner, room, booking, pdfBuff
 
   const html = emailWrapper(`
     <div class="header">
-      <h1>🏠 MESS WALLAH</h1>
+      <h1>MESS WALLAH</h1>
       <p>Student Accommodation Platform</p>
     </div>
-    <div class="badge">✓ Booking Confirmed</div>
+    <div class="badge">Booking Confirmed</div>
     <div class="content">
       <h2 style="margin:0 0 6px; font-size:20px; color:#111">Hi ${buyer.name},</h2>
       <p style="color:#4b5563; font-size:14px; margin:0 0 20px">
         Your booking has been <strong>confirmed</strong>. Your room is reserved. The PDF confirmation is attached to this email.
       </p>
 
-      <div class="section-title">📋 Booking Details</div>
+      <div class="section-title">Booking Details</div>
       <table class="info-table">
         <tr><td class="label">Booking ID</td><td class="value" style="color:#E85D04; font-family:monospace">${booking.bookingId || booking._id}</td></tr>
-        <tr><td class="label">Status</td><td class="value" style="color:#16A34A">CONFIRMED ✓</td></tr>
+        <tr><td class="label">Status</td><td class="value" style="color:#16A34A">CONFIRMED</td></tr>
         <tr><td class="label">Check-in Date</td><td class="value">${checkIn}</td></tr>
         <tr><td class="label">Check-out Date</td><td class="value">${checkOut}</td></tr>
         <tr><td class="label">Duration</td><td class="value">${booking.duration} Month${booking.duration > 1 ? 's' : ''}</td></tr>
       </table>
 
-      <div class="section-title">🏡 Property Details</div>
+      <div class="section-title">Property Details</div>
       <table class="info-table">
         <tr><td class="label">Property</td><td class="value">${room.title}</td></tr>
         <tr><td class="label">Location</td><td class="value">${[room.address?.area, room.address?.city, room.address?.state].filter(Boolean).join(', ')}</td></tr>
@@ -130,7 +154,7 @@ const sendBuyerConfirmationEmail = async ({ buyer, owner, room, booking, pdfBuff
         <tr><td class="label">Owner Phone</td><td class="value">${owner?.phone || 'N/A'}</td></tr>
       </table>
 
-      <div class="section-title">💰 Payment Summary</div>
+      <div class="section-title">Payment Summary</div>
       <table class="info-table">
         <tr><td class="label">Rent × ${booking.duration} months</td><td class="value">₹${((p.monthlyRent || 0) * booking.duration).toLocaleString('en-IN')}</td></tr>
         <tr><td class="label">Security Deposit</td><td class="value">₹${(p.securityDeposit || 0).toLocaleString('en-IN')}</td></tr>
@@ -140,16 +164,22 @@ const sendBuyerConfirmationEmail = async ({ buyer, owner, room, booking, pdfBuff
       </table>
 
       <div class="alert-box">
-        ⚠️ <strong>Important:</strong> Please show your Booking ID <strong>${booking.bookingId || booking._id}</strong> or this email at check-in. The attached PDF is your proof of booking.
+        <strong>Important:</strong> Please show your Booking ID <strong>${booking.bookingId || booking._id}</strong> or this email at check-in. The attached PDF is your proof of booking.
       </div>
     </div>
   `);
 
   await sendEmail({
     to: buyer.email,
-    subject: `🎉 Booking Confirmed! ${room.title} — ${booking.bookingId || booking._id}`,
+    subject: `Booking Confirmed! ${room.title} — ${booking.bookingId || booking._id}`,
     html,
     text: `Booking Confirmed!\n\nBooking ID: ${booking.bookingId || booking._id}\nRoom: ${room.title}\nCheck-in: ${checkIn}\nDuration: ${booking.duration} month(s)\nTotal: ₹${(p.totalAmount || 0).toLocaleString('en-IN')}\n\nPlease find your PDF confirmation attached.`,
+    metadata: {
+      type: 'booking_confirmation_to_tenant',
+      toUserId: buyer._id,
+      bookingId: booking._id,
+      roomId: room._id
+    },
     attachments: pdfBuffer ? [{
       filename: `MESS-WALLAH-Booking-${booking.bookingId || booking._id}.pdf`,
       content: pdfBuffer,
@@ -168,17 +198,17 @@ const sendOwnerAlertEmail = async ({ owner, buyer, room, booking }) => {
 
   const html = emailWrapper(`
     <div class="header">
-      <h1>🏠 MESS WALLAH</h1>
+      <h1>MESS WALLAH</h1>
       <p>Owner Dashboard Notification</p>
     </div>
-    <div class="badge">📋 New Booking Request</div>
+    <div class="badge">New Booking Request</div>
     <div class="content">
       <h2 style="margin:0 0 6px; font-size:20px; color:#111">Hi ${owner.name},</h2>
       <p style="color:#4b5563; font-size:14px; margin:0 0 20px">
         You have received a <strong>new booking request</strong> for your property. Please review the details below.
       </p>
 
-      <div class="section-title">🏡 Your Property</div>
+      <div class="section-title">Your Property</div>
       <table class="info-table">
         <tr><td class="label">Property</td><td class="value">${room.title}</td></tr>
         <tr><td class="label">Booking ID</td><td class="value" style="color:#E85D04; font-family:monospace">${booking.bookingId || booking._id}</td></tr>
@@ -187,7 +217,7 @@ const sendOwnerAlertEmail = async ({ owner, buyer, room, booking }) => {
         <tr class="total-row"><td class="label" style="color:white; font-weight:700">Booking Amount</td><td class="value" style="color:#FB923C">₹${(p.ownerAmount || 0).toLocaleString('en-IN')}</td></tr>
       </table>
 
-      <div class="section-title">👤 Tenant Details</div>
+      <div class="section-title">Tenant Details</div>
       <table class="info-table">
         <tr><td class="label">Full Name</td><td class="value">${si.name || buyer?.name || '—'}</td></tr>
         <tr><td class="label">Email</td><td class="value">${si.email || buyer?.email || '—'}</td></tr>
@@ -196,21 +226,90 @@ const sendOwnerAlertEmail = async ({ owner, buyer, room, booking }) => {
       </table>
 
       <div class="alert-box">
-        📌 Your room is now marked as <strong>reserved</strong>. Log into your owner dashboard to manage this booking.
+        Your room is now marked as <strong>reserved</strong>. Log into your owner dashboard to manage this booking.
       </div>
     </div>
   `);
 
   await sendEmail({
     to: owner.email,
-    subject: `📋 New Booking: ${room.title} from ${si.name || buyer?.name} — ${booking.bookingId || booking._id}`,
+    subject: `New Booking: ${room.title} from ${si.name || buyer?.name} — ${booking.bookingId || booking._id}`,
     html,
-    text: `New Booking Request!\n\nBooking ID: ${booking.bookingId || booking._id}\nProperty: ${room.title}\nTenant: ${si.name || buyer?.name}\nPhone: ${si.phone || buyer?.phone}\nCheck-in: ${checkIn}\nDuration: ${booking.duration} months\n\nLog in to your dashboard to manage this booking.`
+    text: `New Booking Request!\n\nBooking ID: ${booking.bookingId || booking._id}\nProperty: ${room.title}\nTenant: ${si.name || buyer?.name}\nPhone: ${si.phone || buyer?.phone}\nCheck-in: ${checkIn}\nDuration: ${booking.duration} months\n\nLog in to your dashboard to manage this booking.`,
+    metadata: {
+      type: 'booking_request_to_owner',
+      toUserId: owner._id,
+      bookingId: booking._id,
+      roomId: room._id
+    }
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────
+// BUYER: Booking Status Update (Confirmed/Rejected)
+// ─────────────────────────────────────────────────────────────────
+const sendBookingStatusUpdate = async (email, phone, payload) => {
+  const isConfirmed = payload.status === 'confirmed';
+  const html = emailWrapper(`
+    <div class="header">
+      <h1>MESS WALLAH</h1>
+      <p>Booking Update</p>
+    </div>
+    <div class="content">
+      <h2>Your Booking is ${payload.status.toUpperCase()}</h2>
+      <p>Your request for <strong>${payload.roomTitle}</strong> has been updated.</p>
+      <div class="alert-box">
+        ${payload.message}
+      </div>
+      <p>Booking ID: ${payload.bookingId}</p>
+    </div>
+  `);
+
+  await sendEmail({
+    to: email,
+    subject: `Booking ${payload.status}: ${payload.roomTitle}`,
+    html,
+    text: `Your booking for ${payload.roomTitle} is ${payload.status}.\n${payload.message}`,
+    metadata: {
+      type: isConfirmed ? 'booking_confirmation_to_tenant' : 'booking_rejection_to_tenant'
+    }
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────
+// BUYER/SELLER: Booking Cancellation
+// ─────────────────────────────────────────────────────────────────
+const sendBookingCancellation = async (email, phone, payload) => {
+  const html = emailWrapper(`
+    <div class="header" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);">
+      <h1>MESS WALLAH</h1>
+      <p>Booking Cancellation</p>
+    </div>
+    <div class="content">
+      <h2>Booking CANCELLED</h2>
+      <p>The booking for <strong>${payload.roomTitle}</strong> (ID: ${payload.bookingId}) has been cancelled.</p>
+      <div class="alert-box">
+        Reason: ${payload.reason || 'No reason provided.'}
+      </div>
+      ${payload.refundAmount ? `<p>Refund Amount: ₹${payload.refundAmount}</p>` : ''}
+    </div>
+  `);
+
+  await sendEmail({
+    to: email,
+    subject: `Booking Cancelled: ${payload.roomTitle}`,
+    html,
+    text: `Booking Cancelled: ${payload.roomTitle}\nReason: ${payload.reason || 'N/A'}`,
+    metadata: {
+      type: 'booking_cancellation'
+    }
   });
 };
 
 module.exports = {
   sendEmail,
   sendBuyerConfirmationEmail,
-  sendOwnerAlertEmail
+  sendOwnerAlertEmail,
+  sendBookingStatusUpdate,
+  sendBookingCancellation
 };

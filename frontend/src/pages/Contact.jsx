@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail,
@@ -163,10 +163,10 @@ const Contact = () => {
             </span>
           </motion.div>
           <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
-            Let's <span className="bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">Connect</span>
+            Let&apos;s <span className="bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">Connect</span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Whether you're looking for your next home or wanting to list your property, our dedicated executive team is standing by to assist you instantly.
+            Whether you&apos;re looking for your next home or wanting to list your property, our dedicated executive team is standing by to assist you instantly.
           </motion.p>
         </motion.div>
 

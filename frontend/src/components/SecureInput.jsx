@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * SecureInput Component - Prevents browser auto-fill and form persistence

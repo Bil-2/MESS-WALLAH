@@ -187,6 +187,51 @@ const BookingSchema = new mongoose.Schema({
   refundReason: String,
   refundedAt: Date,
   paymentFailureReason: String,
+
+  // ─── Lifecycle Tracking (OYO/Booking.com style) ───
+  // Physical check-in/out (different from scheduled dates)
+  actualCheckIn: {
+    type: Date   // Recorded by owner when tenant physically arrives
+  },
+  actualCheckOut: {
+    type: Date   // Recorded when tenant physically leaves
+  },
+
+  // Owner rating of tenant (two-way accountability)
+  ownerRatingOfTenant: {
+    rating: { type: Number, min: 1, max: 5 },
+    comment: { type: String, maxlength: 500 },
+    givenAt: Date,
+    tags: [String]  // e.g., ['clean', 'on_time', 'respectful', 'damaged_property']
+  },
+
+  // Did tenant leave early or was asked to leave
+  earlyExitReason: {
+    type: String,
+    enum: ['tenant_request', 'owner_request', 'non_payment', 'rules_violation', 'relocation', 'other']
+  },
+  earlyExitNotes: String,
+  earlyExitDate: Date,
+
+  // Monthly rent payment records (rent received month by month)
+  monthlyPayments: [{
+    month: Date,          // First day of the month this covers
+    amount: Number,
+    paidAt: Date,
+    method: {
+      type: String,
+      enum: ['cash', 'upi', 'bank_transfer', 'razorpay'],
+      default: 'cash'
+    },
+    transactionId: String,
+    notes: String,
+    status: {
+      type: String,
+      enum: ['pending', 'received', 'late', 'waived'],
+      default: 'pending'
+    }
+  }],
+  // ─────────────────────────────────────────────────
   createdAt: {
     type: Date,
     default: Date.now

@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
-  User, Mail, Phone, MapPin, Edit3, Save, X, Camera,
-  Shield, Key, Star, Home, Heart,
-  CheckCircle, Eye, EyeOff, Calendar,
-  Settings, Lock, TrendingUp, Zap
+  User, Mail, Phone, MapPin, Edit3, Save, X, Camera, Key, Home, Heart,
+  CheckCircle, Eye, EyeOff,
+  Settings, Lock, Zap
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -261,7 +260,7 @@ const Profile = () => {
                 {activeTab === 'overview' && (
                   <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                     <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Hello, {user.name.split(' ')[0]} 👋</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg mb-8 font-medium">Here's a quick summary of your account.</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg mb-8 font-medium">Here&apos;s a quick summary of your account.</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <button onClick={() => navigate('/favorites')} className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/10 dark:to-rose-900/10 rounded-3xl p-8 border border-pink-100 dark:border-pink-900/30 text-left hover:shadow-lg transition-all group">
@@ -269,7 +268,7 @@ const Profile = () => {
                           <Heart className="w-7 h-7 text-pink-500 fill-pink-500/20" />
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Saved Rooms</h3>
-                        <p className="text-gray-600 dark:text-gray-400 font-medium">View the accommodations you've bookmarked.</p>
+                        <p className="text-gray-600 dark:text-gray-400 font-medium">View the accommodations you&apos;ve bookmarked.</p>
                       </button>
 
                       <button onClick={() => navigate('/bookings')} className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/10 dark:to-cyan-900/10 rounded-3xl p-8 border border-blue-100 dark:border-blue-900/30 text-left hover:shadow-lg transition-all group">

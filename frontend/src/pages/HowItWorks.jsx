@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -114,7 +113,7 @@ const HowItWorks = () => {
             How It <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Works</span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Finding your absolute perfect accommodation shouldn't be stressful. We've engineered
+            Finding your absolute perfect accommodation shouldn&apos;t be stressful. We&apos;ve engineered
             a flawlessly transparent, 5-step digital process that guarantees peace of mind.
           </motion.p>
         </motion.div>

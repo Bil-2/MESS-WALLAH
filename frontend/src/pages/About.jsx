@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Heart,
@@ -11,11 +10,8 @@ import {
   Star,
   Phone,
   Mail,
-  Globe,
   Building,
-  Check,
   TrendingUp,
-  UserCheck,
   Home,
   Briefcase,
   Code
@@ -201,7 +197,7 @@ const About = () => {
               <h2 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">Our Vision</h2>
             </div>
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed relative z-10">
-              To categorically conquer the industry and become India's most universally trusted platform for women's accommodation, creating an unparalleled network of safe spaces that empowers millions of girls to live independently and build massively successful careers.
+              To categorically conquer the industry and become India&apos;s most universally trusted platform for women&apos;s accommodation, creating an unparalleled network of safe spaces that empowers millions of girls to live independently and build massively successful careers.
             </p>
           </motion.div>
         </motion.div>
@@ -354,7 +350,7 @@ const About = () => {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-black opacity-10 rounded-full blur-3xl -ml-32 -mb-32"></div>
 
           <div className="relative z-10 max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight">Ready to shape the future of women's safety?</h2>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight">Ready to shape the future of women&apos;s safety?</h2>
             <p className="text-xl md:text-2xl mb-12 text-orange-50 font-medium opacity-90 leading-relaxed">
               Have questions about our mission or urgently want to partner with us at a corporate level? We absolutely want to hear from you right now.
             </p>

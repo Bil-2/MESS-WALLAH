@@ -11,7 +11,8 @@ const {
   deleteRoom,
   getRoomStats,
   toggleAvailability,
-  getFeaturedRooms
+  getFeaturedRooms,
+  getRoomContact
 } = require('../controllers/roomController');
 
 // Configure multer for file uploads
@@ -89,12 +90,17 @@ router.get('/my-rooms', protect, authorize('owner'), async (req, res) => {
 
 router.get('/:id', optionalAuth, getRoomById);
 
+// @desc    Get room owner contact details
+// @route   GET /api/rooms/:id/contact
+// @access  Private
+router.get('/:id/contact', protect, getRoomContact);
+
 // Protected routes (require authentication)
 router.post(
   '/',
   protect,
   authorize('owner'),
-  upload.array('photos', 15), // Allow up to 15 photos
+  upload.fields([{ name: 'photos', maxCount: 15 }, { name: 'aadharDocument', maxCount: 1 }]),
   roomValidation,
   createRoom
 );
@@ -103,7 +109,7 @@ router.put(
   '/:id',
   protect,
   authorize('owner'),
-  upload.array('photos', 10),
+  upload.fields([{ name: 'photos', maxCount: 15 }, { name: 'aadharDocument', maxCount: 1 }]),
   roomValidation,
   updateRoom
 );

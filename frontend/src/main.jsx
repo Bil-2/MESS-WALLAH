@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
     console.log('[Performance]', metric);
 
     // Send to analytics in production
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.MODE === 'production') {
       // You can send metrics to your analytics service here
       // Example: gtag('event', metric.name, { value: metric.value });
     }
@@ -63,7 +63,7 @@ if (typeof window !== 'undefined') {
   setTimeout(preloadCriticalResources, 2000);
 
   // Memory usage monitoring (development only)
-  if (process.env.NODE_ENV === 'development' && 'memory' in performance) {
+  if (import.meta.env.MODE === 'development' && 'memory' in performance) {
     setInterval(() => {
       const memInfo = performance.memory;
       const memoryUsage = {
@@ -87,7 +87,7 @@ window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
 
   // You can send error reports to your logging service here
-  if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.MODE === 'production') {
     // Example: Sentry.captureException(event.reason);
   }
 });
@@ -96,7 +96,7 @@ window.addEventListener('unhandledrejection', (event) => {
 window.addEventListener('error', (event) => {
   console.error('[Error] Global error:', event.error);
 
-  if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.MODE === 'production') {
     // Example: Sentry.captureException(event.error);
   }
 });

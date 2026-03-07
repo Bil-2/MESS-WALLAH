@@ -1,5 +1,5 @@
 // MESS WALLAH - Rocket-Fast Room Card Component
-import React, { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { FiMapPin, FiStar, FiWifi, FiCoffee, FiShield, FiHeart } from 'react-icons/fi';
 import OptimizedImage from './OptimizedImage';
 import { useIntersectionObserver } from '../hooks/usePerformance';

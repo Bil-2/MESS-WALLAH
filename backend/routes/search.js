@@ -109,7 +109,6 @@ router.get('/', [
       // Cleanup: Remove sensitive owner details, keep only necessary
       {
         $project: {
-          ownerDetails: 0, // Remove the raw lookup array
           // Explicitly include calculated fields we want to send
           owner: {
             name: "$ownerName",

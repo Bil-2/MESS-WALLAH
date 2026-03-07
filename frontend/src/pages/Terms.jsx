@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -9,7 +8,9 @@ import {
   Scale,
   BookOpen,
   Gavel,
-  Globe
+  Globe,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 const fadeInUp = {

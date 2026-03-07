@@ -1,4 +1,3 @@
-import React from 'react';
 
 const AppIcon = ({ size = 64, className = "" }) => {
   return (

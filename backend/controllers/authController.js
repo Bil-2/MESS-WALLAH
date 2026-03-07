@@ -139,10 +139,10 @@ const register = async (req, res) => {
     const { name, email, otp, role, phone, aadharNo, age } = req.body;
 
     // Input validation
-    if (!name || !email || !otp || !phone || !aadharNo || !age || !role) {
+    if (!name || !email || !otp || !phone || !role) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, phone, role, aadharNo, age, and OTP are required'
+        message: 'Name, email, phone, role, and OTP are required'
       });
     }
 
@@ -202,8 +202,8 @@ const register = async (req, res) => {
       phone,
       role: role || 'user',
       profile: {
-        age: Number(age),
-        aadharNo: aadharNo
+        ...(age && { age: Number(age) }),
+        ...(aadharNo && { aadharNo })
       },
       isActive: true,
       isEmailVerified: true,
@@ -259,7 +259,8 @@ const register = async (req, res) => {
     console.error('Registration error details:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error during registration'
+      message: error.message,
+      stack: error.stack
     });
   }
 };

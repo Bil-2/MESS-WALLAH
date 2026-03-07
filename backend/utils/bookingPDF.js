@@ -35,7 +35,7 @@ const generateBookingPDF = (booking, room, buyer, owner) => {
     doc.moveDown(3);
     doc.rect(40, 105, doc.page.width - 80, 50).fill(green).stroke(green);
     doc.fontSize(16).fillColor('white').font('Helvetica-Bold')
-      .text('✓  Booking Confirmed! Your room is reserved.', 55, 120);
+      .text('Booking Confirmed — Your room is reserved.', 55, 120);
     doc.fillColor(dark);
 
     // ── BOOKING DETAILS TABLE ───────────────────────────────────────
@@ -155,7 +155,7 @@ const generateBookingPDF = (booking, room, buyer, owner) => {
     doc.rect(40, rowY, doc.page.width - 80, 1).fill('#DDDDDD');
     rowY += 10;
     doc.fontSize(9).fillColor(gray).font('Helvetica').text(
-      '⚠️  Important: Please carry this confirmation email or show your Booking ID at check-in.\n' +
+      'Important: Please carry this confirmation email or show your Booking ID at check-in.\n' +
       '   Keep this document safe — it serves as your proof of booking.\n' +
       '   For cancellations or queries, contact support@messwallah.com',
       40, rowY, { width: doc.page.width - 80 }

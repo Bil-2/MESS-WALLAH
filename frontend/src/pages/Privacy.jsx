@@ -1,16 +1,11 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Shield,
   Lock,
-  Eye,
   Database,
   Share2,
-  Cookie,
   UserCheck,
-  AlertTriangle,
   CheckCircle,
-  Phone,
   Mail,
   Calendar,
   FileKey

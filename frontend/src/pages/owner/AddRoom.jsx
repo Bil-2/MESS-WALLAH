@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, Camera, Upload } from 'lucide-react';
+import { ArrowLeft, Home, Camera, Upload, User, Phone, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api from '../../utils/api';
+import { useAuthContext } from '../../context/AuthContext';
 
 const AddRoom = () => {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+
   const [formData, setFormData] = useState({
     title: '',
     rent: '',
@@ -13,17 +17,25 @@ const AddRoom = () => {
     city: '',
     area: '',
     pincode: '',
-    photos: []
+    ownerName: user?.name || '',
+    ownerPhone: user?.phone || '',
+    ownerEmail: user?.email || '',
+    livePhotos: [],
+    galleryPhotos: [],
+    aadharDocument: null
   });
+
+  const totalPhotos = formData.livePhotos.length + formData.galleryPhotos.length;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = (e, isLive) => {
     const files = Array.from(e.target.files);
-    if (formData.photos.length + files.length > 10) {
-      toast.error('Maximum 10 photos allowed');
+
+    if (totalPhotos + files.length > 10) {
+      toast.error('Maximum 10 photos allowed in total');
       return;
     }
 
@@ -32,24 +44,79 @@ const AddRoom = () => {
       reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          photos: [...prev.photos, { file, preview: reader.result }]
+          ...(isLive
+            ? { livePhotos: [...prev.livePhotos, { file, preview: reader.result }] }
+            : { galleryPhotos: [...prev.galleryPhotos, { file, preview: reader.result }] })
         }));
       };
       reader.readAsDataURL(file);
     });
-    toast.success('Photos added successfully!');
+
+    toast.success(`${isLive ? 'Live' : 'Gallery'} photos added successfully!`);
+  };
+
+  const handleAadharUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, aadharDocument: file }));
+      toast.success('Aadhar document uploaded securely.');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.photos.length < 5) {
-      toast.error('Minimum 5 photos required');
+    if (formData.livePhotos.length < 5) {
+      toast.error('Minimum 5 Live photos are required for security verification.');
       return;
     }
 
-    toast.success('Room listed successfully!');
-    navigate('/owner-dashboard');
+    if (!formData.aadharDocument) {
+      toast.error('Aadhar Card is strictly required for owner verification.');
+      return;
+    }
+
+    // Prepare FormData
+    const submitData = new FormData();
+    submitData.append('title', formData.title);
+    submitData.append('rentPerMonth', formData.rent); // Note backend expects rentPerMonth
+    submitData.append('securityDeposit', formData.deposit); // backend expects securityDeposit
+    submitData.append('roomType', formData.roomType);
+
+    // Append nested address fields
+    submitData.append('address.city', formData.city);
+    submitData.append('address.area', formData.area);
+    submitData.append('address.pincode', formData.pincode);
+    submitData.append('address.street', formData.area); // fallback since street input isn't here
+    submitData.append('address.state', 'Unknown'); // fallback since state input isn't here
+
+    submitData.append('description', formData.title); // fallback
+
+    // Append Owner Specific Contact Details
+    if (formData.ownerName) submitData.append('ownerName', formData.ownerName);
+    if (formData.ownerPhone) submitData.append('ownerPhone', formData.ownerPhone);
+    if (formData.ownerEmail) submitData.append('ownerEmail', formData.ownerEmail);
+
+    // Append Aadhar
+    submitData.append('aadharDocument', formData.aadharDocument);
+
+    // Append Live Photos Count
+    submitData.append('livePhotosCount', formData.livePhotos.length);
+
+    // Append all photos
+    formData.livePhotos.forEach(p => submitData.append('photos', p.file));
+    formData.galleryPhotos.forEach(p => submitData.append('photos', p.file));
+
+    try {
+      toast.loading('Uploading room data and verifying security documents...', { id: 'submit' });
+      await api.post('/rooms', submitData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Room listed successfully with maximum security verification!', { id: 'submit' });
+      navigate('/owner-dashboard');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to list room', { id: 'submit' });
+    }
   };
 
   return (
@@ -201,14 +268,43 @@ const AddRoom = () => {
               />
             </div>
 
+            {/* Aadhar Upload */}
+            <div>
+              <label className="block text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                Aadhar Card <span className="text-sm font-medium text-emerald-600 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/50 px-2 py-1 rounded-md">Security Required</span>
+              </label>
+              <p className="text-sm text-gray-500 mb-3">Please upload a clear image of your Aadhar Card for owner verification.</p>
+
+              <label className="flex flex-col items-center justify-center w-full min-h-[8rem] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative overflow-hidden p-4">
+                <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleAadharUpload} required />
+                <div className="flex flex-col items-center justify-center text-gray-500 w-full text-center">
+                  <Upload className="w-8 h-8 mb-2" />
+                  <p className="text-sm font-semibold break-words max-w-full">
+                    {formData.aadharDocument ? formData.aadharDocument.name : 'Click to Upload Aadhar Card'}
+                  </p>
+                </div>
+                {formData.aadharDocument && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  </div>
+                )}
+              </label>
+            </div>
+
             {/* Photos */}
             <div>
               <label className="block text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                Property Photos * (Minimum 5)
+                Property Photos *
               </label>
-              <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-                {formData.photos.length} photos added {formData.photos.length >= 5 && '(Ready)'}
+              <p className="text-lg text-rose-600 dark:text-rose-400 font-medium mb-4">
+                Anti-Scam Protocol: You must capture at least 5 LIVE photos using your camera before unlocking the Gallery Upload feature.
               </p>
+
+              <div className="flex gap-4 mb-4 text-sm font-medium flex-wrap">
+                <span className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-3 py-1 rounded-full">Live: {formData.livePhotos.length}/5</span>
+                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-3 py-1 rounded-full">Gallery: {formData.galleryPhotos.length}</span>
+                <span className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">Total: {totalPhotos}/10</span>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* Camera Button */}
@@ -217,59 +313,101 @@ const AddRoom = () => {
                     type="file"
                     accept="image/*"
                     capture="environment"
-                    onChange={handlePhotoUpload}
+                    onChange={(e) => handlePhotoUpload(e, true)}
                     className="hidden"
                   />
                   <div className="flex flex-col items-center justify-center h-40 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl shadow-lg hover:shadow-xl transition-all text-white p-6">
                     <Camera className="w-12 h-12 mb-2" />
-                    <span className="text-xl font-bold">Take Photo</span>
+                    <span className="text-xl font-bold">Take Live Photo</span>
                     <span className="text-base mt-1">Use Camera</span>
                   </div>
                 </label>
 
                 {/* Gallery Button */}
-                <label className="cursor-pointer">
+                <label className={formData.livePhotos.length < 5 ? "cursor-not-allowed opacity-50 relative" : "cursor-pointer"}>
                   <input
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={handlePhotoUpload}
+                    disabled={formData.livePhotos.length < 5}
+                    onChange={(e) => handlePhotoUpload(e, false)}
                     className="hidden"
                   />
-                  <div className="flex flex-col items-center justify-center h-40 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-3xl shadow-lg hover:shadow-xl transition-all text-white p-6">
-                    <Upload className="w-12 h-12 mb-2" />
-                    <span className="text-xl font-bold">Upload Photos</span>
-                    <span className="text-base mt-1">From Gallery</span>
+                  <div className={`flex flex-col items-center justify-center h-40 bg-gradient-to-br transition-all rounded-3xl p-6 ${formData.livePhotos.length < 5 ? 'bg-gray-600 text-gray-300' : 'from-blue-500 to-cyan-600 text-white shadow-lg hover:shadow-xl'}`}>
+                    {formData.livePhotos.length < 5 ? (
+                      <div className="flex items-center justify-center flex-col text-center w-full h-full">
+                        <svg className="w-8 h-8 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span className="text-sm font-bold text-gray-300">Locked</span>
+                        <span className="text-xs mt-1 text-gray-400">Take {5 - formData.livePhotos.length} more Live Photos</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-12 h-12 mb-2" />
+                        <span className="text-lg md:text-xl font-bold text-center">Upload Photos</span>
+                        <span className="text-sm md:text-base mt-1">From Gallery</span>
+                      </>
+                    )}
                   </div>
                 </label>
               </div>
 
               {/* Photo Grid */}
-              {formData.photos.length > 0 && (
+              {totalPhotos > 0 && (
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                  {formData.photos.map((photo, i) => (
-                    <div key={i} className="relative">
-                      <img
-                        src={photo.preview}
-                        alt={`Photo ${i + 1}`}
-                        className="w-full h-24 object-cover rounded-xl border-2 border-gray-300"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            photos: prev.photos.filter((_, idx) => idx !== i)
-                          }));
-                        }}
-                        className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full font-bold hover:bg-red-600"
-                      >
-                        ×
-                      </button>
+                  {/* Render Live Photos */}
+                  {formData.livePhotos.map((photo, i) => (
+                    <div key={`live-${i}`} className="relative border-4 border-green-400 rounded-xl overflow-hidden">
+                      <div className="absolute top-0 left-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-br-lg z-10 font-bold">LIVE</div>
+                      <img src={photo.preview} alt={`Live ${i + 1}`} className="w-full h-24 object-cover" />
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, livePhotos: prev.livePhotos.filter((_, idx) => idx !== i) }))} className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 z-10 text-white rounded-full font-bold hover:bg-red-600 shadow-md flex items-center justify-center text-sm leading-none">×</button>
+                    </div>
+                  ))}
+
+                  {/* Render Gallery Photos */}
+                  {formData.galleryPhotos.map((photo, i) => (
+                    <div key={`gall-${i}`} className="relative border-2 border-gray-300 rounded-xl overflow-hidden">
+                      <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-br-lg z-10 font-bold">GALLERY</div>
+                      <img src={photo.preview} alt={`Gallery ${i + 1}`} className="w-full h-24 object-cover" />
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, galleryPhotos: prev.galleryPhotos.filter((_, idx) => idx !== i) }))} className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 z-10 text-white rounded-full font-bold hover:bg-red-600 shadow-md flex items-center justify-center text-sm leading-none">×</button>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Owner Contact Details */}
+            <div className="p-6 bg-blue-50 dark:bg-gray-800 rounded-3xl border border-blue-100 dark:border-gray-700">
+              <h3 className="block text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 border-b border-gray-200 dark:border-gray-700 pb-3">
+                Owner Contact Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Owner Name *</label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input type="text" name="ownerName" value={formData.ownerName} onChange={handleChange} required className="w-full pl-12 pr-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" placeholder="John Doe" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile Number *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input type="tel" name="ownerPhone" value={formData.ownerPhone} onChange={handleChange} required className="w-full pl-12 pr-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" placeholder="+91 9876543210" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email Address *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input type="email" name="ownerEmail" value={formData.ownerEmail} onChange={handleChange} required className="w-full pl-12 pr-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" placeholder="john@example.com" />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Submit Button */}

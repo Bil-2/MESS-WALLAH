@@ -1,4 +1,3 @@
-import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import OfflinePage from './OfflinePage';
 import useOffline from '../hooks/useOffline';
@@ -9,7 +8,7 @@ const OfflineWrapper = ({ children, showOfflinePageWhenOffline = true }) => {
   if (!isOnline && showOfflinePageWhenOffline) {
     return (
       <AnimatePresence>
-        <OfflinePage 
+        <OfflinePage
           onRetry={retryConnection}
           cachedData={cachedData}
         />
@@ -25,7 +24,7 @@ const OfflineWrapper = ({ children, showOfflinePageWhenOffline = true }) => {
         <div className="fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 z-50">
           <div className="flex items-center justify-center space-x-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">You're currently offline</span>
+            <span className="text-sm font-medium">You&apos;re currently offline</span>
           </div>
         </div>
       )}

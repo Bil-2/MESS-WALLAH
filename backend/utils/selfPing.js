@@ -32,14 +32,14 @@ const selfPing = () => {
       res.on('data', c => { data += c; });
       res.on('end', () => {
         if (res.statusCode === 200) {
-          console.log(`[SELF-PING] ✓ ${path} — OK (${res.statusCode})`);
+          console.log(`[SELF-PING] OK ${path} — OK (${res.statusCode})`);
         } else {
-          console.warn(`[SELF-PING] ⚠ ${path} — status ${res.statusCode}`);
+          console.warn(`[SELF-PING] WARN ${path} — status ${res.statusCode}`);
         }
       });
     });
-    req.on('error', e => console.error(`[SELF-PING] ✗ ${path} error:`, e.message));
-    req.on('timeout', () => { console.error(`[SELF-PING] ✗ ${path} timeout`); req.destroy(); });
+    req.on('error', e => console.error(`[SELF-PING] FAIL ${path} error:`, e.message));
+    req.on('timeout', () => { console.error(`[SELF-PING] FAIL ${path} timeout`); req.destroy(); });
     req.end();
   };
 

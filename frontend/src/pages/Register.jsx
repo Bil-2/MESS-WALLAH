@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, ArrowRight,
-  CheckCircle, AlertCircle, UserCheck, Star
+  CheckCircle, AlertCircle, UserCheck
 } from '../utils/iconMappings';
 import { useAuthContext } from '../context/AuthContext.jsx';
 import { usePreventAutoFill } from '../hooks/usePreventAutoFill';
@@ -13,10 +13,11 @@ const Register = () => {
   const [userIntent, setUserIntent] = useState(''); // 'tenant' or 'owner'
   const [formData, setFormData] = useState({
     name: '',
+    phone: '',
     email: '',
     role: 'student' // Will be updated based on userIntent
   });
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [emailVerification, setEmailVerification] = useState({
     sendingOtp: false,
@@ -71,6 +72,7 @@ const Register = () => {
   // Anti-autofill protection
   const initialFormData = {
     name: '',
+    phone: '',
     email: '',
     role: 'student'
   };
@@ -154,11 +156,10 @@ const Register = () => {
     registrationInProgress.current = true;
 
     try {
-      // Set role based on user intent
       const registrationData = {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone, // Added phone to registrationData
+        phone: formData.phone.startsWith('+') ? formData.phone : `+91${formData.phone}`,
         role: userIntent === 'owner' ? 'owner' : 'student',
         otp: emailVerification.otp
       };

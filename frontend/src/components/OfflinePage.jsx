@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Wifi, 
-  WifiOff, 
-  RefreshCw, 
-  Home, 
-  Heart, 
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  Home,
+  Heart,
   Calendar,
   MapPin,
-  Star,
   Clock,
-  Download,
   Smartphone,
   Globe
 } from 'lucide-react';
@@ -135,12 +133,12 @@ const OfflinePage = ({ onRetry, cachedData = {} }) => {
           transition={{ delay: 0.3 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold mb-4">You're Offline</h1>
+          <h1 className="text-3xl font-bold mb-4">You&apos;re Offline</h1>
           <p className="text-white/80 text-lg leading-relaxed">
-            It looks like you've lost your internet connection. Don't worry, 
+            It looks like you&apos;ve lost your internet connection. Don&apos;t worry,
             you can still browse some content from your cache!
           </p>
-          
+
           {lastOnline && (
             <motion.p
               initial={{ opacity: 0 }}
@@ -193,15 +191,13 @@ const OfflinePage = ({ onRetry, cachedData = {} }) => {
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.7 + index * 0.1 }}
-                className={`flex items-center p-4 rounded-xl transition-all duration-300 ${
-                  feature.available 
-                    ? 'bg-white/20 hover:bg-white/30 cursor-pointer' 
+                className={`flex items-center p-4 rounded-xl transition-all duration-300 ${feature.available
+                    ? 'bg-white/20 hover:bg-white/30 cursor-pointer'
                     : 'bg-white/10 opacity-50'
-                }`}
+                  }`}
               >
-                <div className={`p-2 rounded-lg mr-4 ${
-                  feature.available ? 'bg-white/20' : 'bg-white/10'
-                }`}>
+                <div className={`p-2 rounded-lg mr-4 ${feature.available ? 'bg-white/20' : 'bg-white/10'
+                  }`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="flex-1 text-left">
@@ -254,9 +250,8 @@ const OfflinePage = ({ onRetry, cachedData = {} }) => {
           transition={{ delay: 1.2 }}
           className="mt-6 flex items-center justify-center"
         >
-          <div className={`w-3 h-3 rounded-full mr-2 ${
-            connectionStatus === 'online' ? 'bg-green-400' : 'bg-red-400'
-          }`}></div>
+          <div className={`w-3 h-3 rounded-full mr-2 ${connectionStatus === 'online' ? 'bg-green-400' : 'bg-red-400'
+            }`}></div>
           <span className="text-xs text-white/60">
             {connectionStatus === 'online' ? 'Back Online!' : 'Currently Offline'}
           </span>

@@ -4,7 +4,7 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const { sendBuyerConfirmationEmail, sendOwnerAlertEmail } = require('../utils/email');
+const { sendBuyerConfirmationEmail, sendOwnerAlertEmail, sendBookingStatusUpdate, sendBookingCancellation } = require('../utils/email');
 const { generateBookingPDF } = require('../utils/bookingPDF');
 const {
   rateLimiters,
@@ -12,6 +12,7 @@ const {
   sanitizeInput,
   preventInjection
 } = require('../middleware/advancedSecurity');
+const LifecycleService = require('../services/LifecycleService');
 
 const router = express.Router();
 
@@ -394,7 +395,54 @@ router.post('/', [
 
 
 
-    console.log(`[BOOKING CYCLE] ✅ Complete — Booking ${booking.bookingId} created, emails sent, room updated`);
+    console.log(`[BOOKING CYCLE] COMPLETE — Booking ${booking.bookingId} created, emails sent, room updated`);
+
+    // Record analytics event (non-blocking)
+    LifecycleService.trackEvent({
+      event: 'booking_started',
+      roomId: roomId,
+      userId: req.user._id,
+      req
+    }).catch(err => console.error('Analytics tracking failed:', err));
+
+    // ── STEP 5: Update User Profile with Booking Details ──────────
+    try {
+      const User = require('../models/User');
+      const userToUpdate = await User.findById(req.user._id);
+
+      let profileUpdated = false;
+
+      // Only update if the user doesn't already have these fields saved
+      if (userToUpdate) {
+        if (!userToUpdate.profile) userToUpdate.profile = {};
+
+        if (!userToUpdate.profile.aadharNo && seekerInfo.aadharNo) {
+          userToUpdate.profile.aadharNo = seekerInfo.aadharNo;
+          profileUpdated = true;
+        }
+
+        if (!userToUpdate.profile.age && seekerInfo.age) {
+          userToUpdate.profile.age = seekerInfo.age;
+          profileUpdated = true;
+        }
+
+        if (!userToUpdate.profile.profession && seekerInfo.profession) {
+          userToUpdate.profile.profession = seekerInfo.profession;
+          profileUpdated = true;
+        }
+
+        if (!userToUpdate.profileCompleted && profileUpdated) {
+          userToUpdate.profileCompleted = true; // Mark as complete since they provided core details validator needs
+        }
+
+        if (profileUpdated) {
+          await userToUpdate.save({ validateModifiedOnly: true });
+          console.log('[BOOKING CYCLE] User profile updated with new booking details (Aadhar, Age, Profession)');
+        }
+      }
+    } catch (profileErr) {
+      console.error('[BOOKING CYCLE] Failed to update user profile (non-critical):', profileErr.message);
+    }
 
     res.status(201).json({
       success: true,
@@ -673,7 +721,62 @@ router.patch('/:id/status', [
       console.error('Status update notification failed:', notifyError);
     }
 
+    // --- Lifecycle Tracking ---
+    if (status === 'confirmed') {
+      // 1. Analytics
+      LifecycleService.trackEvent({
+        event: 'booking_completed',
+        roomId: booking.roomId._id,
+        userId: booking.userId._id,
+        req
+      }).catch(err => console.error('Tracking failed:', err));
 
+      // 2. Room Availability Log
+      LifecycleService.recordRoomStatusChange({
+        roomId: booking.roomId._id,
+        eventType: 'booking_confirmed',
+        previousValue: { isAvailable: true },
+        newValue: { isAvailable: false },
+        triggeredBy: req.user.id,
+        relatedBookingId: booking._id,
+        relatedTenantId: booking.userId._id,
+        reason: 'Booking confirmed by owner',
+        req
+      }).catch(err => console.error('Lifecycle failed:', err));
+
+      // 3. Start Guest Stay
+      LifecycleService.startGuestStay({
+        roomId: booking.roomId._id,
+        ownerId: booking.ownerId._id,
+        tenantId: booking.userId._id,
+        bookingId: booking._id,
+        contractStartDate: booking.checkInDate,
+        rentPerMonth: booking.pricing.monthlyRent,
+        depositPaid: booking.pricing.securityDeposit
+      }).catch(err => console.error('Guest History failed:', err));
+
+      // 4. Record Initial Revenue (Deposit)
+      LifecycleService.recordIncome({
+        type: 'deposit_received',
+        amount: booking.pricing.securityDeposit,
+        roomId: booking.roomId._id,
+        bookingId: booking._id,
+        ownerId: booking.ownerId._id,
+        tenantId: booking.userId._id,
+        paymentMethod: 'cash', // Default since payment gateway isn't strictly enforced yet
+        description: 'Security deposit on booking confirmation',
+        recordedBy: req.user.id
+      }).catch(err => console.error('Revenue tracking failed:', err));
+
+    } else if (status === 'rejected') {
+      LifecycleService.trackEvent({
+        event: 'booking_rejected',
+        roomId: booking.roomId._id,
+        userId: booking.userId._id,
+        req
+      }).catch(err => console.error('Analytics failed:', err));
+    }
+    // --------------------------
 
     res.status(200).json({
       success: true,
@@ -777,7 +880,26 @@ router.patch('/:id/cancel', [
       console.error('Cancellation notification failed:', notifyError);
     }
 
+    // Record lifecycle analytics
+    LifecycleService.trackEvent({
+      event: 'booking_cancelled',
+      roomId: booking.roomId._id,
+      userId: req.user.id,
+      req
+    }).catch(err => console.error('Analytics failed:', err));
 
+    if (wasConfirmed) {
+      LifecycleService.recordRoomStatusChange({
+        roomId: booking.roomId._id,
+        eventType: 'booking_cancelled',
+        previousValue: { isAvailable: false },
+        newValue: { isAvailable: true },
+        triggeredBy: req.user.id,
+        relatedBookingId: booking._id,
+        reason: reason || 'Booking manually cancelled',
+        req
+      }).catch(err => console.error('Lifecycle tracking failed:', err));
+    }
 
     res.status(200).json({
       success: true,

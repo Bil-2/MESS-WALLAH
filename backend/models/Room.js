@@ -105,6 +105,30 @@ const RoomSchema = new mongoose.Schema({
       default: false
     }
   }],
+  // --- New Security & Anti-Scam Fields ---
+  ownerAadharInfo: {
+    url: String, // from cloudinary/upload
+    uploadedAt: Date
+  },
+  securityContext: {
+    ipAddress: String
+  },
+  livePhotosCount: {
+    type: Number,
+    default: 0
+  },
+  ownerDetails: {
+    name: String,
+    phone: String,
+    email: String
+  },
+  // Ghost Owner Info for Instant Contact feature
+  fakeOwnerData: {
+    name: String,
+    phone: String,
+    email: String
+  },
+  // ---------------------------------------
   rules: [String],
   preferences: [String],
   // Added for specific tenant targeting
@@ -147,6 +171,52 @@ const RoomSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+
+  // ─── Lifecycle Tracking (OYO/Booking.com style) ───
+  // Full history of every price change
+  priceHistory: [{
+    price: {
+      type: Number,
+      required: true
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now
+    },
+    changedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    reason: String  // e.g., 'market_adjustment', 'seasonal'
+  }],
+
+  // Occupancy tracking — when did things happen
+  lastOccupiedAt: Date,   // When the last tenant moved in
+  lastVacantAt: Date,     // When the last tenant moved out
+  totalGuestsHosted: {    // Lifetime count of all tenants
+    type: Number,
+    default: 0
+  },
+  averageStayMonths: {    // How long tenants typically stay
+    type: Number,
+    default: 0
+  },
+
+  // Day-by-day availability calendar (like Booking.com)
+  // Stores any dates that are BLOCKED (to avoid huge arrays)
+  blockedDates: [{
+    date: Date,
+    reason: {
+      type: String,
+      enum: ['booked', 'maintenance', 'owner_blocked'],
+      default: 'booked'
+    },
+    bookingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Booking'
+    }
+  }],
+  // ─────────────────────────────────────────────────
 
   featured: {
     type: Boolean,

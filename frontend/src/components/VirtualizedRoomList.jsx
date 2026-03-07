@@ -1,5 +1,5 @@
 // MESS WALLAH - Rocket-Fast Virtualized Room List
-import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { useVirtualScroll, useIntersectionObserver } from '../hooks/usePerformance';
 import RocketRoomCard from './RocketRoomCard';
 import { FiHome } from 'react-icons/fi';
@@ -16,7 +16,7 @@ const VirtualizedRoomList = memo(({
   hasMore = false,
   onLoadMore
 }) => {
-  const [containerRef, setContainerRef] = useState(null);
+  const [_containerRef, _setContainerRef] = useState(null);
   const { elementRef, isVisible } = useIntersectionObserver();
 
   // Use virtual scrolling for performance
@@ -27,7 +27,7 @@ const VirtualizedRoomList = memo(({
   );
 
   // Memoized grid calculation
-  const gridConfig = useMemo(() => {
+  const _gridConfig = useMemo(() => {
     const columns = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
     const itemsPerRow = columns;
     const rowHeight = ITEM_HEIGHT + 32; // Include gap

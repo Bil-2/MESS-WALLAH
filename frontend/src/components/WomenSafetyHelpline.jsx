@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiShield, 
-  FiPhone, 
-  FiAlertTriangle, 
-  FiHeart, 
+import {
+  FiShield,
+  FiPhone,
+  FiAlertTriangle,
+  FiHeart,
   FiMapPin,
   FiClock,
   FiUsers,
@@ -99,8 +99,8 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
 
   if (!isVisible) return null;
 
-  const containerClasses = isFixed 
-    ? "fixed bottom-4 right-4 z-50 max-w-sm" 
+  const containerClasses = isFixed
+    ? "fixed bottom-4 right-4 z-50 max-w-sm"
     : "w-full max-w-4xl mx-auto";
 
   return (
@@ -114,9 +114,9 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-red-200 dark:border-red-700">
           <div className="flex items-center gap-2">
-            <motion.div 
+            <motion.div
               className="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center"
-              animate={{ 
+              animate={{
                 boxShadow: [
                   "0 0 0 0 rgba(239, 68, 68, 0.7)",
                   "0 0 0 8px rgba(239, 68, 68, 0)",
@@ -137,7 +137,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {isFixed && (
               <motion.button
@@ -154,7 +154,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                 </motion.div>
               </motion.button>
             )}
-            
+
             {isFixed && (
               <motion.button
                 onClick={() => setIsVisible(false)}
@@ -184,7 +184,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                     <FiPhone className="w-4 h-4" />
                     Emergency Helplines
                   </h4>
-                  
+
                   <div className="space-y-2">
                     {emergencyNumbers.map((helpline, index) => (
                       <motion.button
@@ -223,7 +223,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                     <FiMapPin className="w-4 h-4" />
                     Safety Guidelines
                   </h4>
-                  
+
                   <div className="space-y-2">
                     {safetyTips.map((tip, index) => (
                       <motion.div
@@ -246,7 +246,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                     <FiShield className="w-4 h-4" />
                     Our Safety Features
                   </h4>
-                  
+
                   <div className="space-y-2">
                     {safetyFeatures.map((feature, index) => (
                       <motion.div
@@ -285,7 +285,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                     <FiShield className="w-4 h-4" />
                     Complete Safety Guide
                   </motion.button>
-                  
+
                   <motion.button
                     onClick={() => handleCall("1091")}
                     className="flex-1 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 px-6 py-3 rounded-xl font-semibold border-2 border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 flex items-center justify-center gap-2"
@@ -295,7 +295,7 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                     <FiPhone className="w-4 h-4" />
                     Call Now: 1091
                   </motion.button>
-                  
+
                   <motion.button
                     onClick={() => window.open('/contact', '_blank')}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-blue-600 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
@@ -306,9 +306,9 @@ const WomenSafetyHelpline = ({ isFixed = false, showMinimized = false }) => {
                     Report Incident
                   </motion.button>
                 </div>
-                
+
                 <p className="text-sm text-center text-gray-600 dark:text-gray-400 mt-4 font-medium">
-                  Your safety is our priority. Don't hesitate to reach out for help anytime.
+                  Your safety is our priority. Don&apos;t hesitate to reach out for help anytime.
                 </p>
               </div>
             </motion.div>
