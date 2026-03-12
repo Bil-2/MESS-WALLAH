@@ -124,6 +124,13 @@ router.post('/send-otp-email', [
       console.error('[ERROR] Failed to send OTP email:', emailError.message);
       // Delete the OTP record since email failed
       await Otp.deleteOne({ _id: otpRecord._id });
+
+      // Avoid sending a second response if another middleware already responded
+      if (res.headersSent) {
+        console.error('[WARN] Response already sent, skipping OTP email error response');
+        return;
+      }
+
       return res.status(500).json({
         success: false,
         message: 'Failed to send OTP email. Please try again.',
@@ -144,6 +151,13 @@ router.post('/send-otp-email', [
 
   } catch (error) {
     console.error('[ERROR] Send OTP Email Error:', error);
+
+    // If headers are already sent (e.g. by a rate limiter), just log
+    if (res.headersSent) {
+      console.error('[WARN] Response already sent, skipping final OTP error response');
+      return;
+    }
+
     res.status(500).json({
       success: false,
       message: 'Failed to send OTP email. Please try again.',

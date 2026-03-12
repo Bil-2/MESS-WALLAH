@@ -7,7 +7,19 @@ const hpp = require('hpp');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load env in two steps:
+// 1) Load `.env` (shared defaults / secrets)
+// 2) If present, load `.env.local` to override for local dev
+const envPath = path.join(__dirname, '.env');
+const envLocalPath = path.join(__dirname, '.env.local');
+dotenv.config({ path: envPath });
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath, override: true });
+}
 
 // Import production-ready error handling and monitoring
 const {
