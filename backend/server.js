@@ -529,10 +529,9 @@ process.on('SIGTERM', () => {
 });
 
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Promise Rejection:', err);
-  server.close(() => {
-    process.exit(1);
-  });
+  console.error('[CRITICAL] Unhandled Promise Rejection:', err);
+  // Do NOT crash the server for unhandled rejections (e.g. DB timeouts, email failures)
+  // Let the request fail but keep the server alive for other users.
 });
 
 process.on('uncaughtException', (err) => {
@@ -544,10 +543,3 @@ process.on('uncaughtException', (err) => {
 // Export the app for testing
 module.exports = app;
 
-// Create and export Firebase Function (only in production/Firebase environment)
-try {
-  const functions = require('firebase-functions');
-  exports.api = functions.https.onRequest(app);
-} catch (e) {
-  // firebase-functions not available in local dev - that's fine
-}

@@ -84,7 +84,7 @@ router.get('/google/callback', (req, res, next) => {
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Allow redirect
+        sameSite: 'none', // Allow cross-origin redirect from Google -> Render -> Netlify
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -98,7 +98,7 @@ router.get('/google/callback', (req, res, next) => {
       res.cookie('user_data', JSON.stringify(publicUserData), {
         httpOnly: false, // Readable by JS
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
