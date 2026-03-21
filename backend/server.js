@@ -147,40 +147,71 @@ app.use(cookieParser());
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
-// Database connection
+// ────────────────────────────────────────────────────────────────
+// SMART DUAL DATABASE CONNECTION
+// Tries Local MongoDB first → falls back to Atlas automatically
+// ────────────────────────────────────────────────────────────────
 const connectDB = async () => {
-  try {
-    console.log('[DB] Connecting to MongoDB...');
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah';
-    console.log(`[DB] MongoDB URI: ${mongoURI.substring(0, 60)}...`);
+  const LOCAL_URI  = 'mongodb://localhost:27017/mess-wallah';
+  const ATLAS_URI  = process.env.MONGODB_URI; // Cloud Atlas from .env
 
-    const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 30000, // 30s — enough for Render cold start
+  const tryConnect = async (uri, label) => {
+    try {
+      console.log(`[DB] Trying ${label}...`);
+      const conn = await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 5000,   // 5s – fail fast on local check
+        socketTimeoutMS: 60000,
+        connectTimeoutMS: 5000,
+        maxPoolSize: 10,
+        minPoolSize: 1,
+        retryWrites: true,
+      });
+      return conn;
+    } catch (err) {
+      console.warn(`[DB] ${label} unavailable: ${err.message}`);
+      return null;
+    }
+  };
+
+  // 1️⃣  Try local first
+  let conn = await tryConnect(LOCAL_URI, 'Local MongoDB (localhost:27017)');
+
+  // 2️⃣  Fall back to Atlas
+  if (!conn && ATLAS_URI) {
+    console.log('[DB] Falling back to MongoDB Atlas...');
+    // Increase timeout for Atlas (network latency)
+    await mongoose.disconnect().catch(() => {});
+    conn = await mongoose.connect(ATLAS_URI, {
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 60000,
       connectTimeoutMS: 30000,
       maxPoolSize: 10,
       minPoolSize: 1,
       retryWrites: true,
     });
-
-    console.log(`[SUCCESS] MongoDB Connected: ${conn.connection.host}`);
-    console.log(`[INFO] Database: ${conn.connection.name}`);
-
-    const Room = require('./models/Room');
-    const roomCount = await Room.countDocuments();
-    console.log(`[INFO] Total rooms in database: ${roomCount}`);
-
-    return conn;
-  } catch (error) {
-    console.error('[ERROR] MongoDB connection failed:', error.message);
-    console.error('[WARN] Server will continue running - retrying connection in background...');
-    // Retry connection after 10 seconds instead of crashing
-    setTimeout(() => connectDB(), 10000);
   }
+
+  if (!conn) {
+    console.error('[ERROR] Both Local and Atlas connections failed. Retrying in 10s...');
+    setTimeout(() => connectDB(), 10000);
+    return;
+  }
+
+  const activeURI = conn.connection.host.includes('localhost') ? '🏠 LOCAL' : '☁️  ATLAS';
+  console.log(`\n[SUCCESS] ✅ MongoDB Connected via ${activeURI}`);
+  console.log(`[INFO]    Host: ${conn.connection.host}`);
+  console.log(`[INFO]    DB:   ${conn.connection.name}\n`);
+
+  const Room = require('./models/Room');
+  const roomCount = await Room.countDocuments().catch(() => '?');
+  console.log(`[INFO]    Rooms in database: ${roomCount}`);
+
+  return conn;
 };
 
 // Connect to database
 connectDB().catch(err => console.error('DB connect error:', err));
+
 
 // OPTIMIZED: Lightweight health check endpoint for Render (< 100ms response)
 app.get('/health', asyncErrorHandler(async (req, res) => {

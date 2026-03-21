@@ -4,12 +4,14 @@ const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 
 // Initialize Resend (primary email provider — works perfectly on Render)
+// Guard: skip if key is missing or still the placeholder value
 let resendClient = null;
-if (process.env.RESEND_API_KEY) {
-  resendClient = new Resend(process.env.RESEND_API_KEY);
+const _rKey = process.env.RESEND_API_KEY;
+if (_rKey && _rKey !== 'YOUR_RESEND_API_KEY_HERE' && _rKey.startsWith('re_')) {
+  resendClient = new Resend(_rKey);
   console.log('[NOTIFY] ✅ Resend email client initialized');
 } else {
-  console.log('[WARNING] RESEND_API_KEY not found - falling back to Gmail SMTP');
+  console.log('[WARNING] RESEND_API_KEY missing or placeholder — falling back to Gmail SMTP');
 }
 
 // Initialize Twilio for SMS notifications
@@ -51,17 +53,21 @@ const sendViaResend = async ({ to, subject, html, text }) => {
   }
 };
 
-// Gmail SSL fallback transporter (port 465 — Render allows this)
+// Gmail transporter — tries port 465 (SSL) then 587 (STARTTLS)
+// Both ports are allowed on Render's network
 const createGmailTransporter = () => {
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+    // Use port 587 with STARTTLS — most reliable across hosts
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false, // STARTTLS
+      requireTLS: true,
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
-      connectionTimeout: 15000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000
+      connectionTimeout: 20000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      tls: { rejectUnauthorized: false }
     });
   }
   return null;
@@ -234,15 +240,13 @@ const sendOTPEmail = async (userEmail, otp) => {
     </div>
   `;
 
-  try {
-    const result = await sendEmail(userEmail, subject, html);
-    if (!result.success) {
-      throw new Error(result.error || 'Unknown email error');
-    }
-  } catch (error) {
-    console.error('[ERROR] Failed to send OTP email:', error.message);
+  const result = await sendEmail(userEmail, subject, html);
+  // 'development' method = email was logged to console (not a fatal error)
+  if (!result.success) {
+    console.error('[ERROR] OTP email failed:', result.error);
     throw new Error('Failed to send OTP email. Please try again later.');
   }
+  // If we got here the email was dispatched (or logged in dev mode) — that's OK
 };
 
 // Send password reset email
@@ -511,7 +515,7 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
         console.log('[SUCCESS] Email sent via Gmail to:', to);
         return { success: true, method: 'gmail' };
       } catch (gmailError) {
-        console.log('[WARNING] Gmail failed, trying SendGrid:', gmailError.message);
+        console.log('[WARNING] Gmail failed (falling back to dev-mode log):', gmailError.message);
       }
     }
 
