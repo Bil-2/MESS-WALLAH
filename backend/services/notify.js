@@ -1,15 +1,15 @@
 // Comprehensive notification service for MESS WALLAH
-const sgMail = require('@sendgrid/mail');
+const { Resend } = require('resend');
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 
-// Initialize SendGrid with API key (if available)
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log('[NOTIFY] SendGrid initialized with API key');
-  console.log('[NOTIFY] Sender email configured as:', process.env.FROM_EMAIL || process.env.EMAIL_FROM || process.env.GMAIL_USER || 'noreply@messwallah.com');
+// Initialize Resend (primary email provider — works perfectly on Render)
+let resendClient = null;
+if (process.env.RESEND_API_KEY) {
+  resendClient = new Resend(process.env.RESEND_API_KEY);
+  console.log('[NOTIFY] ✅ Resend email client initialized');
 } else {
-  console.log('[WARNING] SENDGRID_API_KEY not found - email functionality will be limited');
+  console.log('[WARNING] RESEND_API_KEY not found - falling back to Gmail SMTP');
 }
 
 // Initialize Twilio for SMS notifications
@@ -20,25 +20,45 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 }
 
 // Email configuration
-// Support both FROM_EMAIL and EMAIL_FROM for backwards compatibility
 const emailConfig = {
-  from: process.env.FROM_EMAIL || process.env.EMAIL_FROM || process.env.GMAIL_USER || 'noreply@messwallah.com',
+  // Use your verified Resend domain/email, or fall back to Gmail
+  from: process.env.FROM_EMAIL || process.env.GMAIL_USER || 'onboarding@resend.dev',
   fromName: 'MESS WALLAH'
 };
 
-// Create nodemailer transporter for Gmail
-// Uses port 465 (SSL) explicitly — required for Render production hosting
-// (Render blocks port 587/STARTTLS but allows port 465/SSL)
+// ─────────────────────────────────────────────────────────────────
+// Core send-email helper — tries Resend first, Gmail SSL fallback
+// ─────────────────────────────────────────────────────────────────
+const sendViaResend = async ({ to, subject, html, text }) => {
+  if (!resendClient) return false;
+  try {
+    const { data, error } = await resendClient.emails.send({
+      from: `${emailConfig.fromName} <${emailConfig.from}>`,
+      to,
+      subject,
+      html,
+      text: text || ''
+    });
+    if (error) {
+      console.error('[RESEND ERROR]', error);
+      return false;
+    }
+    console.log('[RESEND] ✅ Email sent to:', to, '| ID:', data?.id);
+    return true;
+  } catch (err) {
+    console.error('[RESEND] Failed:', err.message);
+    return false;
+  }
+};
+
+// Gmail SSL fallback transporter (port 465 — Render allows this)
 const createGmailTransporter = () => {
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
-      secure: true, // SSL — works on Render; port 587/STARTTLS does NOT work
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
-      },
+      secure: true,
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
       connectionTimeout: 15000,
       greetingTimeout: 10000,
       socketTimeout: 15000
@@ -183,76 +203,62 @@ const sendBookingConfirmation = async (userEmail, bookingDetails) => {
 
 // Send OTP email
 const sendOTPEmail = async (userEmail, otp) => {
-  try {
-    const msg = {
-      to: userEmail,
-      from: {
-        email: emailConfig.from,
-        name: emailConfig.fromName
-      },
-      subject: 'Your Verification Code - MESS WALLAH',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #f97316; margin: 0;">MESS WALLAH</h1>
-            <p style="color: #666; margin: 10px 0;">Verification Code</p>
-          </div>
-          
-          <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); padding: 30px; border-radius: 15px; color: white; text-align: center;">
-            <h2 style="margin: 0 0 15px 0;">Your Verification Code</h2>
-            <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace;">${otp}</span>
-            </div>
-            <p style="margin: 0; font-size: 14px; opacity: 0.9;">Enter this code to complete your verification</p>
-          </div>
-          
-          <div style="margin: 30px 0; padding: 20px; background: #fef3c7; border-radius: 10px; border-left: 4px solid #f59e0b;">
-            <h4 style="color: #92400e; margin: 0 0 10px 0;">Important:</h4>
-            <ul style="color: #92400e; margin: 0; padding-left: 20px;">
-              <li>This code will expire in <strong>10 minutes</strong></li>
-              <li>Don't share this code with anyone</li>
-              <li>If you didn't request this, please ignore this email</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin-top: 30px; padding: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #9ca3af; margin: 0; font-size: 14px;">
-              MESS WALLAH - Student Accommodation Platform<br>
-              Koramangala, Bangalore, Karnataka, India 560034<br>
-              <a href="mailto:support@messwallah.com" style="color: #f97316;">support@messwallah.com</a>
-            </p>
-          </div>
+  const subject = 'Your Verification Code - MESS WALLAH';
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #f97316; margin: 0;">MESS WALLAH</h1>
+        <p style="color: #666; margin: 10px 0;">Verification Code</p>
+      </div>
+      <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); padding: 30px; border-radius: 15px; color: white; text-align: center;">
+        <h2 style="margin: 0 0 15px 0;">Your Verification Code</h2>
+        <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace;">${otp}</span>
         </div>
-      `
-    };
+        <p style="margin: 0; font-size: 14px; opacity: 0.9;">Enter this code to complete your verification</p>
+      </div>
+      <div style="margin: 30px 0; padding: 20px; background: #fef3c7; border-radius: 10px; border-left: 4px solid #f59e0b;">
+        <h4 style="color: #92400e; margin: 0 0 10px 0;">Important:</h4>
+        <ul style="color: #92400e; margin: 0; padding-left: 20px;">
+          <li>This code will expire in <strong>10 minutes</strong></li>
+          <li>Don't share this code with anyone</li>
+          <li>If you didn't request this, please ignore this email</li>
+        </ul>
+      </div>
+      <div style="text-align: center; margin-top: 30px; padding: 20px; border-top: 1px solid #e5e7eb;">
+        <p style="color: #9ca3af; margin: 0; font-size: 14px;">
+          MESS WALLAH - Student Accommodation Platform<br>
+          <a href="mailto:support@messwallah.com" style="color: #f97316;">support@messwallah.com</a>
+        </p>
+      </div>
+    </div>
+  `;
 
-    // Try SendGrid first if configured
-    if (process.env.SENDGRID_API_KEY) {
-      await sgMail.send(msg);
-      console.log('[SUCCESS] OTP email sent via SendGrid to:', userEmail);
-      return;
-    }
+  try {
+    // 1) Try Resend (primary — works on Render, no port issues)
+    const sent = await sendViaResend({ to: userEmail, subject, html });
+    if (sent) return;
 
-    // Fallback to Gmail if SendGrid not available
+    // 2) Fallback: Gmail port 465 SSL
     const gmailTransporter = createGmailTransporter();
     if (gmailTransporter) {
       await gmailTransporter.sendMail({
         from: `"${emailConfig.fromName}" <${emailConfig.from}>`,
         to: userEmail,
-        subject: msg.subject,
-        html: msg.html
+        subject,
+        html
       });
       console.log('[SUCCESS] OTP email sent via Gmail to:', userEmail);
       return;
     }
 
-    // No email service configured - development mode
+    // 3) Dev fallback — log to console so dev can still test
     console.log('\n' + '='.repeat(80));
     console.log('[DEVELOPMENT MODE] OTP Email');
     console.log('='.repeat(80));
     console.log(`To: ${userEmail}`);
     console.log(`OTP Code: ${otp}`);
-    console.log(`\nExpires in: 10 minutes`);
+    console.log(`Expires in: 10 minutes`);
     console.log('='.repeat(80) + '\n');
 
   } catch (error) {
@@ -356,76 +362,35 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
     </html>
   `;
 
-  // Try SendGrid FIRST (works on Render)
-  if (process.env.SENDGRID_API_KEY) {
-    try {
-      console.log('[INFO] Attempting to send password reset via SendGrid');
-      console.log('[INFO] Sender email:', emailConfig.from);
-      console.log('[INFO] Recipient email:', userEmail);
+  // 1) Try Resend first (works on Render — no SMTP port issues)
+  const sent = await sendViaResend({
+    to: userEmail,
+    subject: 'Reset Your MESS WALLAH Password',
+    html: htmlContent
+  });
+  if (sent) return;
 
-      const msg = {
-        to: userEmail,
-        from: {
-          email: emailConfig.from,
-          name: emailConfig.fromName
-        },
-        subject: 'Reset Your MESS WALLAH Password',
-        html: htmlContent
-      };
-
-      await sgMail.send(msg);
-      console.log('[SUCCESS] Password reset email sent via SendGrid to:', userEmail);
-      return; // Exit successfully
-    } catch (error) {
-      console.error('[ERROR] SendGrid failed:', error.message);
-      console.error('[ERROR] SendGrid error code:', error.code);
-      console.error('[ERROR] SendGrid details:', error.response ? JSON.stringify(error.response.body) : 'No details');
-
-      // Check for common SendGrid errors
-      if (error.code === 401 || error.message.includes('Unauthorized')) {
-        throw new Error('SendGrid authentication failed. Please verify your API key.');
-      }
-      if (error.code === 403 || error.message.includes('Forbidden')) {
-        throw new Error(`SendGrid sender verification failed. Please verify ${emailConfig.from} in SendGrid dashboard.`);
-      }
-
-      // If no Gmail fallback available, throw SendGrid error
-      if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-        throw new Error(`SendGrid error: ${error.message || 'Unknown error'}`);
-      }
-      console.log('[INFO] Falling back to Gmail SMTP');
-      // Otherwise fall through to try Gmail
-    }
-  } else {
-    console.log('[WARNING] SENDGRID_API_KEY not configured, trying Gmail fallback');
-  }
-
-  // Try Gmail SMTP as fallback — using port 465 (SSL) which works on Render
+  // 2) Try Gmail SMTP port 465 SSL as fallback
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
     try {
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
-        secure: true,  // SSL — Render allows 465 but NOT 587 (STARTTLS)
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASS
-        },
+        secure: true,
+        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
         connectionTimeout: 15000,
         greetingTimeout: 10000,
         socketTimeout: 15000
       });
 
-      const mailOptions = {
+      await transporter.sendMail({
         from: `"${emailConfig.fromName}" <${process.env.GMAIL_USER}>`,
         to: userEmail,
         subject: 'Reset Your MESS WALLAH Password',
         html: htmlContent
-      };
-
-      await transporter.sendMail(mailOptions);
+      });
       console.log(`[SUCCESS] Password reset email sent via Gmail to: ${userEmail}`);
-      return; // Exit successfully
+      return;
     } catch (error) {
       console.error('[ERROR] Gmail SMTP failed:', error.message);
       // Fall through to development mode
