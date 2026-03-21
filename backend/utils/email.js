@@ -13,9 +13,15 @@ const createTransporter = () => {
     });
   }
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+    // Uses port 465 (SSL) explicitly — port 587/STARTTLS is blocked on Render
     return nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
   }
   // Dev fallback — just log

@@ -27,14 +27,21 @@ const emailConfig = {
 };
 
 // Create nodemailer transporter for Gmail
+// Uses port 465 (SSL) explicitly — required for Render production hosting
+// (Render blocks port 587/STARTTLS but allows port 465/SSL)
 const createGmailTransporter = () => {
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // SSL — works on Render; port 587/STARTTLS does NOT work
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
-      }
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
   }
   return null;
@@ -393,18 +400,20 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
     console.log('[WARNING] SENDGRID_API_KEY not configured, trying Gmail fallback');
   }
 
-  // Try Gmail SMTP as fallback (works locally but not on Render)
+  // Try Gmail SMTP as fallback — using port 465 (SSL) which works on Render
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
     try {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,  // SSL — Render allows 465 but NOT 587 (STARTTLS)
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS
         },
-        connectionTimeout: 10000,
+        connectionTimeout: 15000,
         greetingTimeout: 10000,
-        socketTimeout: 10000
+        socketTimeout: 15000
       });
 
       const mailOptions = {
