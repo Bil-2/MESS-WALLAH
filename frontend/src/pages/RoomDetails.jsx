@@ -22,6 +22,7 @@ const RoomDetails = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(0);
+  const [showContact, setShowContact] = useState(false);
 
   const fetchRoomDetails = useCallback(async (isRetry = false) => {
     try {
@@ -100,22 +101,14 @@ const RoomDetails = () => {
 
   const handleContactOwner = () => {
     if (!user) {
-      toast.error('Please login to contact owner');
+      toast.error('Please login to view contact details');
       navigate('/login');
       return;
     }
 
     if (room?.owner?.phone) {
-      // Show visually to the user (desktop users might not have a dialer app)
-      toast.success(
-        <div>
-          <p className="font-bold">Contact: {room.owner.name}</p>
-          <p className="text-lg tracking-wider mt-1">{room.owner.phone}</p>
-        </div>, 
-        { duration: 6000, position: 'top-center' }
-      );
-      // Still try to open the dialer for mobile users
-      window.open(`tel:${room.owner.phone}`, '_self');
+      setShowContact(true);
+      toast.success('Contact details revealed below!');
     } else {
       toast.error('Owner contact information not available');
     }
@@ -586,18 +579,39 @@ const RoomDetails = () => {
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2 mt-2">
                         {room.owner.phone && (
                           <div className="flex items-center">
-                            <FiPhone className="w-3 h-3 mr-1" />
-                            {room.owner.phone}
+                            <FiPhone className="w-4 h-4 mr-2" />
+                            {showContact ? (
+                              <a href={`tel:${room.owner.phone}`} className="hover:text-orange-500 font-medium tracking-wide">
+                                {room.owner.phone}
+                              </a>
+                            ) : (
+                              <span className="opacity-60 select-none blur-[4px]">
+                                +91 ••••••••••
+                              </span>
+                            )}
                           </div>
                         )}
                         {room.owner.email && (
                           <div className="flex items-center">
-                            <FiMail className="w-3 h-3 mr-1" />
-                            {room.owner.email}
+                            <FiMail className="w-4 h-4 mr-2" />
+                            {showContact ? (
+                              <a href={`mailto:${room.owner.email}`} className="hover:text-orange-500">
+                                {room.owner.email}
+                              </a>
+                            ) : (
+                              <span className="opacity-60 select-none blur-[4px]">
+                                ••••••••@••••.com
+                              </span>
+                            )}
                           </div>
+                        )}
+                        {!showContact && (
+                          <p className="text-xs text-orange-500 dark:text-orange-400 mt-2 italic">
+                            Click "Contact Owner" above to view details
+                          </p>
                         )}
                       </div>
                     </div>
