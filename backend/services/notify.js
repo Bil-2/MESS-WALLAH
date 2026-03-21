@@ -22,7 +22,7 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 // Email configuration
 const emailConfig = {
   // Use your verified Resend domain/email, or fall back to Gmail
-  from: process.env.FROM_EMAIL || process.env.GMAIL_USER || 'onboarding@resend.dev',
+  from: process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL || process.env.GMAIL_USER || 'onboarding@resend.dev',
   fromName: 'MESS WALLAH'
 };
 

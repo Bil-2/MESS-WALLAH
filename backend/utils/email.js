@@ -38,7 +38,7 @@ const createTransporter = () => {
 // ─────────────────────────────────────────────────────────────────
 const sendEmail = async (options) => {
   const transporter = createTransporter();
-  const fromEmail = process.env.FROM_EMAIL || process.env.GMAIL_USER || 'noreply@messwallah.com';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL || process.env.GMAIL_USER || 'noreply@messwallah.com';
 
   const mailOptions = {
     from: `"MESS WALLAH" <${fromEmail}>`,
