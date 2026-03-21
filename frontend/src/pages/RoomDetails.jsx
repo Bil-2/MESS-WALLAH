@@ -579,41 +579,32 @@ const RoomDetails = () => {
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2 mt-2">
-                        {room.owner.phone && (
-                          <div className="flex items-center">
-                            <FiPhone className="w-4 h-4 mr-2" />
-                            {showContact ? (
+                      {showContact ? (
+                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2 mt-2">
+                          {room.owner.phone && (
+                            <div className="flex items-center">
+                              <FiPhone className="w-4 h-4 mr-2" />
                               <a href={`tel:${room.owner.phone}`} className="hover:text-orange-500 font-medium tracking-wide">
                                 {room.owner.phone}
                               </a>
-                            ) : (
-                              <span className="opacity-60 select-none blur-[4px]">
-                                +91 ••••••••••
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {room.owner.email && (
-                          <div className="flex items-center">
-                            <FiMail className="w-4 h-4 mr-2" />
-                            {showContact ? (
+                            </div>
+                          )}
+                          {room.owner.email && (
+                            <div className="flex items-center">
+                              <FiMail className="w-4 h-4 mr-2" />
                               <a href={`mailto:${room.owner.email}`} className="hover:text-orange-500">
                                 {room.owner.email}
                               </a>
-                            ) : (
-                              <span className="opacity-60 select-none blur-[4px]">
-                                ••••••••@••••.com
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {!showContact && (
-                          <p className="text-xs text-orange-500 dark:text-orange-400 mt-2 italic">
-                            Click "Contact Owner" above to view details
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <p className="text-xs text-orange-500 dark:text-orange-400 italic">
+                            Click "Contact Owner" above to view phone & email
                           </p>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
