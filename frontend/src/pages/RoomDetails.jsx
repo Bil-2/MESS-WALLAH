@@ -106,6 +106,15 @@ const RoomDetails = () => {
     }
 
     if (room?.owner?.phone) {
+      // Show visually to the user (desktop users might not have a dialer app)
+      toast.success(
+        <div>
+          <p className="font-bold">Contact: {room.owner.name}</p>
+          <p className="text-lg tracking-wider mt-1">{room.owner.phone}</p>
+        </div>, 
+        { duration: 6000, position: 'top-center' }
+      );
+      // Still try to open the dialer for mobile users
       window.open(`tel:${room.owner.phone}`, '_self');
     } else {
       toast.error('Owner contact information not available');

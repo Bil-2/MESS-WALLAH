@@ -144,9 +144,24 @@ const getRooms = async (req, res) => {
 
     const totalPages = Math.ceil(totalRooms / limitNum);
 
+    // Apply fakeOwnerData to owner if it exists
+    const finalRoomsData = roomsData.map(room => {
+      if (room.fakeOwnerData && room.fakeOwnerData.name) {
+        room.owner = {
+          _id: room.owner?._id,
+          name: room.fakeOwnerData.name,
+          phone: room.fakeOwnerData.phone,
+          email: room.fakeOwnerData.email,
+          isVerified: true,
+          verified: true
+        };
+      }
+      return room;
+    });
+
     res.status(200).json({
       success: true,
-      data: roomsData,
+      data: finalRoomsData,
       pagination: {
         currentPage: pageNum,
         totalPages,
@@ -189,17 +204,29 @@ const getFeaturedRooms = async (req, res) => {
       .limit(parseInt(limit))
       .lean();
 
-    console.log('Found featured rooms:', rooms.length);
-
     // Transform rooms data for frontend compatibility
-    const transformedRooms = rooms.map(room => ({
-      ...room,
-      image: room.photos && room.photos.length > 0 ? room.photos[0].url : null,
-      rent: room.rentPerMonth,
-      location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim().replace(/^,\s*/, ''),
-      verified: room.owner?.verified || false,
-      reviews: room.totalReviews || 0
-    }));
+    const transformedRooms = rooms.map(room => {
+      let finalOwner = room.owner;
+      if (room.fakeOwnerData && room.fakeOwnerData.name) {
+        finalOwner = {
+          _id: room.owner?._id,
+          name: room.fakeOwnerData.name,
+          phone: room.fakeOwnerData.phone,
+          email: room.fakeOwnerData.email,
+          verified: true
+        };
+      }
+      
+      return {
+        ...room,
+        owner: finalOwner,
+        image: room.photos && room.photos.length > 0 ? room.photos[0].url : null,
+        rent: room.rentPerMonth,
+        location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim().replace(/^,\s*/, ''),
+        verified: finalOwner?.verified || false,
+        reviews: room.totalReviews || 0
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -248,9 +275,22 @@ const getRoomById = async (req, res) => {
       req
     }).catch(err => console.error('Analytics tracking failed:', err));
 
+    // Override owner if fakeOwnerData exists for realistic demo
+    const roomObj = room.toObject();
+    if (roomObj.fakeOwnerData && roomObj.fakeOwnerData.name) {
+      roomObj.owner = {
+        _id: roomObj.owner?._id || id,
+        name: roomObj.fakeOwnerData.name,
+        phone: roomObj.fakeOwnerData.phone,
+        email: roomObj.fakeOwnerData.email,
+        verified: true,
+        createdAt: roomObj.owner?.createdAt || new Date()
+      };
+    }
+
     res.status(200).json({
       success: true,
-      data: room
+      data: roomObj
     });
   } catch (error) {
     console.error('Error in getRoomById:', error);
