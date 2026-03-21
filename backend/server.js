@@ -13,13 +13,8 @@ const dotenv = require('dotenv');
 
 // Load env in two steps:
 // 1) Load `.env` (shared defaults / secrets)
-// 2) If present, load `.env.local` to override for local dev
-const envPath = path.join(__dirname, '.env');
-const envLocalPath = path.join(__dirname, '.env.local');
+const envPath = path.resolve(__dirname, '.env');
 dotenv.config({ path: envPath });
-if (fs.existsSync(envLocalPath)) {
-  dotenv.config({ path: envLocalPath, override: true });
-}
 
 // Import production-ready error handling and monitoring
 const {
@@ -388,8 +383,7 @@ console.log('[SUCCESS] Health monitoring system started');
 
 // Keep-alive to prevent cold starts
 if (process.env.SELF_PING_ENABLED === 'true') {
-  const { startSelfPing } = require('./utils/selfPing');
-  startSelfPing();
+  healthMonitor.startSelfPing();
   console.log('[SUCCESS] Self-ping keep-alive system started');
 }
 

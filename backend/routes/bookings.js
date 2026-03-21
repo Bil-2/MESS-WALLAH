@@ -4,7 +4,7 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const { sendBuyerConfirmationEmail, sendOwnerAlertEmail, sendBookingStatusUpdate, sendBookingCancellation } = require('../utils/email');
+const { sendBuyerConfirmationEmail, sendOwnerAlertEmail, sendBookingStatusUpdate, sendBookingCancellation } = require('../services/notify');
 const { generateBookingPDF } = require('../utils/bookingPDF');
 const {
   rateLimiters,

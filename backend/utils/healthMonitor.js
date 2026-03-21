@@ -5,6 +5,8 @@
 
 const mongoose = require('mongoose');
 const axios = require('axios');
+const http = require('http');
+const https = require('https');
 
 class HealthMonitor {
   constructor() {
@@ -416,6 +418,71 @@ class HealthMonitor {
       errors: this.healthStatus.errors.length,
       warnings: this.healthStatus.warnings.length
     };
+  }
+
+  /**
+   * Self-Ping Keep-Alive Methods
+   * Prevents backend from spinning down due to inactivity
+   */
+  selfPing() {
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
+
+    const pingUrl = (path) => {
+      const fullUrl = `${baseUrl}${path}`;
+      const protocol = fullUrl.startsWith('https') ? https : http;
+      const urlObj = new URL(fullUrl);
+
+      const options = {
+        hostname: urlObj.hostname,
+        port: urlObj.port || (protocol === https ? 443 : 80),
+        path: urlObj.pathname,
+        method: 'GET',
+        timeout: 10000,
+        headers: { 'User-Agent': 'MESS-WALLAH-Self-Ping/1.0', 'X-Self-Ping': 'true' }
+      };
+
+      const req = protocol.request(options, (res) => {
+        res.on('data', () => {}); // Consume data
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            console.log(`[SELF-PING] OK ${path} — OK (${res.statusCode})`);
+          } else {
+            console.warn(`[SELF-PING] WARN ${path} — status ${res.statusCode}`);
+          }
+        });
+      });
+      req.on('error', e => console.error(`[SELF-PING] FAIL ${path} error:`, e.message));
+      req.on('timeout', () => { console.error(`[SELF-PING] FAIL ${path} timeout`); req.destroy(); });
+      req.end();
+    };
+
+    pingUrl('/health');
+    pingUrl('/api/warmup');
+  }
+
+  startSelfPing() {
+    if (this._pingIntervalId) {
+      console.log('[SELF-PING] Already running');
+      return;
+    }
+
+    const interval = parseInt(process.env.SELF_PING_INTERVAL) || 300000;
+    const intervalMinutes = Math.round(interval / 60000);
+
+    console.log(`[SELF-PING] Starting keep-alive service`);
+    console.log(`[SELF-PING] Ping interval: ${intervalMinutes} minutes`);
+    
+    // First ping after 15 seconds
+    setTimeout(() => this.selfPing(), 15000);
+    this._pingIntervalId = setInterval(() => this.selfPing(), interval);
+  }
+
+  stopSelfPing() {
+    if (this._pingIntervalId) {
+      clearInterval(this._pingIntervalId);
+      this._pingIntervalId = null;
+      console.log('[SELF-PING] Keep-alive service stopped');
+    }
   }
 }
 

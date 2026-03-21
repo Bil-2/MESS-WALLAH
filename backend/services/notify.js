@@ -128,7 +128,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
       `
     };
 
-    await sgMail.send(msg);
+    await sendEmail(msg.to, msg.subject, msg.html);
     console.log('[SUCCESS] Welcome email sent successfully to:', userEmail);
   } catch (error) {
     console.error('[ERROR] Welcome email failed:', error.message);
@@ -194,7 +194,7 @@ const sendBookingConfirmation = async (userEmail, bookingDetails) => {
       `
     };
 
-    await sgMail.send(msg);
+    await sendEmail(msg.to, msg.subject, msg.html);
     console.log('[SUCCESS] Booking confirmation email sent successfully to:', userEmail);
   } catch (error) {
     console.error('[ERROR] Booking confirmation email failed:', error.message);
@@ -235,32 +235,10 @@ const sendOTPEmail = async (userEmail, otp) => {
   `;
 
   try {
-    // 1) Try Resend (primary — works on Render, no port issues)
-    const sent = await sendViaResend({ to: userEmail, subject, html });
-    if (sent) return;
-
-    // 2) Fallback: Gmail port 465 SSL
-    const gmailTransporter = createGmailTransporter();
-    if (gmailTransporter) {
-      await gmailTransporter.sendMail({
-        from: `"${emailConfig.fromName}" <${emailConfig.from}>`,
-        to: userEmail,
-        subject,
-        html
-      });
-      console.log('[SUCCESS] OTP email sent via Gmail to:', userEmail);
-      return;
+    const result = await sendEmail(userEmail, subject, html);
+    if (!result.success) {
+      throw new Error(result.error || 'Unknown email error');
     }
-
-    // 3) Dev fallback — log to console so dev can still test
-    console.log('\n' + '='.repeat(80));
-    console.log('[DEVELOPMENT MODE] OTP Email');
-    console.log('='.repeat(80));
-    console.log(`To: ${userEmail}`);
-    console.log(`OTP Code: ${otp}`);
-    console.log(`Expires in: 10 minutes`);
-    console.log('='.repeat(80) + '\n');
-
   } catch (error) {
     console.error('[ERROR] Failed to send OTP email:', error.message);
     throw new Error('Failed to send OTP email. Please try again later.');
@@ -482,7 +460,7 @@ const sendPasswordResetSuccessEmail = async (userEmail, userName) => {
       `
     };
 
-    await sgMail.send(msg);
+    await sendEmail(msg.to, msg.subject, msg.html);
     console.log('[SUCCESS] Password reset success email sent successfully to:', userEmail);
   } catch (error) {
     console.error('[ERROR] Password reset success email failed:', error.message);
@@ -492,8 +470,34 @@ const sendPasswordResetSuccessEmail = async (userEmail, userName) => {
 // ============================================
 // GENERIC EMAIL SENDER
 // ============================================
-const sendEmail = async (to, subject, htmlContent) => {
+const sendEmail = async (to, subject, htmlContent, attachments = null) => {
   try {
+    const mailOptions = { to, subject, html: htmlContent };
+    if (attachments && attachments.length > 0) mailOptions.attachments = attachments;
+
+    // 1) Try Resend API First
+    if (resendClient) {
+      try {
+        const resendArgs = {
+          from: `${emailConfig.fromName} <${emailConfig.from}>`.trim(),
+          to,
+          subject,
+          html: htmlContent
+        };
+        if (mailOptions.attachments && mailOptions.attachments.length > 0) {
+          resendArgs.attachments = mailOptions.attachments;
+        }
+        
+        const { error } = await resendClient.emails.send(resendArgs);
+        if (!error) {
+          console.log('[SUCCESS] Email sent via Resend to:', to);
+          return { success: true, method: 'resend' };
+        }
+      } catch (resendError) {
+        console.log('[WARNING] Resend failed, trying Gmail:', resendError.message);
+      }
+    }
+
     // Try Gmail SMTP first
     const gmailTransporter = createGmailTransporter();
     if (gmailTransporter) {
@@ -511,21 +515,7 @@ const sendEmail = async (to, subject, htmlContent) => {
       }
     }
 
-    // Try SendGrid
-    if (process.env.SENDGRID_API_KEY) {
-      try {
-        await sgMail.send({
-          to,
-          from: { email: emailConfig.from, name: emailConfig.fromName },
-          subject,
-          html: htmlContent
-        });
-        console.log('[SUCCESS] Email sent via SendGrid to:', to);
-        return { success: true, method: 'sendgrid' };
-      } catch (sgError) {
-        console.log('[WARNING] SendGrid failed:', sgError.message);
-      }
-    }
+
 
     // Development mode - log to console
     console.log('\n' + '='.repeat(80));
@@ -859,6 +849,167 @@ const sendBookingStatusUpdate = async (email, phone, details) => {
   return { success: true };
 };
 
+// ─────────────────────────────────────────────────────────────────
+// Shared email wrapper styles
+// ─────────────────────────────────────────────────────────────────
+const emailWrapper = (content) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background: white; }
+    .header { background: linear-gradient(135deg, #E85D04 0%, #FB923C 100%); padding: 30px 40px; }
+    .header h1 { color: white; margin: 0; font-size: 26px; letter-spacing: -0.5px; }
+    .header p { color: rgba(255,255,255,0.85); margin: 4px 0 0; font-size: 13px; }
+    .badge { display: inline-block; background: #16A34A; color: white; font-size: 13px; font-weight: 700; padding: 10px 20px; border-radius: 8px; margin: 24px 40px; }
+    .content { padding: 10px 40px 30px; }
+    .section-title { font-size: 11px; font-weight: 700; color: #E85D04; letter-spacing: 1px; text-transform: uppercase; margin: 24px 0 10px; }
+    .info-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .info-table tr:nth-child(odd) { background: #fafafa; }
+    .info-table td { padding: 10px 14px; font-size: 13px; }
+    .info-table .label { color: #6b7280; width: 45%; }
+    .info-table .value { color: #111827; font-weight: 600; }
+    .total-row { background: #1a1a1a !important; }
+    .total-row td { color: white !important; font-size: 15px; font-weight: 700; padding: 14px; }
+    .alert-box { background: #FFF7ED; border-left: 4px solid #E85D04; border-radius: 4px; padding: 12px 16px; margin: 20px 0; font-size: 12px; color: #78350f; }
+    .footer { background: #E85D04; padding: 20px 40px; text-align: center; }
+    .footer p { color: rgba(255,255,255,0.85); font-size: 11px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    ${content}
+    <div class="footer">
+      <p>MESS WALLAH · Student Accommodation Platform</p>
+      <p style="margin-top:4px">support@messwallah.com · This is an automated notification</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+// ─────────────────────────────────────────────────────────────────
+// BUYER: Booking Confirmation Email (with PDF attachment)
+// ─────────────────────────────────────────────────────────────────
+const sendBuyerConfirmationEmail = async ({ buyer, owner, room, booking, pdfBuffer }) => {
+  const p = booking.pricing || {};
+  const checkIn = new Date(booking.checkInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  const checkOut = (() => {
+    const d = new Date(booking.checkInDate);
+    d.setMonth(d.getMonth() + booking.duration);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  })();
+
+  const html = emailWrapper(`
+    <div class="header">
+      <h1>MESS WALLAH</h1>
+      <p>Student Accommodation Platform</p>
+    </div>
+    <div class="badge">Booking Confirmed</div>
+    <div class="content">
+      <h2 style="margin:0 0 6px; font-size:20px; color:#111">Hi ${buyer.name},</h2>
+      <p style="color:#4b5563; font-size:14px; margin:0 0 20px">
+        Your booking has been <strong>confirmed</strong>. Your room is reserved. The PDF confirmation is attached to this email.
+      </p>
+
+      <div class="section-title">Booking Details</div>
+      <table class="info-table">
+        <tr><td class="label">Booking ID</td><td class="value" style="color:#E85D04; font-family:monospace">${booking.bookingId || booking._id}</td></tr>
+        <tr><td class="label">Status</td><td class="value" style="color:#16A34A">CONFIRMED</td></tr>
+        <tr><td class="label">Check-in Date</td><td class="value">${checkIn}</td></tr>
+        <tr><td class="label">Check-out Date</td><td class="value">${checkOut}</td></tr>
+        <tr><td class="label">Duration</td><td class="value">${booking.duration} Month${booking.duration > 1 ? 's' : ''}</td></tr>
+      </table>
+
+      <div class="section-title">Property Details</div>
+      <table class="info-table">
+        <tr><td class="label">Property</td><td class="value">${room.title}</td></tr>
+        <tr><td class="label">Location</td><td class="value">${[room.address?.area, room.address?.city, room.address?.state].filter(Boolean).join(', ')}</td></tr>
+        <tr><td class="label">Room Type</td><td class="value">${(room.roomType || 'Room').toUpperCase()}</td></tr>
+        <tr><td class="label">Owner</td><td class="value">${owner?.name || 'Property Owner'}</td></tr>
+        <tr><td class="label">Owner Phone</td><td class="value">${owner?.phone || 'N/A'}</td></tr>
+      </table>
+
+      <div class="section-title">Payment Summary</div>
+      <table class="info-table">
+        <tr><td class="label">Rent × ${booking.duration} months</td><td class="value">₹${((p.monthlyRent || 0) * booking.duration).toLocaleString('en-IN')}</td></tr>
+        <tr><td class="label">Security Deposit</td><td class="value">₹${(p.securityDeposit || 0).toLocaleString('en-IN')}</td></tr>
+        <tr><td class="label">Platform Fee (5%)</td><td class="value">₹${(p.platformFee || 0).toLocaleString('en-IN')}</td></tr>
+        <tr><td class="label">GST (18% on fee)</td><td class="value">₹${(p.tax || 0).toLocaleString('en-IN')}</td></tr>
+        <tr class="total-row"><td class="label" style="color:white; font-weight:700">TOTAL PAID</td><td class="value" style="color:#FB923C; font-size:18px">₹${(p.totalAmount || 0).toLocaleString('en-IN')}</td></tr>
+      </table>
+
+      <div class="alert-box">
+        <strong>Important:</strong> Please show your Booking ID <strong>${booking.bookingId || booking._id}</strong> or this email at check-in. The attached PDF is your proof of booking.
+      </div>
+    </div>
+  `);
+
+  await sendEmail(
+    buyer.email,
+    `Booking Confirmed! ${room.title} — ${booking.bookingId || booking._id}`,
+    html,
+    pdfBuffer ? [{
+      filename: `MESS-WALLAH-Booking-${booking.bookingId || booking._id}.pdf`,
+      content: pdfBuffer,
+      contentType: 'application/pdf'
+    }] : []
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────
+// SELLER/OWNER: New Booking Alert Email
+// ─────────────────────────────────────────────────────────────────
+const sendOwnerAlertEmail = async ({ owner, buyer, room, booking }) => {
+  const p = booking.pricing || {};
+  const checkIn = new Date(booking.checkInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  const si = booking.seekerInfo || {};
+
+  const html = emailWrapper(`
+    <div class="header">
+      <h1>MESS WALLAH</h1>
+      <p>Owner Dashboard Notification</p>
+    </div>
+    <div class="badge">New Booking Request</div>
+    <div class="content">
+      <h2 style="margin:0 0 6px; font-size:20px; color:#111">Hi ${owner.name},</h2>
+      <p style="color:#4b5563; font-size:14px; margin:0 0 20px">
+        You have received a <strong>new booking request</strong> for your property. Please review the details below.
+      </p>
+
+      <div class="section-title">Your Property</div>
+      <table class="info-table">
+        <tr><td class="label">Property</td><td class="value">${room.title}</td></tr>
+        <tr><td class="label">Booking ID</td><td class="value" style="color:#E85D04; font-family:monospace">${booking.bookingId || booking._id}</td></tr>
+        <tr><td class="label">Check-in Date</td><td class="value">${checkIn}</td></tr>
+        <tr><td class="label">Duration</td><td class="value">${booking.duration} Month${booking.duration > 1 ? 's' : ''}</td></tr>
+        <tr class="total-row"><td class="label" style="color:white; font-weight:700">Booking Amount</td><td class="value" style="color:#FB923C">₹${(p.ownerAmount || 0).toLocaleString('en-IN')}</td></tr>
+      </table>
+
+      <div class="section-title">Tenant Details</div>
+      <table class="info-table">
+        <tr><td class="label">Full Name</td><td class="value">${si.name || buyer?.name || '—'}</td></tr>
+        <tr><td class="label">Email</td><td class="value">${si.email || buyer?.email || '—'}</td></tr>
+        <tr><td class="label">Phone</td><td class="value">${si.phone || buyer?.phone || '—'}</td></tr>
+        ${booking.specialRequests ? '<tr><td class="label">Special Requests</td><td class="value">' + booking.specialRequests + '</td></tr>' : ''}
+      </table>
+
+      <div class="alert-box">
+        Your room is now marked as <strong>reserved</strong>. Log into your owner dashboard to manage this booking.
+      </div>
+    </div>
+  `);
+
+  await sendEmail(
+    owner.email,
+    `New Booking: ${room.title} from ${si.name || buyer?.name} — ${booking.bookingId || booking._id}`,
+    html
+  );
+};
+
+
 module.exports = {
   // Generic
   sendEmail,
@@ -876,5 +1027,10 @@ module.exports = {
   sendBookingNotificationToOwner,
   sendPaymentReceipt,
   sendBookingCancellation,
-  sendBookingStatusUpdate
+  sendBookingStatusUpdate,
+  
+  // Migrated from utils/email.js
+  emailWrapper,
+  sendBuyerConfirmationEmail,
+  sendOwnerAlertEmail
 };

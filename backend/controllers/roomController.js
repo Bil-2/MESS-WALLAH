@@ -2,7 +2,21 @@ const Room = require('../models/Room');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
-const { createSafeSearchQuery, createTextSearchQuery } = require('../utils/regexSecurity');
+const createSafeSearchQuery = (input) => {
+  if (!input) return {};
+  const escaped = input.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+  return { $regex: escaped, $options: 'i' };
+};
+
+const createTextSearchQuery = (input, fields = []) => {
+  if (!input || !fields || fields.length === 0) return {};
+  const escaped = input.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+  return {
+    $or: fields.map(field => ({
+      [field]: { $regex: escaped, $options: 'i' }
+    }))
+  };
+};
 const LifecycleService = require('../services/LifecycleService');
 
 // Get all rooms with filtering and pagination

@@ -4,8 +4,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Otp = require('../models/Otp');
 const User = require('../models/User');
-const { sendSms } = require('../services/notify');
-const { sendEmail } = require('../utils/email');
+
+
 const { protect, blacklistToken } = require('../middleware/auth');
 const {
   rateLimiters,
