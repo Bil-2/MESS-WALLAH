@@ -275,8 +275,8 @@ const AddRoom = () => {
               </label>
               <p className="text-sm text-gray-500 mb-3">Please upload a clear image of your Aadhar Card for owner verification.</p>
 
-              <label className="flex flex-col items-center justify-center w-full min-h-[8rem] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative overflow-hidden p-4">
-                <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleAadharUpload} required />
+              <label htmlFor="aadharUpload" className="flex flex-col items-center justify-center w-full min-h-[8rem] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative overflow-hidden p-4">
+                <input type="file" id="aadharUpload" name="aadharUpload" accept="image/*,application/pdf" className="hidden" onChange={handleAadharUpload} required />
                 <div className="flex flex-col items-center justify-center text-gray-500 w-full text-center">
                   <Upload className="w-8 h-8 mb-2" />
                   <p className="text-sm font-semibold break-words max-w-full">
@@ -308,9 +308,11 @@ const AddRoom = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* Camera Button */}
-                <label className="cursor-pointer">
+                <label htmlFor="cameraUpload" className="cursor-pointer">
                   <input
                     type="file"
+                    id="cameraUpload"
+                    name="cameraUpload"
                     accept="image/*"
                     capture="environment"
                     onChange={(e) => handlePhotoUpload(e, true)}
@@ -324,9 +326,11 @@ const AddRoom = () => {
                 </label>
 
                 {/* Gallery Button */}
-                <label className={formData.livePhotos.length < 5 ? "cursor-not-allowed opacity-50 relative" : "cursor-pointer"}>
+                <label htmlFor="galleryUpload" className={formData.livePhotos.length < 5 ? "cursor-not-allowed opacity-50 relative" : "cursor-pointer"}>
                   <input
                     type="file"
+                    id="galleryUpload"
+                    name="galleryUpload"
                     accept="image/*"
                     multiple
                     disabled={formData.livePhotos.length < 5}

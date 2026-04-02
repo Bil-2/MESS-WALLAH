@@ -260,6 +260,8 @@ const Support = () => {
                   <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10" />
                   <input
                     type="text"
+                    id="supportSearch"
+                    name="supportSearch"
                     placeholder="E.g. How to cancel..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

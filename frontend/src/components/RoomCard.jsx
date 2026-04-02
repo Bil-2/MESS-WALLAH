@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Users, Wifi, Car, Utensils, Heart, Star } from 'lucide-react';
+import { getSafeImageUrl } from '../utils/imageUtils';
 
 const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
   const [imageError, setImageError] = useState(false);
@@ -63,7 +64,7 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
           {room.photos && room.photos.length > 0 && !imageError ? (
             <>
               <img
-                src={room.photos[currentImageIndex]?.url || room.photos[currentImageIndex]}
+                src={getSafeImageUrl(room.photos[currentImageIndex]?.url || room.photos[currentImageIndex], currentImageIndex)}
                 alt={room.title}
                 className="w-full h-full object-cover"
                 onError={handleImageError}

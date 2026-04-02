@@ -8,6 +8,7 @@ import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BookingModal from '../components/BookingModal';
 import toast from 'react-hot-toast';
+import { getSafeImageUrl } from '../utils/imageUtils';
 
 const RoomDetails = () => {
   const { id } = useParams();
@@ -106,7 +107,7 @@ const RoomDetails = () => {
       return;
     }
 
-    if (room?.owner?.phone) {
+    if (room?.owner?.phone || room?.owner?.email) {
       setShowContact(true);
       toast.success('Contact details revealed below!');
     } else {
@@ -217,7 +218,7 @@ const RoomDetails = () => {
               <div className="relative group">
                 <motion.img
                   key={selectedImage}
-                  src={room.photos?.[selectedImage]?.url || room.photos?.[selectedImage] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop'}
+                  src={getSafeImageUrl(room.photos?.[selectedImage]?.url || room.photos?.[selectedImage], selectedImage)}
                   alt={room.photos?.[selectedImage]?.caption || room.title}
                   className="w-full h-96 object-cover cursor-pointer"
                   onClick={() => {
@@ -280,7 +281,7 @@ const RoomDetails = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <img
-                        src={photo.url || photo || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=150&h=120&fit=crop'}
+                        src={getSafeImageUrl(photo.url || photo, index)}
                         alt={photo.caption || `View ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -600,9 +601,15 @@ const RoomDetails = () => {
                         </div>
                       ) : (
                         <div className="mt-2">
-                          <p className="text-xs text-orange-500 dark:text-orange-400 italic">
-                            Click "Contact Owner" above to view phone & email
-                          </p>
+                          {room.owner.phone || room.owner.email ? (
+                            <p className="text-xs text-orange-500 dark:text-orange-400 italic">
+                              Click "Contact Owner" above to view phone & email
+                            </p>
+                          ) : (
+                            <p className="text-xs text-red-500 dark:text-red-400 italic">
+                              Contact information not provided by owner.
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -625,7 +632,7 @@ const RoomDetails = () => {
             >
               <div className="relative max-w-4xl max-h-full">
                 <motion.img
-                  src={room.photos?.[lightboxImage]?.url || room.photos?.[lightboxImage] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&h=800&fit=crop'}
+                  src={getSafeImageUrl(room.photos?.[lightboxImage]?.url || room.photos?.[lightboxImage], lightboxImage)}
                   alt={room.photos?.[lightboxImage]?.caption || room.title}
                   className="max-w-full max-h-full object-contain rounded-lg"
                   initial={{ scale: 0.8 }}

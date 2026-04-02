@@ -277,6 +277,7 @@ const BookingModal = ({ room, onClose, user }) => {
                     <div className="relative">
                       <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <input type="date" value={form.checkInDate}
+                        id="checkInDate" name="checkInDate"
                         onChange={e => updateForm('checkInDate', e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
                         className="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
@@ -285,7 +286,7 @@ const BookingModal = ({ room, onClose, user }) => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration <span className="text-red-500">*</span></label>
-                    <select value={form.duration} onChange={e => updateForm('duration', parseInt(e.target.value))}
+                    <select value={form.duration} id="duration" name="duration" onChange={e => updateForm('duration', parseInt(e.target.value))}
                       className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm">
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
                         <option key={m} value={m}>{m} month{m > 1 ? 's' : ''}</option>
@@ -304,12 +305,12 @@ const BookingModal = ({ room, onClose, user }) => {
                     { label: 'Age', key: 'age', icon: <FiCalendar className="w-4 h-4" />, type: 'number', placeholder: 'Age (e.g. 22)', maxLength: 3 },
                   ].map(({ label, key, icon, type, placeholder, maxLength }) => (
                     <div key={key}>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor={key} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {label} <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
-                        <input type={type} value={form[key]}
+                        <input type={type} id={key} name={key} value={form[key]}
                           onChange={e => updateForm(key, e.target.value)}
                           maxLength={maxLength}
                           className="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
@@ -321,7 +322,7 @@ const BookingModal = ({ room, onClose, user }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Special Requests <span className="text-gray-400">(optional)</span></label>
-                  <textarea value={form.specialRequests} onChange={e => updateForm('specialRequests', e.target.value)}
+                  <textarea id="specialRequests" name="specialRequests" value={form.specialRequests} onChange={e => updateForm('specialRequests', e.target.value)}
                     rows={2} maxLength={500}
                     className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white resize-none text-sm"
                     placeholder="Any special requirements..." />

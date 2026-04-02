@@ -3,6 +3,7 @@ import { memo, useMemo, useCallback } from 'react';
 import { FiMapPin, FiStar, FiWifi, FiCoffee, FiShield, FiHeart } from 'react-icons/fi';
 import OptimizedImage from './OptimizedImage';
 import { useIntersectionObserver } from '../hooks/usePerformance';
+import { getSafeImageUrl } from '../utils/imageUtils';
 
 const RocketRoomCard = memo(({
   room,
@@ -27,7 +28,7 @@ const RocketRoomCard = memo(({
       location: room.location || `${room.address?.area || ''}, ${room.address?.city || ''}`,
       rent: room.rent || room.rentPerMonth || 0,
       rating: room.rating || 4.5,
-      image: room.image || room.photos?.[0]?.url || room.photos?.[0] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=75',
+      image: getSafeImageUrl(room.image || room.photos?.[0]?.url || room.photos?.[0]),
       amenities: room.amenities?.slice(0, 3) || ['WiFi', 'AC', 'Food'],
       roomType: room.roomType || 'PG',
       isVerified: room.isVerified || true

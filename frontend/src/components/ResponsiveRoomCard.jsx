@@ -14,6 +14,7 @@ import {
   Award,
   Zap
 } from '../utils/iconMappings';
+import { getSafeImageUrl } from '../utils/imageUtils';
 
 /**
  * Modern Room Card Component
@@ -33,8 +34,8 @@ const ResponsiveRoomCard = ({
 
   // Get all images
   const images = room.photos?.length > 0
-    ? room.photos.map(p => p.url || p)
-    : [room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600'];
+    ? room.photos.map((p, index) => getSafeImageUrl(p.url || p, index))
+    : [getSafeImageUrl(room.image)];
 
   // Auto-rotate images on hover (Airbnb style)
   useEffect(() => {

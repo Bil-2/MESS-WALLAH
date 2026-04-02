@@ -21,7 +21,7 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone,
 
   const images = room.photos?.length > 0
     ? room.photos.map(p => p.url || p)
-    : [room.image || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600'];
+    : [room.image || 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800'];
 
   // Auto-rotate images on hover (like Airbnb)
   useEffect(() => {
@@ -253,12 +253,12 @@ const Rooms = () => {
 
   // Popular Cities Data
   const popularCities = [
-    { name: 'Bangalore', image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=300', rooms: '2,500+' },
-    { name: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=300', rooms: '1,800+' },
-    { name: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=300', rooms: '1,500+' },
-    { name: 'Pune', image: 'https://images.unsplash.com/photo-1625731226721-b4d51ae70e20?w=300', rooms: '1,200+' },
-    { name: 'Chennai', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=300', rooms: '900+' },
-    { name: 'Kolkata', image: 'https://images.unsplash.com/photo-1558431382-27e303142255?w=300', rooms: '800+' },
+    { name: 'Bangalore', image: 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '2,500+' },
+    { name: 'Delhi', image: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '1,800+' },
+    { name: 'Mumbai', image: 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '1,500+' },
+    { name: 'Pune', image: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '1,200+' },
+    { name: 'Chennai', image: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '900+' },
+    { name: 'Kolkata', image: 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '800+' },
   ];
 
   // Amenity Options
@@ -297,7 +297,7 @@ const Rooms = () => {
           location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim(),
           city: room.address?.city || '',
           rent: room.rentPerMonth,
-          image: room.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600',
+          image: room.photos?.[0]?.url || 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
           verified: true,
           ownerPhone: room.owner?.phone || '+91 9876543210',
           ownerName: room.owner?.name || 'Property Owner',
@@ -466,6 +466,8 @@ const Rooms = () => {
                   <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
                   <input
                     type="text"
+                    id="searchQuery"
+                    name="searchQuery"
                     placeholder="Where do you want to stay?"
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, location: e.target.value }))}
@@ -485,6 +487,8 @@ const Rooms = () => {
                 <div className="relative md:w-48">
                   <FiHome className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
                   <select
+                    id="roomTypeFilter"
+                    name="roomTypeFilter"
                     value={filters.roomType}
                     onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white appearance-none cursor-pointer focus:ring-2 focus:ring-violet-500 transition-all"
@@ -624,6 +628,8 @@ const Rooms = () => {
             <div className="flex items-center gap-2">
               {/* Price Range Dropdown */}
               <select
+                id="priceRangeFilter"
+                name="priceRangeFilter"
                 value={filters.maxRent ? `${filters.minRent || '0'}-${filters.maxRent}` : ''}
                 onChange={(e) => {
                   const [min, max] = e.target.value.split('-');
@@ -687,6 +693,8 @@ const Rooms = () => {
 
             {/* Sort Dropdown */}
             <select
+              id="sortBySelect"
+              name="sortBySelect"
               value={filters.sortBy}
               onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
               className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium cursor-pointer focus:ring-2 focus:ring-violet-500"
@@ -964,6 +972,8 @@ const Rooms = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="number"
+                    id="minRentInput"
+                    name="minRentInput"
                     placeholder="Min ₹"
                     value={filters.minRent}
                     onChange={(e) => setFilters(prev => ({ ...prev, minRent: e.target.value }))}
@@ -971,6 +981,8 @@ const Rooms = () => {
                   />
                   <input
                     type="number"
+                    id="maxRentInput"
+                    name="maxRentInput"
                     placeholder="Max ₹"
                     value={filters.maxRent}
                     onChange={(e) => setFilters(prev => ({ ...prev, maxRent: e.target.value }))}

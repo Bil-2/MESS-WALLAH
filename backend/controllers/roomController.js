@@ -678,7 +678,7 @@ const seedSampleRooms = async () => {
         },
         amenities: ['wifi', 'ac', 'parking', 'security'],
         photos: [{
-          url: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400&h=300&fit=crop',
+          url: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
           publicId: 'sample1',
           caption: 'Cozy single room'
         }],
@@ -703,7 +703,7 @@ const seedSampleRooms = async () => {
         },
         amenities: ['wifi', 'laundry', 'kitchen', 'security'],
         photos: [{
-          url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+          url: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
           publicId: 'sample2',
           caption: 'Shared room near IT Park'
         }],
@@ -728,7 +728,7 @@ const seedSampleRooms = async () => {
         },
         amenities: ['wifi', 'ac', 'kitchen', 'parking', 'gym'],
         photos: [{
-          url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop',
+          url: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
           publicId: 'sample3',
           caption: 'Studio apartment with modern amenities'
         }],

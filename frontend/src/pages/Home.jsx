@@ -48,7 +48,7 @@ const Home = () => {
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
             photos: room.photos || [], // Pass the entire photos array
-            image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+            image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
             amenities: room.amenities ? room.amenities.slice(0, 3) : ['WiFi', 'AC', 'Food']
           }));
           setFeaturedRooms(transformedRooms);
@@ -78,7 +78,7 @@ const Home = () => {
           location: 'Andheri, Mumbai',
           rent: 12000,
           rating: 4.7,
-          image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+          image: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
           amenities: ['WiFi', 'AC', 'Food']
         }
       ]);
