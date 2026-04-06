@@ -49,7 +49,7 @@ const Divider = () => <div className="h-px bg-gray-100 dark:bg-gray-800 mx-4" />
 /* ═══════════════════════════════════════════════════════════════════ */
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, updateProfile, logout, loading: authLoading } = useAuthContext();
+  const { user, updateProfile, uploadProfilePicture, logout, loading: authLoading } = useAuthContext();
 
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -103,6 +103,28 @@ const Profile = () => {
     finally { setLoading(false); }
   };
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image max size is 5MB');
+      return;
+    }
+
+    try {
+      const toastId = toast.loading('Uploading profile picture...');
+      const result = await uploadProfilePicture(file);
+      if (result?.success) {
+        toast.success('Profile picture updated!', { id: toastId });
+      } else {
+        throw new Error(result?.message || 'Upload failed');
+      }
+    } catch (err) {
+      toast.error(err.message || 'An error occurred during upload');
+    }
+  };
+
   const handlePasswordChangeSubmit = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) { toast.error('Passwords do not match'); return; }
@@ -149,8 +171,12 @@ const Profile = () => {
   const accentDark = 'dark:from-gray-950 dark:via-gray-900 dark:to-gray-900';
 
   return (
-    <div className={`min-h-screen ${accentBg} ${accentDark} pt-24 pb-16`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen relative overflow-hidden ${accentBg} ${accentDark} pt-24 pb-16`}>
+      {/* ── Ambient Background Orbs ── */}
+      <div className={`absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-40 mix-blend-multiply dark:mix-blend-screen animate-pulse pointer-events-none ${isOwner ? 'bg-indigo-300 dark:bg-indigo-900/40' : 'bg-orange-300 dark:bg-orange-900/40'}`} style={{ animationDuration: '4s' }} />
+      <div className={`absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-[140px] opacity-30 mix-blend-multiply dark:mix-blend-screen animate-pulse pointer-events-none ${isOwner ? 'bg-purple-300 dark:bg-purple-900/40' : 'bg-pink-300 dark:bg-pink-900/40'}`} style={{ animationDuration: '7s', animationDelay: '2s' }} />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── Page title ────────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-8 pl-2">
@@ -180,29 +206,34 @@ const Profile = () => {
                 <div className="absolute inset-0 opacity-10"
                   style={{ backgroundImage: 'radial-gradient(circle at 2px 2px,white 1px,transparent 0)', backgroundSize: '20px 20px' }} />
 
-                <div className="relative z-10 flex items-center gap-4">
-                  <div className="relative">
-                    <div className="w-18 h-18 w-[72px] h-[72px] rounded-2xl bg-white/25 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-xl">
-                      {user?.profilePicture
-                        ? <img src={user.profilePicture} alt="" className="w-full h-full object-cover rounded-2xl" />
-                        : <span className="text-2xl font-black text-white">{initials}</span>
-                      }
+                <div className="relative z-10 flex items-center gap-5">
+                  <div className="relative group">
+                    <div className="relative w-[84px] h-[84px] rounded-[1.5rem] bg-white/20 backdrop-blur-md border-[2px] border-white/50 flex items-center justify-center shadow-2xl p-1 overflow-hidden transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+                      <div className="w-full h-full rounded-[1.1rem] overflow-hidden bg-white/10 flex items-center justify-center relative">
+                        {user?.profilePicture
+                          ? <img src={user.profilePicture} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          : <span className="text-3xl font-black text-white">{initials}</span>
+                        }
+                      </div>
                     </div>
-                    <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
-                      <Camera className={`w-3.5 h-3.5 ${isOwner ? 'text-indigo-600' : 'text-orange-500'}`} />
-                      <input type="file" accept="image/*" className="hidden" />
+                    <label className="absolute -bottom-2 -right-2 w-9 h-9 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-xl shadow-black/20 cursor-pointer hover:scale-110 hover:rotate-12 transition-all ring-4 ring-black/5 dark:ring-white/10 z-20 overflow-hidden group/cam">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-gray-100 to-white dark:from-gray-800 dark:to-gray-700 opacity-0 group-hover/cam:opacity-100 transition-opacity" />
+                      <Camera className={`relative w-4 h-4 ${isOwner ? 'text-indigo-600 dark:text-indigo-400' : 'text-orange-500 dark:text-orange-400'}`} />
+                      <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
                     </label>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-black text-white leading-tight">{user?.name}</h2>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <span className="text-white/70 text-sm font-medium">Online</span>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{user?.name}</h2>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 shadow-sm">
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                        <span className="text-white/90 text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">Online</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 mt-1">
+                    <div className="flex items-center gap-1.5 mt-2.5 drop-shadow-sm">
                       {isOwner
-                        ? <><ShieldCheck className="w-3.5 h-3.5 text-green-300" /><span className="text-xs font-bold text-green-300">Verified Owner</span></>
-                        : <><CheckCircle className="w-3.5 h-3.5 text-green-300" /><span className="text-xs font-bold text-green-300">Verified Student</span></>
+                        ? <><ShieldCheck className="w-4 h-4 text-green-300 drop-shadow-sm" strokeWidth={2.5} /><span className="text-[13px] font-bold text-green-300 tracking-wide">Verified Owner</span></>
+                        : <><CheckCircle className="w-4 h-4 text-green-300 drop-shadow-sm" strokeWidth={2.5} /><span className="text-[13px] font-bold text-green-300 tracking-wide">Verified Student</span></>
                       }
                     </div>
                   </div>
@@ -210,7 +241,7 @@ const Profile = () => {
               </div>
 
               {/* Stats row */}
-              <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-800 py-4 px-1">
+              <div className="grid grid-cols-3 divide-x divide-gray-100/50 dark:divide-gray-800/50 py-5 px-2 bg-gray-50/50 dark:bg-gray-800/20">
                 {(isOwner ? [
                   { icon: BedDouble, label: 'Rooms',    value: '—',   color: 'text-blue-500',   fill: false },
                   { icon: Calendar,  label: 'Bookings', value: '—',   color: 'text-teal-500',   fill: false },
@@ -220,10 +251,12 @@ const Profile = () => {
                   { icon: Heart, label: 'Favorites', value: '12',  color: 'text-pink-500',   fill: true  },
                   { icon: Star,  label: 'Rating',    value: '4.8', color: 'text-yellow-400', fill: true  },
                 ]).map(s => (
-                  <div key={s.label} className="flex flex-col items-center gap-0.5">
-                    <s.icon className={`w-5 h-5 ${s.color}`} strokeWidth={2} fill={s.fill ? 'currentColor' : 'none'} />
-                    <span className="text-xl font-black text-gray-900 dark:text-white">{s.value}</span>
-                    <span className="text-xs font-semibold text-gray-400">{s.label}</span>
+                  <div key={s.label} className="flex flex-col items-center gap-1 group/stat cursor-pointer">
+                    <div className={`p-2 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 group-hover/stat:scale-110 group-hover/stat:-translate-y-1 group-hover/stat:shadow-md transition-all duration-300`}>
+                      <s.icon className={`w-4 h-4 ${s.color}`} strokeWidth={2.5} fill={s.fill ? 'currentColor' : 'none'} />
+                    </div>
+                    <span className="text-[22px] font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1.5">{s.value}</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">{s.label}</span>
                   </div>
                 ))}
               </div>
@@ -273,16 +306,16 @@ const Profile = () => {
             {/* Account info card — toggle with edit form */}
             {!editing && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-gray-200/50 dark:shadow-black/50 overflow-hidden border border-white dark:border-gray-800 p-2">
-                <div className="flex items-center justify-between px-6 pt-6 pb-2">
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">Account Information</h3>
+                className="relative bg-white/60 dark:bg-gray-900/60 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-black/50 overflow-hidden border border-white/60 dark:border-gray-800/80 p-3 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/40 before:to-transparent before:pointer-events-none">
+                <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-3">
+                  <h3 className="text-[22px] font-black text-gray-900 dark:text-white tracking-tight">Account Information</h3>
                   <button onClick={() => setEditing(true)}
-                    className={`hidden md:flex items-center gap-1.5 text-xs font-black px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 hover:-translate-y-0.5
-                      ${isOwner ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:shadow-lg hover:shadow-indigo-500/20 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-orange-600 bg-orange-50 hover:bg-orange-100 hover:shadow-lg hover:shadow-orange-500/20 dark:bg-orange-900/30 dark:text-orange-400'}`}>
-                    <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+                    className={`hidden md:flex items-center gap-2 text-[13px] font-black px-5 py-2.5 rounded-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-0.5
+                      ${isOwner ? 'text-white bg-indigo-500 hover:bg-indigo-600 shadow-xl shadow-indigo-500/30' : 'text-white bg-orange-500 hover:bg-orange-600 shadow-xl shadow-orange-500/30'}`}>
+                    <Edit3 className="w-4 h-4" /> Edit Profile
                   </button>
                 </div>
-                <div className="px-5 pb-5">
+                <div className="relative z-10 px-5 pb-5">
                   <InfoRow icon={User}   label="Full Name"  value={user?.name}              color={isOwner ? 'text-indigo-500' : 'text-orange-500'} />
                   <InfoRow icon={Mail}   label="Email"      value={user?.email}             color={isOwner ? 'text-blue-500'   : 'text-pink-500'} />
                   <InfoRow icon={Phone}  label="Phone"      value={user?.phone}             color={isOwner ? 'text-teal-500'   : 'text-teal-500'} />

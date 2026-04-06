@@ -370,7 +370,13 @@ const Rooms = () => {
 
   const handleView = (roomId) => navigate(`/rooms/${roomId}`);
 
-  const handleFavorite = (roomId) => {
+  const handleFavorite = async (roomId) => {
+    if (!user) {
+      toast.error('Please login to save favorites');
+      navigate('/login');
+      return;
+    }
+
     const newFavorites = new Set(favorites);
     if (favorites.has(roomId)) {
       newFavorites.delete(roomId);
@@ -381,6 +387,13 @@ const Rooms = () => {
     }
     setFavorites(newFavorites);
     localStorage.setItem('mess-wallah-favorites', JSON.stringify([...newFavorites]));
+
+    // Sync with backend asynchronously
+    try {
+      await api.post(`/users/favorites/${roomId}`);
+    } catch (err) {
+      console.error('Failed to sync favorite with backend', err);
+    }
   };
 
   const handleCityClick = (city) => {

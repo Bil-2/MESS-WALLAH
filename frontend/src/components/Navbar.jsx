@@ -101,7 +101,9 @@ const Navbar = () => {
                   <div className="relative">
                     <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md">
                       <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-sm">
-                        {(() => {
+                        {user?.profilePicture ? (
+                          <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (() => {
                           if (!user?.name) return 'U';
                           const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);
                           if (!words.length) return 'U';
@@ -127,7 +129,9 @@ const Navbar = () => {
                   <div className="relative">
                     <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md">
                       <div className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm">
-                        {(() => {
+                        {user?.profilePicture ? (
+                          <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (() => {
                           if (!user?.name) return 'U';
                           const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);
                           if (!words.length) return 'U';

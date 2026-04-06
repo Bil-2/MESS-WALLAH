@@ -67,8 +67,13 @@ api.interceptors.request.use(
       }
 
       // Sanitize request body
-      if (config.data && typeof config.data === 'object') {
-        config.data = sanitizeObject(config.data);
+      if (config.data) {
+        if (config.data instanceof FormData) {
+          // [VITAL FIX] Let the browser automatically generate the multipart boundary
+          delete config.headers['Content-Type'];
+        } else if (typeof config.data === 'object') {
+          config.data = sanitizeObject(config.data);
+        }
       }
     }
 
@@ -236,20 +241,12 @@ export const apiHelpers = {
   },
 
   async createRoom(roomData) {
-    const response = await api.post('/rooms', roomData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post('/rooms', roomData);
     return response.data;
   },
 
   async updateRoom(id, roomData) {
-    const response = await api.put(`/rooms/${id}`, roomData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.put(`/rooms/${id}`, roomData);
     return response.data;
   },
 
@@ -302,6 +299,13 @@ export const apiHelpers = {
 
   async updateProfile(profileData) {
     const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  },
+
+  async uploadProfilePicture(file) {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const response = await api.post('/users/profile-picture', formData);
     return response.data;
   },
 

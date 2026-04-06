@@ -16,8 +16,31 @@ const {
   toggleFavourite,
   getFavourites,
   deactivateAccount,
-  getPlatformStats
+  getPlatformStats,
+  uploadProfilePicture
 } = require('../controllers/userController');
+
+const multer = require('multer');
+const fs = require('fs');
+
+// Ensure uploads directory exists
+const uploadDir = 'uploads/';
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const uploadProfile = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+      const ext = file.mimetype.split('/')[1];
+      cb(null, `profile-${req.user.id}-${Date.now()}.${ext}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
 
 const router = express.Router();
 
@@ -158,6 +181,7 @@ router.get('/profile', protect, async (req, res) => {
           profile: user.profile || {},
           preferences: user.preferences || {},
           favourites: user.favourites || [],
+          profilePicture: user.profilePicture || null,
           createdAt: user.createdAt,
           lastLogin: user.lastLogin
         }
@@ -176,6 +200,11 @@ router.get('/profile', protect, async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 router.put('/profile', protect, updateUserProfile);
+
+// @desc    Upload profile picture
+// @route   POST /api/users/profile-picture
+// @access  Private
+router.post('/profile-picture', protect, uploadProfile.single('photo'), uploadProfilePicture);
 
 // @desc    Get user dashboard stats
 // @route   GET /api/users/dashboard/stats
@@ -279,7 +308,7 @@ router.post('/favorites/:roomId', [
       });
     }
 
-    const favoriteIndex = user.favourites.indexOf(roomId);
+    const favoriteIndex = user.favourites.findIndex(id => id.toString() === roomId.toString());
     if (favoriteIndex > -1) {
       // Remove from favorites
       user.favourites.splice(favoriteIndex, 1);
@@ -334,7 +363,7 @@ router.delete('/favorites/:roomId', [
       });
     }
 
-    const favoriteIndex = user.favourites.indexOf(roomId);
+    const favoriteIndex = user.favourites.findIndex(id => id.toString() === roomId.toString());
     if (favoriteIndex > -1) {
       // Remove from favorites
       user.favourites.splice(favoriteIndex, 1);

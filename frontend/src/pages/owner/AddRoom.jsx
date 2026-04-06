@@ -109,9 +109,7 @@ const AddRoom = () => {
 
     try {
       toast.loading('Uploading room data and verifying security documents...', { id: 'submit' });
-      await api.post('/rooms', submitData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await api.post('/rooms', submitData);
       toast.success('Room listed successfully with maximum security verification!', { id: 'submit' });
       navigate('/owner-dashboard');
     } catch (error) {

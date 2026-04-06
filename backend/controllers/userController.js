@@ -419,11 +419,22 @@ const getFavourites = async (req, res) => {
     // Initialize favourites array if it doesn't exist
     let favourites = req.user.favourites || [];
 
-    // Return empty favourites for now to test the basic flow
+    // Real implementation of fetching favorites
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const favouriteRooms = [];  // Empty for now
-    const totalFavourites = 0;  // Empty for now
-    const totalPages = 0;       // Empty for now
+    const Room = require('../models/Room');
+    const filter = { _id: { $in: favourites } };
+    
+    const [favouriteRooms, totalFavourites] = await Promise.all([
+      Room.find(filter)
+        .populate('owner', 'name phone email verified')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Room.countDocuments(filter)
+    ]);
+    
+    const totalPages = Math.ceil(totalFavourites / parseInt(limit));
 
     res.status(200).json({
       success: true,
@@ -544,6 +555,35 @@ const getPlatformStats = async (req, res) => {
   }
 };
 
+// Upload profile picture
+const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image uploaded' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Set the new profile picture URL
+    const imageUrl = `/uploads/${req.file.filename}`;
+    user.profilePicture = imageUrl;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully',
+      profilePicture: imageUrl,
+      user: user.getPublicProfile()
+    });
+  } catch (error) {
+    console.error('Error in uploadProfilePicture:', error);
+    res.status(500).json({ success: false, message: 'Error uploading profile picture', error: error.message });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
@@ -553,5 +593,6 @@ module.exports = {
   toggleFavourite,
   getFavourites,
   deactivateAccount,
-  getPlatformStats
+  getPlatformStats,
+  uploadProfilePicture
 };

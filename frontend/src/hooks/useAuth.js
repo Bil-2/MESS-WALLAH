@@ -233,6 +233,36 @@ const useAuth = () => {
     }
   };
 
+  // Upload profile picture
+  const uploadProfilePicture = async (file) => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const response = await api.post('/users/profile-picture', formData);
+
+      if (response.data.success) {
+        const updatedUser = response.data.user;
+
+        // Update localStorage and state
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+
+        console.log('Profile picture uploaded successfully!');
+        return { success: true, user: updatedUser };
+      } else {
+        console.error(response.data.message || 'Failed to upload profile picture');
+        return { success: false, message: response.data.message };
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to upload profile picture';
+      console.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get fresh user profile
   const refreshProfile = async () => {
     try {
@@ -480,6 +510,7 @@ const useAuth = () => {
     register,
 
     updateProfile,
+    uploadProfilePicture,
     refreshProfile,
     logout,
     isAuthenticated,
