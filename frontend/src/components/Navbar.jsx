@@ -119,115 +119,31 @@ const Navbar = () => {
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 </button>
               ) : (
-                /* ── Renter: dropdown with stats + menu ── */
-                <div className="relative profile-dropdown">
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsProfileDropdownOpen(!isProfileDropdownOpen); }}
-                    className="group relative flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
-                  >
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md">
-                        <div className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm">
-                          {(() => {
-                            if (!user?.name) return 'U';
-                            const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);
-                            if (!words.length) return 'U';
-                            if (words.length === 1) return words[0][0].toUpperCase();
-                            return words[0][0].toUpperCase() + words[words.length - 1][0].toUpperCase();
-                          })()}
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full" />
+                /* ── Renter: click goes straight to /profile ── */
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="group relative flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md">
+                      <div className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm">
+                        {(() => {
+                          if (!user?.name) return 'U';
+                          const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);
+                          if (!words.length) return 'U';
+                          if (words.length === 1) return words[0][0].toUpperCase();
+                          return words[0][0].toUpperCase() + words[words.length - 1][0].toUpperCase();
+                        })()}
                       </div>
                     </div>
-                    <div className="hidden sm:flex flex-col items-start min-w-0">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-32">{user.name || 'User'}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-32">@{user.email?.split('@')[0] || 'user'}</span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Renter dropdown */}
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl border-2 border-orange-500 z-[9999] overflow-hidden bg-white dark:bg-gray-800"
-                      style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px' }}>
-                      {/* Header */}
-                      <div className="relative p-6 bg-gradient-to-br from-orange-500 to-pink-500">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm text-white flex items-center justify-center font-bold text-lg shadow-lg">
-                            {(() => {
-                              if (!user?.name) return 'U';
-                              const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);
-                              if (!words.length) return 'U';
-                              if (words.length === 1) return words[0][0].toUpperCase();
-                              return words[0][0].toUpperCase() + words[words.length - 1][0].toUpperCase();
-                            })()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-bold text-lg truncate">{user.name || 'User Name'}</h3>
-                            <p className="text-white/90 text-sm truncate">{user.email}</p>
-                            <div className="flex items-center mt-1">
-                              <div className="w-2 h-2 bg-green-400 rounded-full mr-2" />
-                              <span className="text-white/90 text-xs">Online</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/80">
-                        <div className="grid grid-cols-3 gap-3">
-                          {[
-                            { value: '8', label: 'Bookings', icon: Home },
-                            { value: '12', label: 'Favorites', icon: Heart },
-                            { value: '4.8', label: 'Rating', icon: Star }
-                          ].map((stat, i) => {
-                            const Icon = stat.icon;
-                            return (
-                              <div key={i} className="text-center">
-                                <div className="flex justify-center mb-1"><Icon className="w-5 h-5 text-orange-500" /></div>
-                                <div className="text-lg font-bold text-gray-900 dark:text-white">{stat.value}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Menu */}
-                      <div className="p-3 space-y-1">
-                        {[
-                          { to: '/profile',   icon: User,     label: 'My Profile',  color: 'orange' },
-                          { to: '/bookings',  icon: Calendar, label: 'My Bookings', color: 'blue' },
-                          { to: '/favorites', icon: Heart,    label: 'Favorites',   color: 'pink' },
-                          { to: '/profile',   icon: Settings, label: 'Settings',    color: 'purple' }
-                        ].map((item, i) => {
-                          const Icon = item.icon;
-                          return (
-                            <Link key={i} to={item.to} onClick={() => setIsProfileDropdownOpen(false)}
-                              className="group flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200">
-                              <div className={`w-8 h-8 bg-${item.color}-100 dark:bg-${item.color}-900/30 rounded-lg flex items-center justify-center mr-3`}>
-                                <Icon className={`w-4 h-4 text-${item.color}-600 dark:text-${item.color}-400`} />
-                              </div>
-                              <div className="flex-1"><div className="font-medium text-gray-900 dark:text-white text-sm">{item.label}</div></div>
-                              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-                            </Link>
-                          );
-                        })}
-                      </div>
-
-                      {/* Sign out */}
-                      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-                        <button onClick={() => { setIsProfileDropdownOpen(false); handleLogout(); }}
-                          className="group w-full flex items-center p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200">
-                          <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <X className="w-4 h-4 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div className="flex-1 text-left"><div className="font-medium text-red-700 dark:text-red-400 text-sm">Sign Out</div></div>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full" />
+                  </div>
+                  <div className="hidden sm:flex flex-col items-start min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-32">{user.name || 'User'}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-32">@{user.email?.split('@')[0] || 'user'}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
               )}</div>
             ) : (
               <div className="hidden md:flex items-center space-x-2">

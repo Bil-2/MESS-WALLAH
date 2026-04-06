@@ -209,10 +209,10 @@ const useAuth = () => {
   const updateProfile = async (profileData) => {
     setLoading(true);
     try {
-      const response = await api.put('/auth/profile', profileData);
+      const response = await api.put('/users/profile', profileData);
 
       if (response.data.success) {
-        const updatedUser = response.data.user;
+        const updatedUser = response.data.data?.user || response.data.user;
 
         // Update localStorage and state
         localStorage.setItem('user', JSON.stringify(updatedUser));

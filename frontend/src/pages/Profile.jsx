@@ -21,13 +21,13 @@ const getInitials = (name = '') => {
 
 /* ─── Reusable field row for display ─────────────────────────────── */
 const InfoRow = ({ icon: Icon, label, value, color = 'text-blue-500' }) => (
-  <div className="flex items-center gap-4 py-4 border-b border-gray-100 dark:border-gray-800 last:border-0">
-    <div className={`w-9 h-9 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center flex-shrink-0`}>
-      <Icon className={`w-4 h-4 ${color}`} />
+  <div className="group flex items-center gap-4 py-3.5 px-3 hover:bg-gray-50/80 dark:hover:bg-gray-800/40 rounded-2xl transition-all duration-300">
+    <div className={`w-11 h-11 rounded-[14px] bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-md transition-all duration-300`}>
+      <Icon className={`w-5 h-5 ${color} group-hover:opacity-100 opacity-80 transition-opacity`} />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{value || '—'}</p>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
+      <p className="text-[15px] font-bold text-gray-800 dark:text-gray-100 truncate group-hover:text-black dark:group-hover:text-white transition-colors">{value || '—'}</p>
     </div>
   </div>
 );
@@ -35,12 +35,12 @@ const InfoRow = ({ icon: Icon, label, value, color = 'text-blue-500' }) => (
 /* ─── Sidebar menu item ───────────────────────────────────────────── */
 const MenuItem = ({ icon: Icon, iconBg, iconColor, label, onClick }) => (
   <button onClick={onClick}
-    className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors group rounded-2xl text-left">
-    <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+    className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-all duration-300 group rounded-2xl text-left hover:pr-2">
+    <div className={`w-11 h-11 ${iconBg} rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:-translate-y-0.5 group-hover:shadow-lg transition-all duration-300`}>
       <Icon className={`w-5 h-5 ${iconColor}`} />
     </div>
-    <span className="flex-1 text-[14px] font-semibold text-gray-800 dark:text-gray-100">{label}</span>
-    <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-gray-500 transition-colors" />
+    <span className="flex-1 text-[15px] font-bold text-gray-800 dark:text-gray-100 group-hover:translate-x-1 transition-transform duration-300">{label}</span>
+    <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-gray-900 dark:group-hover:text-gray-300 transition-colors" />
   </button>
 );
 
@@ -82,7 +82,21 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      const result = await updateProfile(formData);
+      // Create backend-friendly payload
+      const payload = {
+        name: formData.name,
+        profile: {
+          bio: formData.bio,
+          city: formData.city,
+          state: formData.state
+        }
+      };
+      
+      // Only include email and phone if they are not empty strings to avoid validation errors
+      if (formData.email?.trim()) payload.email = formData.email.trim();
+      if (formData.phone?.trim()) payload.phone = formData.phone.trim();
+
+      const result = await updateProfile(payload);
       if (result?.success) { setEditing(false); toast.success('Profile updated!'); }
       else throw new Error(result?.message || 'Failed');
     } catch (e) { toast.error(e.message || 'Failed to update profile'); }
@@ -135,23 +149,20 @@ const Profile = () => {
   const accentDark = 'dark:from-gray-950 dark:via-gray-900 dark:to-gray-900';
 
   return (
-    <div className={`min-h-screen ${accentBg} ${accentDark} pt-20 pb-12`}>
+    <div className={`min-h-screen ${accentBg} ${accentDark} pt-24 pb-16`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── Page title ────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8 pl-2">
           <div>
-            <p className={`text-xs font-bold uppercase tracking-widest mb-0.5 ${isOwner ? 'text-indigo-500' : 'text-orange-500'}`}>
+            <p className={`text-[11px] font-black uppercase tracking-[0.2em] mb-1 ${isOwner ? 'text-indigo-500' : 'text-orange-500'}`}>
               {isOwner ? 'Owner Account' : 'My Account'}
             </p>
-            <h1 className="text-2xl font-black text-gray-900 dark:text-white">Profile</h1>
+            <h1 className="text-4xl font-black bg-gradient-to-r from-gray-900 to-gray-500 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+              Profile
+            </h1>
           </div>
-          <button onClick={() => setEditing(true)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all hover:shadow-lg
-              ${isOwner ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-gradient-to-r from-orange-500 to-pink-500'}`}>
-            <Edit3 className="w-4 h-4" />
-            Edit Profile
-          </button>
+
         </div>
 
         {/* ── Main grid ─────────────────────────────────────────── */}
@@ -160,7 +171,7 @@ const Profile = () => {
           {/* ── LEFT: Profile card ──────────────────────────────── */}
           <div className="lg:col-span-4 mx-auto w-full max-w-md lg:max-w-none">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-gray-900 lg:sticky lg:top-24">
+              className="rounded-[2.5rem] overflow-hidden shadow-2xl shadow-gray-200/50 dark:shadow-black/50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border border-white dark:border-gray-800 lg:sticky lg:top-28">
 
               {/* Gradient header */}
               <div className={`relative bg-gradient-to-br ${headerGrad} px-6 pt-8 pb-7`}>
@@ -222,12 +233,16 @@ const Profile = () => {
               <div className="p-2">
                 {/* Edit profile — mobile only button */}
                 <div className="md:hidden">
-                  <MenuItem icon={Edit3}
-                    iconBg={isOwner ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}
-                    iconColor="text-orange-500"
-                    label="My Profile"
-                    onClick={() => setEditing(true)} />
-                  <Divider />
+                  {!editing && (
+                    <>
+                      <MenuItem icon={Edit3}
+                        iconBg={isOwner ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}
+                        iconColor="text-orange-500"
+                        label="Edit Profile"
+                        onClick={() => setEditing(true)} />
+                      <Divider />
+                    </>
+                  )}
                 </div>
                 {menus.map((item, i) => (
                   <div key={item.label}>
@@ -235,12 +250,7 @@ const Profile = () => {
                     {i < menus.length - 1 && <Divider />}
                   </div>
                 ))}
-                <Divider />
-                <MenuItem icon={Settings}
-                  iconBg="bg-gray-100 dark:bg-gray-800"
-                  iconColor="text-gray-500"
-                  label="Change Password"
-                  onClick={() => setShowPasswordChange(true)} />
+
               </div>
 
               {/* Sign out */}
@@ -260,71 +270,44 @@ const Profile = () => {
           {/* ── RIGHT: Profile details + forms ──────────────────── */}
           <div className="lg:col-span-8 space-y-5">
 
-            {/* Account info card — always visible on desktop */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-              className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between px-6 pt-6 pb-2">
-                <h3 className="text-base font-black text-gray-900 dark:text-white">Account Information</h3>
-                <button onClick={() => setEditing(true)}
-                  className={`hidden md:flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors
-                    ${isOwner ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400' : 'text-orange-600 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400'}`}>
-                  <Edit3 className="w-3 h-3" /> Edit
-                </button>
-              </div>
-              <div className="px-6 pb-4">
-                <InfoRow icon={User}   label="Full Name"  value={user?.name}              color={isOwner ? 'text-indigo-500' : 'text-orange-500'} />
-                <InfoRow icon={Mail}   label="Email"      value={user?.email}             color={isOwner ? 'text-blue-500'   : 'text-pink-500'} />
-                <InfoRow icon={Phone}  label="Phone"      value={user?.phone}             color={isOwner ? 'text-teal-500'   : 'text-teal-500'} />
-                <InfoRow icon={MapPin} label="City"       value={user?.profile?.city}     color="text-purple-500" />
-                <InfoRow icon={MapPin} label="State"      value={user?.profile?.state}    color="text-purple-500" />
-                {user?.profile?.bio && (
-                  <InfoRow icon={Wifi} label={isOwner ? 'About Business' : 'Bio'} value={user.profile.bio} color="text-gray-400" />
-                )}
-              </div>
-            </motion.div>
-
-            {/* Security card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between px-6 pt-6 pb-2">
-                <h3 className="text-base font-black text-gray-900 dark:text-white">Security</h3>
-              </div>
-              <div className="px-6 pb-4">
-                <button onClick={() => setShowPasswordChange(true)}
-                  className="w-full flex items-center gap-4 py-4 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors group px-2">
-                  <div className="w-9 h-9 bg-orange-50 dark:bg-orange-900/20 rounded-xl flex items-center justify-center">
-                    <Lock className="w-4 h-4 text-orange-500" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Password</p>
-                    <p className="text-xs text-gray-400">Last changed — tap to update</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500" />
-                </button>
-                <div className="flex items-center gap-4 py-4 px-2">
-                  <div className="w-9 h-9 bg-green-50 dark:bg-green-900/20 rounded-xl flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-green-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Account Verified</p>
-                    <p className="text-xs text-green-500 font-medium">Your account is verified ✓</p>
-                  </div>
+            {/* Account info card — toggle with edit form */}
+            {!editing && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-gray-200/50 dark:shadow-black/50 overflow-hidden border border-white dark:border-gray-800 p-2">
+                <div className="flex items-center justify-between px-6 pt-6 pb-2">
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white">Account Information</h3>
+                  <button onClick={() => setEditing(true)}
+                    className={`hidden md:flex items-center gap-1.5 text-xs font-black px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 hover:-translate-y-0.5
+                      ${isOwner ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:shadow-lg hover:shadow-indigo-500/20 dark:bg-indigo-900/30 dark:text-indigo-400' : 'text-orange-600 bg-orange-50 hover:bg-orange-100 hover:shadow-lg hover:shadow-orange-500/20 dark:bg-orange-900/30 dark:text-orange-400'}`}>
+                    <Edit3 className="w-3.5 h-3.5" /> Edit Profile
+                  </button>
                 </div>
-              </div>
-            </motion.div>
+                <div className="px-5 pb-5">
+                  <InfoRow icon={User}   label="Full Name"  value={user?.name}              color={isOwner ? 'text-indigo-500' : 'text-orange-500'} />
+                  <InfoRow icon={Mail}   label="Email"      value={user?.email}             color={isOwner ? 'text-blue-500'   : 'text-pink-500'} />
+                  <InfoRow icon={Phone}  label="Phone"      value={user?.phone}             color={isOwner ? 'text-teal-500'   : 'text-teal-500'} />
+                  <InfoRow icon={MapPin} label="City"       value={user?.profile?.city}     color="text-purple-500" />
+                  <InfoRow icon={MapPin} label="State"      value={user?.profile?.state}    color="text-purple-500" />
+                  {user?.profile?.bio && (
+                    <InfoRow icon={Wifi} label={isOwner ? 'About Business' : 'Bio'} value={user.profile.bio} color="text-gray-400" />
+                  )}
+                </div>
+              </motion.div>
+            )}
+
 
             {/* Edit Profile form */}
             <AnimatePresence>
               {editing && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                  className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
-                  <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
-                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Edit Profile</h3>
-                    <button onClick={() => setEditing(false)} className="w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors">
+                <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl shadow-gray-300/50 dark:shadow-black/50 overflow-hidden border border-white dark:border-gray-800 p-2 relative">
+                  <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100/50 dark:border-gray-800/50">
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white">Edit Profile</h3>
+                    <button onClick={() => setEditing(false)} className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 hover:rotate-90 transition-all duration-300">
                       <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                     </button>
                   </div>
-                  <div className="p-6 space-y-4">
+                  <div className="p-6 space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
                         { label: 'Full Name', name: 'name',  icon: User,   type: 'text',  editable: true },
@@ -340,10 +323,10 @@ const Profile = () => {
                             <input type={f.type} value={formData[f.name]}
                               onChange={e => setFormData({ ...formData, [f.name]: e.target.value })}
                               readOnly={!f.editable}
-                              className={`w-full pl-11 pr-4 py-3.5 rounded-xl font-medium text-sm transition-all
+                              className={`w-full pl-12 pr-4 py-4 rounded-2xl font-bold text-[15px] transition-all duration-300
                                 ${f.editable
-                                  ? `bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none text-gray-900 dark:text-white ${isOwner ? 'focus:border-indigo-500' : 'focus:border-orange-500'}`
-                                  : 'bg-gray-50 dark:bg-gray-800/50 text-gray-400 border border-transparent cursor-not-allowed outline-none'
+                                  ? `bg-gray-50/50 dark:bg-gray-800/30 border-2 border-transparent focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white shadow-inner ${isOwner ? 'focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10' : 'focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'}`
+                                  : 'bg-gray-100/80 dark:bg-gray-800/80 text-gray-400 border-2 border-transparent cursor-not-allowed outline-none shadow-none'
                                 }`} />
                           </div>
                         </div>
@@ -352,18 +335,18 @@ const Profile = () => {
                     <div>
                       <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">{isOwner ? 'About Your Business' : 'Bio'}</label>
                       <textarea value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} rows={3}
-                        className={`w-full px-4 py-3.5 rounded-xl font-medium text-sm bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 focus:outline-none text-gray-900 dark:text-white resize-none ${isOwner ? 'focus:border-indigo-500' : 'focus:border-orange-500'}`}
+                        className={`w-full px-5 py-4 rounded-2xl font-bold text-[15px] bg-gray-50/50 dark:bg-gray-800/30 border-2 border-transparent focus:bg-white dark:focus:bg-gray-900 focus:outline-none text-gray-900 dark:text-white shadow-inner resize-none transition-all duration-300 ${isOwner ? 'focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10' : 'focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'}`}
                         placeholder={isOwner ? 'Describe your properties and services...' : 'Write a few sentences about yourself...'} />
                     </div>
-                    <div className="flex gap-3 pt-1">
+                    <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-800/50">
                       <button onClick={handleSaveProfile} disabled={loading}
-                        className={`flex-1 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2
-                          ${isOwner ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-gradient-to-r from-orange-500 to-pink-500'}`}>
-                        <Save className="w-4 h-4" />
-                        {loading ? 'Saving...' : 'Save Changes'}
+                        className={`flex-1 text-white py-4 rounded-2xl font-black text-[15px] shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2
+                          ${isOwner ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500' : 'bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-400 hover:to-pink-400'}`}>
+                        <Save className="w-5 h-5" />
+                        {loading ? 'Saving Changes...' : 'Save Changes'}
                       </button>
                       <button onClick={() => setEditing(false)}
-                        className="px-6 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">
+                        className="px-8 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-2xl font-black text-[15px] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 hover:-translate-y-1">
                         Cancel
                       </button>
                     </div>
@@ -372,56 +355,7 @@ const Profile = () => {
               )}
             </AnimatePresence>
 
-            {/* Change Password form */}
-            <AnimatePresence>
-              {showPasswordChange && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                  className="bg-gray-900 rounded-3xl shadow-xl overflow-hidden">
-                  <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-800">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-orange-500/20 rounded-xl flex items-center justify-center">
-                        <Key className="w-4 h-4 text-orange-400" />
-                      </div>
-                      <h3 className="text-lg font-black text-white">Change Password</h3>
-                    </div>
-                    <button onClick={() => setShowPasswordChange(false)} className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-gray-700 transition-colors">
-                      <X className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                  <form onSubmit={handlePasswordChangeSubmit} className="p-6 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[
-                        { id: 'current', label: 'Current Password', key: 'currentPassword', value: passwordData.currentPassword },
-                        { id: 'new',     label: 'New Password',     key: 'newPassword',     value: passwordData.newPassword },
-                        { id: 'confirm', label: 'Confirm Password', key: 'confirmPassword', value: passwordData.confirmPassword },
-                      ].map(f => (
-                        <div key={f.id}>
-                          <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">{f.label}</label>
-                          <div className="relative">
-                            <input type={showPassword[f.id] ? 'text' : 'password'} value={f.value}
-                              onChange={e => setPasswordData({ ...passwordData, [f.key]: e.target.value })}
-                              required placeholder="••••••••"
-                              className="w-full px-4 py-3.5 pr-12 rounded-xl bg-gray-800 border border-gray-700 focus:border-orange-500 focus:outline-none text-white font-medium text-sm placeholder-gray-600" />
-                            <button type="button" onClick={() => setShowPassword({ ...showPassword, [f.id]: !showPassword[f.id] })}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
-                              {showPassword[f.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-3 pt-1">
-                      <button type="submit" disabled={loading} className="flex-1 py-3.5 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl text-sm transition-colors disabled:opacity-50">
-                        {loading ? 'Updating...' : 'Update Password'}
-                      </button>
-                      <button type="button" onClick={() => setShowPasswordChange(false)} className="px-6 py-3.5 bg-gray-800 text-gray-300 font-bold rounded-xl text-sm hover:bg-gray-700 transition-colors border border-gray-700">
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
 
           </div>
         </div>
