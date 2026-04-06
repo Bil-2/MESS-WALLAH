@@ -52,7 +52,7 @@ const GoogleAuthSuccess = () => {
   }, [searchParams, navigate, setAuthUser]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">
       <ScrollReveal animation="fade-up">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mx-auto mb-4"></div>

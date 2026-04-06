@@ -165,7 +165,7 @@ const Support = () => {
   })).filter(category => category.faqs.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden transition-colors">
 
       {/* Immersive Ambient Background Elements */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-blue-100/40 via-purple-100/30 to-pink-100/40 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10 -z-10 rounded-bl-full"></div>

@@ -294,17 +294,9 @@ class HealthMonitor {
   async performAutoRecovery() {
     // Database recovery
     if (this.healthStatus.database === 'disconnected') {
-      console.log('Attempting database auto-recovery...');
-      try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mess-wallah', {
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        });
-        console.log('Database auto-recovery successful');
-        this.healthStatus.database = 'healthy';
-      } catch (error) {
-        console.error('Database auto-recovery failed', { error: error.message });
-      }
+      console.log('[INFO] Waiting for primary connection logic to handle database retry...');
+      // We rely on server.js's connectDB retry loop and Mongoose's internal auto-reconnect.
+      this.healthStatus.database = 'reconnecting';
     }
 
     // Memory recovery

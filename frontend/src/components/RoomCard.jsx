@@ -64,7 +64,7 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
           {room.photos && room.photos.length > 0 && !imageError ? (
             <>
               <img
-                src={getSafeImageUrl(room.photos[currentImageIndex]?.url || room.photos[currentImageIndex], currentImageIndex)}
+                src={getSafeImageUrl(room.photos[currentImageIndex]?.url || room.photos[currentImageIndex], currentImageIndex, room._id)}
                 alt={room.title}
                 className="w-full h-full object-cover"
                 onError={handleImageError}
@@ -104,16 +104,12 @@ const RoomCard = ({ room, onFavorite, isFavorited = false }) => {
               )}
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <p className="text-sm text-gray-500">No image available</p>
-              </div>
-            </div>
+            // No photos or image error — always show a unique room image
+            <img
+              src={getSafeImageUrl('', 0, room._id || room.title || String(Math.random()))}
+              alt={room.title}
+              className="w-full h-full object-cover"
+            />
           )}
 
           {/* Favorite Button */}

@@ -17,6 +17,7 @@ import {
 import SuccessStories from '../components/SuccessStories';
 import ScrollReveal, { ScrollRevealGroup } from '../components/ScrollReveal';
 import api from '../utils/api';
+import { getSafeImageUrl } from '../utils/imageUtils';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -28,6 +29,32 @@ const Home = () => {
     cities: 1500,
     rating: 4.8
   });
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const BANNERS = [
+    '/images/rooms/room-3.jpg',
+    '/images/rooms/room-10.jpg',
+    '/images/rooms/room-11.jpg',
+    '/images/rooms/room-12.jpg',
+    '/images/rooms/room-15.jpg',
+    '/images/rooms/room-16.jpg',
+    '/images/rooms/room-30.jpg',
+    '/images/rooms/room-34.jpg',
+    '/images/rooms/room-39.jpg',
+    '/images/rooms/room-44.jpg',
+    '/images/rooms/room-59.jpg',
+    '/images/rooms/room-61.jpg',
+    '/images/rooms/room-63.jpg',
+    '/images/rooms/room-84.jpg',
+    '/images/rooms/room-86.jpg',
+  ];
+
+  // Auto-rotate banner every 3 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setBannerIndex(prev => (prev + 1) % BANNERS.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchHomeData();
@@ -48,7 +75,7 @@ const Home = () => {
             rent: room.rentPerMonth,
             rating: room.rating || 4.5,
             photos: room.photos || [], // Pass the entire photos array
-            image: room.photos && room.photos[0] ? room.photos[0].url : 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
+            image: getSafeImageUrl(room.photos && room.photos[0] ? room.photos[0].url : '', 0, room._id),
             amenities: room.amenities ? room.amenities.slice(0, 3) : ['WiFi', 'AC', 'Food']
           }));
           setFeaturedRooms(transformedRooms);
@@ -78,7 +105,7 @@ const Home = () => {
           location: 'Andheri, Mumbai',
           rent: 12000,
           rating: 4.7,
-          image: 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
+          image: getSafeImageUrl('', 0, '1'),
           amenities: ['WiFi', 'AC', 'Food']
         }
       ]);
@@ -98,14 +125,25 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
-      {/* Hero Section */}
-      <section className="relative pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Animated Background */}
+    <div className="min-h-screen bg-gray-900 fade-in">
+      {/* Hero Section with Banner Background */}
+      <section className="section-dark relative pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Banner Background Slideshow */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-orange-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-400/30 to-pink-400/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+          {BANNERS.map((src, i) => (
+            <div
+              key={src}
+              className="absolute inset-0 transition-opacity duration-1000"
+              style={{
+                opacity: i === bannerIndex ? 1 : 0,
+                backgroundImage: `url(${src})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
+          ))}
+          {/* Dark overlay so text stays readable in all modes */}
+          <div className="absolute inset-0 bg-black/15" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -193,7 +231,7 @@ const Home = () => {
                 </h1>
 
                 {/* Value Proposition */}
-                <p className="text-xl sm:text-2xl text-gray-300 mb-6 max-w-4xl mx-auto font-medium leading-relaxed">
+                <p className="text-xl sm:text-2xl text-white/90 mb-6 max-w-4xl mx-auto font-medium leading-relaxed drop-shadow">
                   Discover <span className="text-orange-400 font-bold">verified</span>,
                   <span className="text-pink-400 font-bold"> secure</span>, and
                   <span className="text-purple-400 font-bold"> affordable</span> student housing
@@ -258,19 +296,19 @@ const Home = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                 <div className="text-center">
                   <div className="text-3xl font-black text-orange-400 mb-1">25K+</div>
-                  <div className="text-sm text-gray-400 font-semibold">Happy Students</div>
+                  <div className="text-sm text-white/80 font-semibold">Happy Students</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-black text-pink-400 mb-1">7,500+</div>
-                  <div className="text-sm text-gray-400 font-semibold">Verified Rooms</div>
+                  <div className="text-sm text-white/80 font-semibold">Verified Rooms</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-black text-purple-400 mb-1">3,734+</div>
-                  <div className="text-sm text-gray-400 font-semibold">Cities Covered</div>
+                  <div className="text-sm text-white/80 font-semibold">Cities Covered</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-black text-green-400 mb-1">4.88/5</div>
-                  <div className="text-sm text-gray-400 font-semibold">Safety Rating</div>
+                  <div className="text-sm text-white/80 font-semibold">Safety Rating</div>
                 </div>
               </div>
             </ScrollReveal>
@@ -279,14 +317,14 @@ const Home = () => {
       </section>
 
       {/* Top 5 Cities Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-900/30 via-purple-900/30 to-pink-900/30 backdrop-blur-sm">
+      <section className="section-dark py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-900/30 via-purple-900/30 to-pink-900/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal animation="fade-up">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Top Cities for <span className="bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Student Housing</span>
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              <p className="text-xl text-white/80 max-w-3xl mx-auto">
                 Discover premium student accommodations in India&apos;s top educational and professional hubs
               </p>
             </div>
@@ -365,7 +403,7 @@ const Home = () => {
                       <HomeIcon className="w-4 h-4 mr-2" />
                       {city.rooms}
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-4">{city.popular}</p>
+                    <p className="text-white/70 text-sm font-medium mb-4">{city.popular}</p>
 
                     {/* Action Button */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -386,7 +424,7 @@ const Home = () => {
           {/* Additional Info */}
           <ScrollReveal animation="fade-up" delay={600}>
             <div className="text-center mt-12">
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
+              <p className="text-white/80 text-lg">
                 Click on any city to explore available student housing and PG accommodations
               </p>
               <div className="flex justify-center items-center mt-4 space-x-4">

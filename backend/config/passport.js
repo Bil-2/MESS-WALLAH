@@ -56,9 +56,25 @@ passport.use(
           return done(null, user);
         }
 
-        // NEW: Reject new users and return an error message to the callback
-        console.log('[AUTH] Google OAuth: User not found in database, rejecting:', email);
-        return done(null, false, { message: 'email_not_found' });
+        // Auto-register new users who sign in with Google
+        console.log('[AUTH] Google OAuth: Creating new user from Google profile:', email);
+        user = await User.create({
+          name,
+          email,
+          password: Math.random().toString(36) + Math.random().toString(36), // random — they'll use Google to login
+          phone: '',
+          role: 'user',
+          socialAuth: { googleId, provider: 'google' },
+          profilePicture: profilePicture || '',
+          verified: true,
+          isVerified: true,
+          isEmailVerified: true,
+          accountType: 'social',
+          registrationMethod: 'google',
+          lastLogin: new Date()
+        });
+        console.log('[SUCCESS] New Google user created:', user.email);
+        return done(null, user);
 
       } catch (error) {
         console.error('[ERROR] Google OAuth Error:', error);

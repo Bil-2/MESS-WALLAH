@@ -151,62 +151,80 @@ app.use('/uploads', express.static('uploads'));
 // SMART DUAL DATABASE CONNECTION
 // Tries Local MongoDB first → falls back to Atlas automatically
 // ────────────────────────────────────────────────────────────────
+const net = require('net');
+
+const checkLocalMongoDB = () => {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    socket.setTimeout(1000); // Fast fail
+
+    socket.on('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+
+    socket.on('timeout', () => {
+      socket.destroy();
+      resolve(false);
+    });
+
+    socket.on('error', () => {
+      socket.destroy();
+      resolve(false);
+    });
+
+    socket.connect(27017, '127.0.0.1');
+  });
+};
+
 const connectDB = async () => {
-  const LOCAL_URI  = 'mongodb://localhost:27017/mess-wallah';
+  const LOCAL_URI  = 'mongodb://127.0.0.1:27017/mess-wallah';
   const ATLAS_URI  = process.env.MONGODB_URI; // Cloud Atlas from .env
 
-  const tryConnect = async (uri, label) => {
-    try {
-      console.log(`[DB] Trying ${label}...`);
-      const conn = await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 5000,   // 5s – fail fast on local check
-        socketTimeoutMS: 60000,
-        connectTimeoutMS: 5000,
-        maxPoolSize: 10,
-        minPoolSize: 1,
-        retryWrites: true,
-      });
-      return conn;
-    } catch (err) {
-      console.warn(`[DB] ${label} unavailable: ${err.message}`);
-      return null;
-    }
+  console.log('[DB] Checking for local MongoDB server...');
+  const isLocalAvailable = await checkLocalMongoDB();
+
+  // Decide which URI to use
+  let activeURI = '';
+  let label = '';
+  let options = {
+    retryWrites: true,
   };
 
-  // 1️⃣  Try local first
-  let conn = await tryConnect(LOCAL_URI, 'Local MongoDB (localhost:27017)');
-
-  // 2️⃣  Fall back to Atlas
-  if (!conn && ATLAS_URI) {
-    console.log('[DB] Falling back to MongoDB Atlas...');
-    // Increase timeout for Atlas (network latency)
-    await mongoose.disconnect().catch(() => {});
-    conn = await mongoose.connect(ATLAS_URI, {
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 60000,
-      connectTimeoutMS: 30000,
-      maxPoolSize: 10,
-      minPoolSize: 1,
-      retryWrites: true,
-    });
+  if (isLocalAvailable) {
+    activeURI = LOCAL_URI;
+    label = 'Local MongoDB (localhost:27017)';
+    options.serverSelectionTimeoutMS = 5000;
+  } else if (ATLAS_URI) {
+    console.log('[DB] Local DB not available. Falling back to MongoDB Atlas...');
+    activeURI = ATLAS_URI;
+    label = 'MongoDB Atlas';
+    options.serverSelectionTimeoutMS = 30000;
+    options.socketTimeoutMS = 60000;
+    options.connectTimeoutMS = 30000;
+  } else {
+    console.error('[ERROR] No MongoDB URI available (Local failed, ATLAS not set).');
+    process.exit(1);
   }
 
-  if (!conn) {
-    console.error('[ERROR] Both Local and Atlas connections failed. Retrying in 10s...');
+  try {
+    const conn = await mongoose.connect(activeURI, options);
+    
+    const displayURI = conn.connection.host.includes('127.0.0.1') || conn.connection.host.includes('localhost') ? '🏠 LOCAL' : '☁️  ATLAS';
+    console.log(`\n[SUCCESS] ✅ MongoDB Connected via ${displayURI}`);
+    console.log(`[INFO]    Host: ${conn.connection.host}`);
+    console.log(`[INFO]    DB:   ${conn.connection.name}\n`);
+
+    const Room = require('./models/Room');
+    const roomCount = await Room.countDocuments().catch(() => '?');
+    console.log(`[INFO]    Rooms in database: ${roomCount}`);
+
+    return conn;
+  } catch (err) {
+    console.error(`[ERROR] Failed to connect to ${label}:`, err.message);
+    console.log('[INFO] Retrying connection in 10s...');
     setTimeout(() => connectDB(), 10000);
-    return;
   }
-
-  const activeURI = conn.connection.host.includes('localhost') ? '🏠 LOCAL' : '☁️  ATLAS';
-  console.log(`\n[SUCCESS] ✅ MongoDB Connected via ${activeURI}`);
-  console.log(`[INFO]    Host: ${conn.connection.host}`);
-  console.log(`[INFO]    DB:   ${conn.connection.name}\n`);
-
-  const Room = require('./models/Room');
-  const roomCount = await Room.countDocuments().catch(() => '?');
-  console.log(`[INFO]    Rooms in database: ${roomCount}`);
-
-  return conn;
 };
 
 // Connect to database

@@ -34,8 +34,8 @@ const ResponsiveRoomCard = ({
 
   // Get all images
   const images = room.photos?.length > 0
-    ? room.photos.map((p, index) => getSafeImageUrl(p.url || p, index))
-    : [getSafeImageUrl(room.image)];
+    ? room.photos.map((p, index) => getSafeImageUrl(p.url || p, index, room._id))
+    : [getSafeImageUrl(room.image, 0, room._id)];
 
   // Auto-rotate images on hover (Airbnb style)
   useEffect(() => {

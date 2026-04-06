@@ -8,23 +8,33 @@ import ScrollReveal from '../../components/ScrollReveal';
 const OwnerBookings = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);   // full unfiltered list
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, pending, approved, rejected
+  const [filter, setFilter] = useState('all');
 
+  // Fetch ONCE on mount
   useEffect(() => {
     fetchBookings();
-  }, [filter]);
+  }, []); // ← no [filter] dependency — avoids repeated API calls
+
+  // Filter locally whenever filter or allBookings changes
+  useEffect(() => {
+    if (filter === 'all') {
+      setBookings(allBookings);
+    } else {
+      setBookings(allBookings.filter(b => b.status === filter));
+    }
+  }, [filter, allBookings]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
       const response = await api.get('/bookings/owner-bookings');
       const data = response.data.data;
-      let list = Array.isArray(data) ? data : (data?.bookings || []);
-      if (filter !== 'all') {
-        list = list.filter(b => b.status === filter);
-      }
-      setBookings(list);
+      const list = Array.isArray(data) ? data : (data?.bookings || []);
+      setAllBookings(list);  // store full list
+      // initial display respects current filter
+      setBookings(filter === 'all' ? list : list.filter(b => b.status === filter));
     } catch (error) {
       console.error('Error fetching bookings:', error);
       toast.error('Failed to load booking requests');
@@ -37,7 +47,8 @@ const OwnerBookings = () => {
     try {
       await api.patch(`/bookings/${bookingId}/status`, { status: 'confirmed' });
       toast.success('Booking approved! Tenant will be notified.');
-      fetchBookings();
+      // Update local state — no extra API call
+      setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'confirmed' } : b));
     } catch (error) {
       console.error('Approve error:', error);
       toast.error('Failed to approve booking');
@@ -48,7 +59,8 @@ const OwnerBookings = () => {
     try {
       await api.patch(`/bookings/${bookingId}/status`, { status: 'rejected' });
       toast.success('Booking rejected');
-      fetchBookings();
+      // Update local state — no extra API call
+      setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'rejected' } : b));
     } catch (error) {
       console.error('Reject error:', error);
       toast.error('Failed to reject booking');

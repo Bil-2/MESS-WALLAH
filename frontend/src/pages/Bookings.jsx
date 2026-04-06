@@ -7,6 +7,7 @@ import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ScrollReveal from '../components/ScrollReveal';
 import toast from 'react-hot-toast';
+import { getSafeImageUrl } from '../utils/imageUtils';
 
 const Bookings = () => {
   const { _user } = useAuthContext();
@@ -41,7 +42,7 @@ const Bookings = () => {
         _id: 'room1',
         title: 'Cozy Student Room',
         address: { area: 'Koramangala', city: 'Bangalore' },
-        photos: [{ url: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800' }]
+        photos: [{ url: getSafeImageUrl('', 0, 'dummy1') }]
       },
       checkInDate: '2024-01-15',
       checkOutDate: '2024-06-15',
@@ -57,7 +58,7 @@ const Bookings = () => {
         _id: 'room2',
         title: 'Modern Mess Accommodation',
         address: { area: 'Whitefield', city: 'Bangalore' },
-        photos: [{ url: 'https://images.pexels.com/photos/3752194/pexels-photo-3752194.jpeg?auto=compress&cs=tinysrgb&w=800' }]
+        photos: [{ url: getSafeImageUrl('', 0, 'dummy2') }]
       },
       checkInDate: '2024-02-01',
       checkOutDate: '2024-07-01',
@@ -73,7 +74,7 @@ const Bookings = () => {
         _id: 'room3',
         title: 'Budget Friendly Room',
         address: { area: 'BTM Layout', city: 'Bangalore' },
-        photos: [{ url: 'https://images.pexels.com/photos/3752194/pexels-photo-3752194.jpeg?auto=compress&cs=tinysrgb&w=800' }]
+        photos: [{ url: getSafeImageUrl('', 0, 'dummy3') }]
       },
       checkInDate: '2023-08-01',
       checkOutDate: '2023-12-31',
@@ -242,7 +243,7 @@ const Bookings = () => {
                     {/* Property Image */}
                     <div className="lg:w-64 h-48 lg:h-auto">
                       <img
-                        src={booking.room?.photos?.[0]?.url || 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                        src={getSafeImageUrl(booking.room?.photos?.[0]?.url || '', 0, booking.room?._id)}
                         alt={booking.room?.title || 'Room'}
                         className="w-full h-full object-cover"
                       />

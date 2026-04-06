@@ -106,7 +106,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
       {/* Premium Background Elements */}
       <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-br from-orange-100/50 via-pink-100/30 to-purple-100/50 dark:from-orange-900/10 dark:via-pink-900/10 dark:to-purple-900/10 -z-10 rounded-b-[100px] sm:rounded-b-[200px]"></div>
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-300/30 dark:bg-orange-600/20 blur-[100px] rounded-full -z-10"></div>

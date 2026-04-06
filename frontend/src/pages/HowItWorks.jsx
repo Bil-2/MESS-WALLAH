@@ -91,7 +91,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
       {/* Premium Background Elements */}
       <div className="absolute top-0 left-0 w-full h-[700px] bg-gradient-to-br from-blue-100/40 via-purple-100/30 to-pink-100/40 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10 -z-10 rounded-b-[150px] md:rounded-b-[300px]"></div>
       <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-purple-300/20 dark:bg-purple-600/10 blur-[120px] rounded-full -z-10"></div>

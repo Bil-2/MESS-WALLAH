@@ -39,7 +39,7 @@ const OwnerBookings = lazy(() => import('./pages/owner/OwnerBookings'));
 
 // Enhanced loading component for better UX
 const PageLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
     <div className="text-center">
       <LoadingSpinner size="large" />
       <p className="mt-4 text-gray-600 dark:text-gray-400 animate-pulse">
@@ -63,7 +63,7 @@ function App() {
             v7_relativeSplatPath: true
           }}
         >
-          <div className="App min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
+          <div className="App min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 fade-in">
             <Navbar />
             <main className="smooth-transition pt-16 pb-20 md:pb-8">
               <Suspense fallback={<PageLoadingFallback />}>

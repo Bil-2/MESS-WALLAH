@@ -84,7 +84,7 @@ const Privacy = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
       {/* Immersive Background Glow */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-teal-100/40 via-cyan-100/30 to-blue-100/40 dark:from-teal-900/10 dark:via-cyan-900/10 dark:to-blue-900/10 -z-10 rounded-bl-full"></div>
       <div className="absolute top-40 left-0 w-96 h-96 bg-blue-300/20 dark:bg-blue-600/10 blur-[100px] rounded-full -z-10"></div>

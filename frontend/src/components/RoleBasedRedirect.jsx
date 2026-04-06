@@ -34,7 +34,7 @@ const RoleBasedRedirect = ({ children }) => {
   // Show loading while checking
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
         <LoadingSpinner size="large" />
       </div>
     );

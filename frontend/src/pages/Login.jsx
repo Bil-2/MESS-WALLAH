@@ -70,7 +70,7 @@ const Login = () => {
   // Show loading while checking auth status
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600" />
       </div>
     );
@@ -288,7 +288,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center py-6 px-4 relative overflow-hidden fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center py-6 px-4 relative overflow-hidden fade-in">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 text-orange-200 opacity-20 pulse">
@@ -417,7 +417,7 @@ const Login = () => {
                     <input
                       id="otp"
                       type="text"
-                      autoComplete="off"
+                      autoComplete="one-time-code"
                       autoCorrect="off"
                       autoCapitalize="off"
                       spellCheck="false"

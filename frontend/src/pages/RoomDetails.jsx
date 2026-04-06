@@ -8,13 +8,14 @@ import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BookingModal from '../components/BookingModal';
 import toast from 'react-hot-toast';
-import { getSafeImageUrl } from '../utils/imageUtils';
+import { getSafeImageUrl, getRoomGalleryImages } from '../utils/imageUtils';
 
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const [room, setRoom] = useState(null);
+  const [roomPhotos, setRoomPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retrying, setRetrying] = useState(false);
@@ -37,6 +38,8 @@ const RoomDetails = () => {
 
       if (data.success && data.data) {
         setRoom(data.data);
+        // Always generate 15 stable local images for this room
+        setRoomPhotos(getRoomGalleryImages(data.data._id, 15));
         // Check if user has favorited this room
         if (user && data.data._id) {
           const favs = user.favourites || [];
@@ -189,7 +192,7 @@ const RoomDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
         {/* Back Button */}
         <motion.button
@@ -218,8 +221,8 @@ const RoomDetails = () => {
               <div className="relative group">
                 <motion.img
                   key={selectedImage}
-                  src={getSafeImageUrl(room.photos?.[selectedImage]?.url || room.photos?.[selectedImage], selectedImage)}
-                  alt={room.photos?.[selectedImage]?.caption || room.title}
+                  src={roomPhotos[selectedImage]?.url}
+                  alt={roomPhotos[selectedImage]?.caption || room.title}
                   className="w-full h-96 object-cover cursor-pointer"
                   onClick={() => {
                     setLightboxImage(selectedImage);
@@ -231,16 +234,16 @@ const RoomDetails = () => {
                 />
 
                 {/* Image Navigation Arrows */}
-                {room.photos && room.photos.length > 1 && (
+                {roomPhotos.length > 1 && (
                   <>
                     <button
-                      onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : room.photos.length - 1)}
+                      onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : roomPhotos.length - 1)}
                       className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
                     >
                       <FiChevronLeft className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => setSelectedImage(selectedImage < room.photos.length - 1 ? selectedImage + 1 : 0)}
+                      onClick={() => setSelectedImage(selectedImage < roomPhotos.length - 1 ? selectedImage + 1 : 0)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
                     >
                       <FiChevronRight className="w-5 h-5" />
@@ -260,16 +263,16 @@ const RoomDetails = () => {
                 </button>
 
                 {/* Image Counter */}
-                {room.photos && room.photos.length > 1 && (
+                {roomPhotos.length > 1 && (
                   <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                    {selectedImage + 1} / {room.photos.length}
+                    {selectedImage + 1} / {roomPhotos.length}
                   </div>
                 )}
               </div>
 
               <div className="p-6">
                 <div className="flex space-x-3 overflow-x-auto pb-2">
-                  {(room.photos || []).map((photo, index) => (
+                  {roomPhotos.map((photo, index) => (
                     <motion.button
                       key={index}
                       onClick={() => setSelectedImage(index)}
@@ -281,7 +284,7 @@ const RoomDetails = () => {
                       whileTap={{ scale: 0.95 }}
                     >
                       <img
-                        src={getSafeImageUrl(photo.url || photo, index)}
+                        src={photo.url}
                         alt={photo.caption || `View ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -603,7 +606,7 @@ const RoomDetails = () => {
                         <div className="mt-2">
                           {room.owner.phone || room.owner.email ? (
                             <p className="text-xs text-orange-500 dark:text-orange-400 italic">
-                              Click "Contact Owner" above to view phone & email
+                              Click &quot;Contact Owner&quot; above to view phone &amp; email
                             </p>
                           ) : (
                             <p className="text-xs text-red-500 dark:text-red-400 italic">
@@ -632,8 +635,8 @@ const RoomDetails = () => {
             >
               <div className="relative max-w-4xl max-h-full">
                 <motion.img
-                  src={getSafeImageUrl(room.photos?.[lightboxImage]?.url || room.photos?.[lightboxImage], lightboxImage)}
-                  alt={room.photos?.[lightboxImage]?.caption || room.title}
+                  src={roomPhotos[lightboxImage]?.url || getSafeImageUrl('', lightboxImage, room._id)}
+                  alt={roomPhotos[lightboxImage]?.caption || room.title}
                   className="max-w-full max-h-full object-contain rounded-lg"
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
@@ -650,12 +653,12 @@ const RoomDetails = () => {
                 </button>
 
                 {/* Navigation */}
-                {room.photos && room.photos.length > 1 && (
+                {roomPhotos.length > 1 && (
                   <>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setLightboxImage(lightboxImage > 0 ? lightboxImage - 1 : room.photos.length - 1);
+                        setLightboxImage(lightboxImage > 0 ? lightboxImage - 1 : roomPhotos.length - 1);
                       }}
                       className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
                     >
@@ -664,7 +667,7 @@ const RoomDetails = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setLightboxImage(lightboxImage < room.photos.length - 1 ? lightboxImage + 1 : 0);
+                        setLightboxImage(lightboxImage < roomPhotos.length - 1 ? lightboxImage + 1 : 0);
                       }}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
                     >
@@ -674,9 +677,9 @@ const RoomDetails = () => {
                 )}
 
                 {/* Image Counter */}
-                {room.photos && room.photos.length > 1 && (
+                {roomPhotos.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
-                    {lightboxImage + 1} / {room.photos.length}
+                    {lightboxImage + 1} / {roomPhotos.length}
                   </div>
                 )}
               </div>

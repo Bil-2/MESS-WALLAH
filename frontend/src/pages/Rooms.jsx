@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getSafeImageUrl } from '../utils/imageUtils';
 import {
   FiSearch, FiMapPin, FiStar, FiHeart, FiChevronDown, FiGrid, FiList,
   FiWifi, FiShield, FiCoffee, FiWind, FiTruck, FiX, FiPhone, FiShare2, FiUsers, FiHome, FiZap, FiAward,
@@ -20,8 +21,8 @@ const ModernRoomCard = ({ room, onBook, onView, onFavorite, isFavorite, onPhone,
   const [isHovered, setIsHovered] = useState(false);
 
   const images = room.photos?.length > 0
-    ? room.photos.map(p => p.url || p)
-    : [room.image || 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800'];
+    ? room.photos.map(p => getSafeImageUrl(p.url || p, 0, room._id || room.id))
+    : [getSafeImageUrl(room.image, 0, room._id || room.id)];
 
   // Auto-rotate images on hover (like Airbnb)
   useEffect(() => {
@@ -251,14 +252,14 @@ const Rooms = () => {
 
   const debouncedSearch = useDebounce(filters.search, 400);
 
-  // Popular Cities Data
+  // Popular Cities — each city has its own unique hardcoded room photo (all different)
   const popularCities = [
-    { name: 'Bangalore', image: 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '2,500+' },
-    { name: 'Delhi', image: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '1,800+' },
-    { name: 'Mumbai', image: 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '1,500+' },
-    { name: 'Pune', image: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '1,200+' },
-    { name: 'Chennai', image: 'https://images.pexels.com/photos/739987/pexels-photo-739987.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '900+' },
-    { name: 'Kolkata', image: 'https://images.pexels.com/photos/2387446/pexels-photo-2387446.jpeg?auto=compress&cs=tinysrgb&w=800', rooms: '800+' },
+    { name: 'Bangalore', image: 'https://picsum.photos/id/378/800/600', rooms: '2,500+' },
+    { name: 'Delhi',     image: 'https://picsum.photos/id/260/800/600', rooms: '1,800+' },
+    { name: 'Mumbai',    image: 'https://picsum.photos/id/164/800/600', rooms: '1,500+' },
+    { name: 'Pune',      image: 'https://picsum.photos/id/197/800/600', rooms: '1,200+' },
+    { name: 'Chennai',   image: 'https://picsum.photos/id/188/800/600', rooms: '900+' },
+    { name: 'Kolkata',   image: 'https://picsum.photos/id/255/800/600', rooms: '800+' },
   ];
 
   // Amenity Options
@@ -297,7 +298,7 @@ const Rooms = () => {
           location: `${room.address?.area || ''}, ${room.address?.city || ''}`.trim(),
           city: room.address?.city || '',
           rent: room.rentPerMonth,
-          image: room.photos?.[0]?.url || 'https://images.pexels.com/photos/2724749/pexels-photo-2724749.jpeg?auto=compress&cs=tinysrgb&w=800',
+          image: getSafeImageUrl(room.photos?.[0]?.url || null, 0, room._id),
           verified: true,
           ownerPhone: room.owner?.phone || '+91 9876543210',
           ownerName: room.owner?.name || 'Property Owner',
@@ -417,7 +418,7 @@ const Rooms = () => {
   }, [filters.sortBy]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50/30 to-purple-50/20 dark:from-gray-900 dark:via-violet-950/20 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-zinc-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
 
       {/* ============================================ */}
       {/* HERO SECTION - Airbnb/OYO Inspired */}
@@ -464,10 +465,12 @@ const Rooms = () => {
                 {/* Location Input */}
                 <div className="flex-1 relative">
                   <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
+                  <label htmlFor="searchQuery" className="sr-only">Search location</label>
                   <input
                     type="text"
                     id="searchQuery"
                     name="searchQuery"
+                    autoComplete="address-level2"
                     placeholder="Where do you want to stay?"
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, location: e.target.value }))}
@@ -486,9 +489,11 @@ const Rooms = () => {
                 {/* Room Type Dropdown */}
                 <div className="relative md:w-48">
                   <FiHome className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
+                  <label htmlFor="roomTypeFilter" className="sr-only">Room type</label>
                   <select
                     id="roomTypeFilter"
                     name="roomTypeFilter"
+                    autoComplete="off"
                     value={filters.roomType}
                     onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white appearance-none cursor-pointer focus:ring-2 focus:ring-violet-500 transition-all"
@@ -627,9 +632,11 @@ const Rooms = () => {
             {/* Price Range & Sort */}
             <div className="flex items-center gap-2">
               {/* Price Range Dropdown */}
+              <label htmlFor="priceRangeFilter" className="sr-only">Price range</label>
               <select
                 id="priceRangeFilter"
                 name="priceRangeFilter"
+                autoComplete="off"
                 value={filters.maxRent ? `${filters.minRent || '0'}-${filters.maxRent}` : ''}
                 onChange={(e) => {
                   const [min, max] = e.target.value.split('-');
@@ -692,9 +699,11 @@ const Rooms = () => {
             </div>
 
             {/* Sort Dropdown */}
+            <label htmlFor="sortBySelect" className="sr-only">Sort by</label>
             <select
               id="sortBySelect"
               name="sortBySelect"
+              autoComplete="off"
               value={filters.sortBy}
               onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
               className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium cursor-pointer focus:ring-2 focus:ring-violet-500"

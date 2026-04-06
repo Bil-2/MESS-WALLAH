@@ -41,13 +41,14 @@ router.get('/google/callback', (req, res, next) => {
       }
 
       if (!user) {
-        const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
-        const frontendBase = frontendUrl.replace(/\/$/, '');
-
-        if (info && info.message === 'email_not_found') {
-          console.error('[ERROR] Google user not found in DB, redirecting to register');
-          return res.redirect(`${frontendBase}/register?error=email_not_found`);
-        }
+        // Decode frontend URL from state parameter (set at OAuth initiation)
+        let frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+        try {
+          if (req.query.state) {
+            const stateData = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
+            if (stateData.frontend) frontendBase = stateData.frontend;
+          }
+        } catch (_) {}
 
         console.error('[ERROR] No user found after Google authentication');
         return res.redirect(`${frontendBase}/login?error=auth_failed`);

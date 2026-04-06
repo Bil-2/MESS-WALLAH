@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCalendar, FiUser, FiMail, FiPhone, FiCheck, FiAlertCircle, FiChevronRight, FiChevronLeft, FiLoader } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -29,6 +29,27 @@ const BookingModal = ({ room, onClose, user }) => {
     profession: '',
     age: '',
   });
+
+  // ── Fetch fresh profile to ensure email & phone are pre-filled ──
+  useEffect(() => {
+    const prefill = async () => {
+      try {
+        const res = await api.get('/auth/me');
+        if (res.data.success && res.data.user) {
+          const u = res.data.user;
+          setForm(prev => ({
+            ...prev,
+            name:  u.name  || prev.name,
+            email: u.email || prev.email,
+            phone: u.phone || prev.phone,
+          }));
+        }
+      } catch {
+        // silently ignore — use whatever was in localStorage
+      }
+    };
+    prefill();
+  }, []);
 
   // ─── Pricing Calculation ──────────────────────────────
   const pricing = (() => {
@@ -297,23 +318,33 @@ const BookingModal = ({ room, onClose, user }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { label: 'Full Name', key: 'name', icon: <FiUser className="w-4 h-4" />, type: 'text', placeholder: 'Your full name' },
-                    { label: 'Email', key: 'email', icon: <FiMail className="w-4 h-4" />, type: 'email', placeholder: 'your@email.com' },
-                    { label: 'Phone', key: 'phone', icon: <FiPhone className="w-4 h-4" />, type: 'tel', placeholder: '10-digit mobile number', maxLength: 10 },
+                    { label: 'Full Name',  key: 'name',      icon: <FiUser className="w-4 h-4" />,  type: 'text',   placeholder: 'Your full name',         readonly: true },
+                    { label: 'Email',      key: 'email',     icon: <FiMail className="w-4 h-4" />,  type: 'email',  placeholder: 'your@email.com',         readonly: true },
+                    { label: 'Phone',      key: 'phone',     icon: <FiPhone className="w-4 h-4" />, type: 'tel',    placeholder: '10-digit mobile number', readonly: true },
                     { label: 'Aadhar No (Safety)', key: 'aadharNo', icon: <FiCheck className="w-4 h-4" />, type: 'text', placeholder: '12-digit Aadhar No', maxLength: 12 },
-                    { label: 'Profession', key: 'profession', icon: <FiUser className="w-4 h-4" />, type: 'text', placeholder: 'e.g. Student, Engineer' },
-                    { label: 'Age', key: 'age', icon: <FiCalendar className="w-4 h-4" />, type: 'number', placeholder: 'Age (e.g. 22)', maxLength: 3 },
-                  ].map(({ label, key, icon, type, placeholder, maxLength }) => (
+                    { label: 'Profession',key: 'profession', icon: <FiUser className="w-4 h-4" />,  type: 'text',   placeholder: 'e.g. Student, Engineer'  },
+                    { label: 'Age',       key: 'age',        icon: <FiCalendar className="w-4 h-4" />, type: 'number', placeholder: 'Age (e.g. 22)', maxLength: 3 },
+                  ].map(({ label, key, icon, type, placeholder, maxLength, readonly }) => (
                     <div key={key}>
-                      <label htmlFor={key} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor={key} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
                         {label} <span className="text-red-500">*</span>
+                        {readonly && (
+                          <span className="ml-auto text-[10px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-full">
+                            from account
+                          </span>
+                        )}
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
                         <input type={type} id={key} name={key} value={form[key]}
-                          onChange={e => updateForm(key, e.target.value)}
+                          onChange={e => !readonly && updateForm(key, e.target.value)}
+                          readOnly={readonly}
                           maxLength={maxLength}
-                          className="w-full pl-9 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm"
+                          className={`w-full pl-9 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white text-sm transition-colors
+                            ${readonly
+                              ? 'border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-900/10 text-gray-700 dark:text-gray-200 cursor-default select-none'
+                              : 'border-gray-300 dark:border-gray-600'
+                            }`}
                           placeholder={placeholder}
                         />
                       </div>

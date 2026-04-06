@@ -11,9 +11,9 @@ import {
   FiExternalLink,
   FiAlertTriangle,
   FiFacebook,
-  FiInstagram,
-  FiTwitter
+  FiInstagram
 } from 'react-icons/fi';
+import { FaXTwitter } from 'react-icons/fa6';
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -132,9 +132,9 @@ const Footer = () => {
               </button>
               <button
                 onClick={() => handleSocialClick('twitter')}
-                className="w-8 h-8 bg-blue-400/20 hover:bg-blue-400/30 rounded-lg flex items-center justify-center transition-colors scale-hover"
+                className="w-8 h-8 bg-gray-600/30 hover:bg-gray-600/50 rounded-lg flex items-center justify-center transition-colors scale-hover"
               >
-                <FiTwitter className="w-4 h-4 text-blue-300" />
+                <FaXTwitter className="w-4 h-4 text-gray-100" />
               </button>
             </div>
           </div>

@@ -139,7 +139,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden transition-colors duration-300">
 
       {/* Immersive 3D-Like Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">

@@ -82,7 +82,7 @@ const Terms = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden">
       {/* Immersive Background Glow */}
       <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-gradient-to-br from-gray-200/50 via-blue-100/30 to-purple-100/40 dark:from-gray-800/20 dark:via-blue-900/10 dark:to-purple-900/10 -z-10 rounded-br-full"></div>
 

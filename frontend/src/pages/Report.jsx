@@ -84,7 +84,7 @@ const Report = () => {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center px-4 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-400/20 dark:bg-emerald-600/10 rounded-full blur-[100px] pointer-events-none"></div>
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -128,7 +128,7 @@ const Report = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pt-24 pb-24 px-4 sm:px-6 relative overflow-hidden transition-colors">
 
       {/* Heavy Warning Gradient Backgrounds */}
       <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-to-br from-red-100/40 via-orange-100/30 to-transparent dark:from-red-900/10 dark:via-orange-900/10 -z-10 rounded-br-full blur-3xl"></div>

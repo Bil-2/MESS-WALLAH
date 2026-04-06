@@ -53,8 +53,13 @@ const createRateLimit = (windowMs, max, message, keyGenerator) => {
       return crypto.createHash('md5').update(fingerprint).digest('hex');
     }),
     skip: (req) => {
-      // Skip rate limiting for health checks
-      return req.path === '/health' || req.path === '/api/test';
+      // Skip rate limiting for health checks and local development
+      if (req.path === '/health' || req.path === '/api/test') return true;
+      if (process.env.NODE_ENV !== 'production') {
+        const ip = req.ip || req.connection?.remoteAddress || '';
+        if (ip === '::1' || ip === '127.0.0.1' || ip.includes('::ffff:127.')) return true;
+      }
+      return false;
     },
     handler: (req, res) => {
       console.log(`[SECURITY] Rate limit exceeded: ${req.ip} - ${req.path}`);
@@ -82,7 +87,7 @@ const otpLimiter = createRateLimit(
 
 const generalLimiter = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  200, // 200 requests
+  process.env.NODE_ENV === 'production' ? 300 : 2000, // 2000 in dev, 300 in prod
   'Too many requests. Please slow down.'
 );
 
