@@ -4,7 +4,7 @@ const GoogleSignInButton = () => {
   const handleClick = () => {
     // Redirect to backend Google OAuth endpoint with current frontend URL
     const backendUrl = import.meta.env.VITE_API_URL ||
-      (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://mess-wallah.onrender.com/api');
+      (import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://mess-wallah-api.onrender.com');
     const currentOrigin = window.location.origin;
     window.location.href = `${backendUrl}/auth/google?redirect_url=${encodeURIComponent(currentOrigin)}`;
   };
