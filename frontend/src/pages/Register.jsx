@@ -472,6 +472,7 @@ const Register = () => {
                           <div className="flex gap-3">
                             <input
                               id="otp"
+                              name="otp"
                               type="text"
                               autoComplete="one-time-code"
                               value={emailVerification.otp}
