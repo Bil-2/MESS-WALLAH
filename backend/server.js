@@ -231,6 +231,15 @@ const connectDB = async () => {
 connectDB().catch(err => console.error('DB connect error:', err));
 
 
+// Base route to handle Render health checks hitting the root URL
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'MESS WALLAH API. Please use /health for detailed status or the frontend client.',
+    frontend: process.env.CLIENT_URL || 'https://mess-wallah.netlify.app'
+  });
+});
+
 // OPTIMIZED: Lightweight health check endpoint for Render (< 100ms response)
 app.get('/health', asyncErrorHandler(async (req, res) => {
   // Skip expensive checks - just return basic status
