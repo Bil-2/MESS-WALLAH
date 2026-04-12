@@ -61,8 +61,7 @@ passport.use(
         user = await User.create({
           name,
           email,
-          password: Math.random().toString(36) + Math.random().toString(36), // random — they'll use Google to login
-          phone: '',
+          password: Math.random().toString(36) + Math.random().toString(36), // random
           role: 'user',
           socialAuth: { googleId, provider: 'google' },
           profilePicture: profilePicture || '',
