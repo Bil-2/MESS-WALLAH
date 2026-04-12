@@ -1,0 +1,33 @@
+# Netlify configuration for MESS-WALLAH (Root level)
+# This tells Netlify: build from the frontend/ directory
+
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+  VITE_API_URL = "https://mess-wallah-api.onrender.com/api"
+
+# ─── SPA Routing Fix ─────────────────────────────────────────────────────────
+# All routes must serve index.html so React Router can handle them client-side
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ─── Security Headers ─────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options          = "DENY"
+    X-Content-Type-Options   = "nosniff"
+    Referrer-Policy          = "strict-origin-when-cross-origin"
+    X-XSS-Protection         = "1; mode=block"
+
+# ─── Cache static assets aggressively ────────────────────────────────────────
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
