@@ -46,6 +46,10 @@ passport.use(
             user.profilePicture = profilePicture;
           }
 
+          if (user.phone === '') {
+            user.phone = undefined;
+          }
+
           user.verified = true; // Google accounts are pre-verified
           user.isVerified = true;
           user.isEmailVerified = true;

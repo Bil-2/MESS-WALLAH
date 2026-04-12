@@ -37,7 +37,8 @@ router.get('/google/callback', (req, res, next) => {
         console.error('[ERROR] Error in Google callback:', err);
         const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
         const frontendBase = frontendUrl.replace(/\/$/, '');
-        return res.redirect(`${frontendBase}/login?error=server_error`);
+        const errMsg = err ? (err.message || err.toString() || 'server_error') : 'server_error';
+        return res.redirect(`${frontendBase}/login?error=${encodeURIComponent(errMsg)}`);
       }
 
       if (!user) {
@@ -129,7 +130,8 @@ router.get('/google/callback', (req, res, next) => {
       console.error('[ERROR] Error in Google callback:', error);
       const frontendUrl = req.headers.referer || req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
       const frontendBase = frontendUrl.replace(/\/$/, '');
-      res.redirect(`${frontendBase}/login?error=server_error`);
+      const errMsg = error ? (error.message || 'unknown_error') : 'server_error';
+      res.redirect(`${frontendBase}/login?error=${encodeURIComponent(errMsg)}`);
     }
   })(req, res, next);
 });
