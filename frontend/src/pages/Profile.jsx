@@ -10,6 +10,7 @@ import {
   ShieldCheck, ChevronRight, LogOut, Star, BedDouble, Edit3, Wifi
 } from 'lucide-react';
 import api from '../utils/api';
+import { getServerImageUrl } from '../utils/imageUtils';
 
 /* ─── helpers ──────────────────────────────────────────────────────── */
 const getInitials = (name = '') => {
@@ -67,8 +68,12 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
+      // Strip +91 prefix for display — store as plain 10-digit
+      const rawPhone = user.phone?.startsWith('+91')
+        ? user.phone.slice(3)
+        : (user.phone || '');
       setFormData({
-        name: user.name || '', email: user.email || '', phone: user.phone || '',
+        name: user.name || '', email: user.email || '', phone: rawPhone,
         bio: user.profile?.bio || '', city: user.profile?.city || '', state: user.profile?.state || ''
       });
     }
@@ -82,6 +87,16 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
+      // Validate phone if provided
+      const rawPhone = formData.phone?.trim().replace(/\s/g, '');
+      if (rawPhone) {
+        if (!/^[6-9]\d{9}$/.test(rawPhone)) {
+          toast.error('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Create backend-friendly payload
       const payload = {
         name: formData.name,
@@ -92,9 +107,10 @@ const Profile = () => {
         }
       };
       
-      // Only include email and phone if they are not empty strings to avoid validation errors
+      // Only include email and phone if not empty
       if (formData.email?.trim()) payload.email = formData.email.trim();
-      if (formData.phone?.trim()) payload.phone = formData.phone.trim();
+      // Send phone in +91 international format that backend expects
+      if (rawPhone) payload.phone = `+91${rawPhone}`;
 
       const result = await updateProfile(payload);
       if (result?.success) { setEditing(false); toast.success('Profile updated!'); }
@@ -211,7 +227,7 @@ const Profile = () => {
                     <div className="relative w-[84px] h-[84px] rounded-[1.5rem] bg-white/20 backdrop-blur-md border-[2px] border-white/50 flex items-center justify-center shadow-2xl p-1 overflow-hidden transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">
                       <div className="w-full h-full rounded-[1.1rem] overflow-hidden bg-white/10 flex items-center justify-center relative">
                         {user?.profilePicture
-                          ? <img src={user.profilePicture} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          ? <img src={getServerImageUrl(user.profilePicture)} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                           : <span className="text-3xl font-black text-white">{initials}</span>
                         }
                       </div>
@@ -318,7 +334,7 @@ const Profile = () => {
                 <div className="relative z-10 px-5 pb-5">
                   <InfoRow icon={User}   label="Full Name"  value={user?.name}              color={isOwner ? 'text-indigo-500' : 'text-orange-500'} />
                   <InfoRow icon={Mail}   label="Email"      value={user?.email}             color={isOwner ? 'text-blue-500'   : 'text-pink-500'} />
-                  <InfoRow icon={Phone}  label="Phone"      value={user?.phone}             color={isOwner ? 'text-teal-500'   : 'text-teal-500'} />
+                  <InfoRow icon={Phone}  label="Phone"      value={user?.phone ? (user.phone.startsWith('+91') ? user.phone.slice(3) : user.phone) : '—'} color={isOwner ? 'text-teal-500' : 'text-teal-500'} />
                   <InfoRow icon={MapPin} label="City"       value={user?.profile?.city}     color="text-purple-500" />
                   <InfoRow icon={MapPin} label="State"      value={user?.profile?.state}    color="text-purple-500" />
                   {user?.profile?.bio && (
@@ -343,24 +359,29 @@ const Profile = () => {
                   <div className="p-6 space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
-                        { label: 'Full Name', name: 'name',  icon: User,   type: 'text',  editable: true },
-                        { label: 'Email',     name: 'email', icon: Mail,   type: 'email', editable: false },
-                        { label: 'Phone',     name: 'phone', icon: Phone,  type: 'tel',   editable: false },
-                        { label: 'City',      name: 'city',  icon: MapPin, type: 'text',  editable: true },
-                        { label: 'State',     name: 'state', icon: MapPin, type: 'text',  editable: true },
+                        { label: 'Full Name',       name: 'name',  icon: User,   type: 'text',  editable: true,  placeholder: 'Your full name' },
+                        { label: 'Email',            name: 'email', icon: Mail,   type: 'email', editable: false, placeholder: '' },
+                        { label: 'Phone (10-digit)', name: 'phone', icon: Phone,  type: 'tel',   editable: true,  placeholder: '9XXXXXXXXX (10 digits)' },
+                        { label: 'City',             name: 'city',  icon: MapPin, type: 'text',  editable: true,  placeholder: 'Your city' },
+                        { label: 'State',            name: 'state', icon: MapPin, type: 'text',  editable: true,  placeholder: 'Your state' },
                       ].map(f => (
                         <div key={f.name}>
                           <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wider">{f.label}</label>
                           <div className="relative">
                             <f.icon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input type={f.type} value={formData[f.name]}
+                            <input
+                              type={f.type}
+                              value={formData[f.name]}
                               onChange={e => setFormData({ ...formData, [f.name]: e.target.value })}
                               readOnly={!f.editable}
+                              placeholder={f.placeholder || ''}
+                              maxLength={f.name === 'phone' ? 10 : undefined}
                               className={`w-full pl-12 pr-4 py-4 rounded-2xl font-bold text-[15px] transition-all duration-300
                                 ${f.editable
                                   ? `bg-gray-50/50 dark:bg-gray-800/30 border-2 border-transparent focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white shadow-inner ${isOwner ? 'focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10' : 'focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'}`
                                   : 'bg-gray-100/80 dark:bg-gray-800/80 text-gray-400 border-2 border-transparent cursor-not-allowed outline-none shadow-none'
-                                }`} />
+                                }`}
+                            />
                           </div>
                         </div>
                       ))}

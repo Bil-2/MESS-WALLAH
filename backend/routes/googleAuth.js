@@ -94,7 +94,8 @@ router.get('/google/callback', (req, res, next) => {
       const publicUserData = {
         id: user._id,
         name: user.name,
-        role: user.role
+        role: user.role,
+        profilePicture: user.profilePicture || ''
       };
 
       res.cookie('user_data', JSON.stringify(publicUserData), {

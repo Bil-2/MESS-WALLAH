@@ -17,6 +17,7 @@ import {
 import { useAuthContext } from '../context/AuthContext.jsx';
 import AppIcon from './AppIcon';
 import ThemeToggle from './ThemeToggle';
+import { getServerImageUrl } from '../utils/imageUtils';
 
 const Navbar = () => {
   const { user, logout } = useAuthContext();
@@ -102,7 +103,7 @@ const Navbar = () => {
                     <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md">
                       <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-sm">
                         {user?.profilePicture ? (
-                          <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                          <img src={getServerImageUrl(user.profilePicture)} alt="Profile" className="w-full h-full object-cover" />
                         ) : (() => {
                           if (!user?.name) return 'U';
                           const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);
@@ -130,7 +131,7 @@ const Navbar = () => {
                     <div className="w-8 h-8 rounded-xl overflow-hidden shadow-md">
                       <div className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm">
                         {user?.profilePicture ? (
-                          <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                          <img src={getServerImageUrl(user.profilePicture)} alt="Profile" className="w-full h-full object-cover" />
                         ) : (() => {
                           if (!user?.name) return 'U';
                           const words = user.name.trim().split(/\s+/).filter(w => w.length > 0);

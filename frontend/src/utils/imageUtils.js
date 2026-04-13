@@ -59,6 +59,26 @@ export const CITY_IMAGES = {
   Kolkata:   '/images/rooms/room-38.jpg',
   Hyderabad: '/images/rooms/room-45.jpg',
   Ahmedabad: '/images/rooms/room-55.jpg',
-  Jaipur:    '/images/rooms/room-65.jpg',
-  Noida:     '/images/rooms/room-75.jpg',
+  Jaipur:   '/images/rooms/room-65.jpg',
+  Noida:    '/images/rooms/room-75.jpg',
+};
+
+/**
+ * Ensures a profile picture or uploaded image URL is fully qualified.
+ * Correctly points `/uploads/...` to the backend server instead of Netlify frontend.
+ */
+export const getServerImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  
+  if (url.startsWith('/uploads')) {
+    let baseUrl = import.meta.env.VITE_API_URL || '';
+    if (!baseUrl) {
+      baseUrl = import.meta.env.DEV ? 'http://localhost:5001/api' : 'https://mess-wallah-api.onrender.com/api';
+    }
+    const serverUrl = baseUrl.replace(/\/api$/, '');
+    return `${serverUrl}${url}`;
+  }
+  
+  return url;
 };

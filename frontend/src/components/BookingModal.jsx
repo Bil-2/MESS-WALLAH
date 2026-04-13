@@ -18,13 +18,16 @@ const BookingModal = ({ room, onClose, user }) => {
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
   const [paymentSkipped, setPaymentSkipped] = useState(false);
 
+  // Helper: strip +91 prefix so we store/display plain 10-digit
+  const toLocalPhone = (p) => (p?.startsWith('+91') ? p.slice(3) : (p || ''));
+
   const [form, setForm] = useState({
     checkInDate: '',
     duration: 1,
     specialRequests: '',
     name: user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || '',
+    phone: toLocalPhone(user?.phone),
     aadharNo: '',
     profession: '',
     age: '',
@@ -41,7 +44,8 @@ const BookingModal = ({ room, onClose, user }) => {
             ...prev,
             name:  u.name  || prev.name,
             email: u.email || prev.email,
-            phone: u.phone || prev.phone,
+            // Strip +91 so 10-digit validation in validateStep1 works
+            phone: toLocalPhone(u.phone) || prev.phone,
           }));
         }
       } catch {
@@ -320,7 +324,8 @@ const BookingModal = ({ room, onClose, user }) => {
                   {[
                     { label: 'Full Name',  key: 'name',      icon: <FiUser className="w-4 h-4" />,  type: 'text',   placeholder: 'Your full name',         readonly: true },
                     { label: 'Email',      key: 'email',     icon: <FiMail className="w-4 h-4" />,  type: 'email',  placeholder: 'your@email.com',         readonly: true },
-                    { label: 'Phone',      key: 'phone',     icon: <FiPhone className="w-4 h-4" />, type: 'tel',    placeholder: '10-digit mobile number', readonly: true },
+                    // Phone: readonly only if already populated from account
+                    { label: 'Phone',      key: 'phone',     icon: <FiPhone className="w-4 h-4" />, type: 'tel',    placeholder: '10-digit mobile number', readonly: !!form.phone, maxLength: 10 },
                     { label: 'Aadhar No (Safety)', key: 'aadharNo', icon: <FiCheck className="w-4 h-4" />, type: 'text', placeholder: '12-digit Aadhar No', maxLength: 12 },
                     { label: 'Profession',key: 'profession', icon: <FiUser className="w-4 h-4" />,  type: 'text',   placeholder: 'e.g. Student, Engineer'  },
                     { label: 'Age',       key: 'age',        icon: <FiCalendar className="w-4 h-4" />, type: 'number', placeholder: 'Age (e.g. 22)', maxLength: 3 },

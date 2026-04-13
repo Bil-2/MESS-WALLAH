@@ -17,7 +17,8 @@
     "health:check": "curl -f http://localhost:5001/health || exit 1",
     "security:audit": "node scripts/runSecurityAudit.js",
     "security:check": "npm run security:audit",
-    "seed:production": "node seedProduction.js"
+    "seed:production": "node seedProduction.js",
+    "seed:india": "node seedFromIndiaClean.js"
   },
   "keywords": [
     "room-booking",
