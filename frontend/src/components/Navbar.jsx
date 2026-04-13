@@ -145,7 +145,7 @@ const Navbar = () => {
                   </div>
                   <div className="hidden sm:flex flex-col items-start min-w-0">
                     <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-32">{user.name || 'User'}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-32">@{user.email?.split('@')[0] || 'user'}</span>
+                    <span className="text-xs text-green-500 font-bold truncate max-w-32">@rental</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 </button>
