@@ -7,7 +7,7 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   VITE_API_URL = "https://mess-wallah-api.onrender.com/api"
 
 # ─── SPA Routing Fix ─────────────────────────────────────────────────────────
