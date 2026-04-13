@@ -33,14 +33,14 @@ Thumbs.db
 *.swo
 
 # Images and media (if you don't want to track them)
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.ico
-*.mp4
-*.mov
+# *.png
+# *.jpg
+# *.jpeg
+# *.gif
+# *.svg
+# *.ico
+# *.mp4
+# *.mov
 
 # Firebase
 .firebase/
