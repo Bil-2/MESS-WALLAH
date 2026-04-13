@@ -31,6 +31,20 @@ const ResponsiveRoomCard = ({
   const [imageIndex, setImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [viewersCount, setViewersCount] = useState(() => {
+    return 1.0 + Math.floor(Math.random() * 10) / 10;
+  });
+
+  useEffect(() => {
+    const delay = 9000 + Math.random() * 1000;
+    const interval = setInterval(() => {
+      setViewersCount(prev => {
+        if (prev >= 3.0) return 3.0;
+        return prev + 0.1;
+      });
+    }, delay);
+    return () => clearInterval(interval);
+  }, []);
 
   // Get all images
   const images = room.photos?.length > 0
@@ -58,8 +72,7 @@ const ResponsiveRoomCard = ({
     balcony: HomeIcon
   };
 
-  // Random viewers count for urgency (Booking.com style)
-  const viewersCount = Math.floor(Math.random() * 8) + 2;
+  // Dynamic viewers count added via useState
 
   return (
     <motion.div
@@ -226,7 +239,7 @@ const ResponsiveRoomCard = ({
         <div className="flex items-center gap-2 mb-4 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200/50 dark:border-amber-800/30">
           <Zap className="w-4 h-4 text-amber-600" />
           <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-            HIGH DEMAND - {viewersCount} people viewing now
+            HIGH DEMAND - {viewersCount.toFixed(1)}k peoples viewing everyday
           </span>
         </div>
 
