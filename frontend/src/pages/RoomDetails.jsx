@@ -223,7 +223,7 @@ const RoomDetails = () => {
                   key={selectedImage}
                   src={roomPhotos[selectedImage]?.url}
                   alt={roomPhotos[selectedImage]?.caption || room.title}
-                  className="w-full h-96 object-cover cursor-pointer"
+                  className="w-full h-56 sm:h-72 md:h-96 object-cover cursor-pointer"
                   onClick={() => {
                     setLightboxImage(selectedImage);
                     setShowLightbox(true);
@@ -296,7 +296,7 @@ const RoomDetails = () => {
 
             {/* Room Details */}
             <motion.div
-              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 dark:border-gray-700"
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-xl p-5 sm:p-8 mb-8 border border-gray-200 dark:border-gray-700"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
@@ -304,7 +304,7 @@ const RoomDetails = () => {
               <div className="flex items-start justify-between mb-6">
                 <div className="flex-1">
                   <motion.h1
-                    className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-3"
+                    className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent mb-3"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
@@ -389,23 +389,23 @@ const RoomDetails = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-6">
                 Amenities
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {(room.amenities || []).map((amenity, index) => (
                   <motion.div
                     key={amenity}
-                    className="flex items-center p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl hover:shadow-lg transition-all duration-300 border border-orange-100 dark:border-gray-600"
+                    className="flex items-center p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-pink-50 dark:from-gray-700 dark:to-gray-600 rounded-xl hover:shadow-lg transition-all duration-300 border border-orange-100 dark:border-gray-600"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     whileHover={{ scale: 1.05, y: -2 }}
                   >
-                    <div className="text-orange-500 dark:text-orange-400 mr-3">
+                    <div className="text-orange-500 dark:text-orange-400 mr-3 flex-shrink-0">
                       {amenityIcons[amenity] || <FiUsers className="w-5 h-5" />}
                     </div>
-                    <span className="text-gray-900 dark:text-white capitalize font-medium">
+                    <span className="text-gray-900 dark:text-white capitalize font-medium text-sm sm:text-base break-words min-w-0">
                       {amenity}
                     </span>
                   </motion.div>

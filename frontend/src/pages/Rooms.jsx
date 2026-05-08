@@ -466,14 +466,14 @@ const Rooms = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-10"
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4">
               <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Find Your Perfect
               </span>
               <br />
               <span className="text-gray-900 dark:text-white">Student Home</span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               7,500+ verified rooms across India. Safe, affordable, and hassle-free.
             </p>
           </motion.div>
@@ -487,8 +487,8 @@ const Rooms = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-4xl mx-auto"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl shadow-violet-500/10 border border-gray-200/50 dark:border-gray-700/50 p-2">
-              <div className="flex flex-col md:flex-row gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl shadow-violet-500/10 border border-gray-200/50 dark:border-gray-700/50 p-2">
+              <div className="flex flex-col gap-2">
                 {/* Location Input */}
                 <div className="flex-1 relative">
                   <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
@@ -501,7 +501,7 @@ const Rooms = () => {
                     placeholder="Where do you want to stay?"
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, location: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-gray-700 transition-all"
+                    className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-gray-700 transition-all"
                   />
                   {filters.search && (
                     <button
@@ -513,38 +513,40 @@ const Rooms = () => {
                   )}
                 </div>
 
-                {/* Room Type Dropdown */}
-                <div className="relative md:w-48">
-                  <FiHome className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
-                  <label htmlFor="roomTypeFilter" className="sr-only">Room type</label>
-                  <select
-                    id="roomTypeFilter"
-                    name="roomTypeFilter"
-                    autoComplete="off"
-                    value={filters.roomType}
-                    onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white appearance-none cursor-pointer focus:ring-2 focus:ring-violet-500 transition-all"
-                  >
-                    <option value="">All Types</option>
-                    <option value="single">Single Room</option>
-                    <option value="shared">Shared Room</option>
-                    <option value="pg">PG</option>
-                    <option value="studio">Studio</option>
-                    <option value="apartment">Apartment</option>
-                  </select>
-                  <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
+                <div className="flex gap-2">
+                  {/* Room Type Dropdown */}
+                  <div className="relative flex-1">
+                    <FiHome className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
+                    <label htmlFor="roomTypeFilter" className="sr-only">Room type</label>
+                    <select
+                      id="roomTypeFilter"
+                      name="roomTypeFilter"
+                      autoComplete="off"
+                      value={filters.roomType}
+                      onChange={(e) => setFilters(prev => ({ ...prev, roomType: e.target.value }))}
+                      className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-gray-50 dark:bg-gray-700/50 border-0 rounded-xl text-gray-900 dark:text-white appearance-none cursor-pointer focus:ring-2 focus:ring-violet-500 transition-all"
+                    >
+                      <option value="">All Types</option>
+                      <option value="single">Single Room</option>
+                      <option value="shared">Shared Room</option>
+                      <option value="pg">PG</option>
+                      <option value="studio">Studio</option>
+                      <option value="apartment">Apartment</option>
+                    </select>
+                    <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
 
-                {/* Search Button */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => fetchRooms(1)}
-                  className="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-violet-500/30 flex items-center justify-center gap-2 transition-all"
-                >
-                  <FiSearch className="w-5 h-5" />
-                  <span>Search</span>
-                </motion.button>
+                  {/* Search Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => fetchRooms(1)}
+                    className="px-5 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-violet-500/30 flex items-center justify-center gap-2 transition-all whitespace-nowrap"
+                  >
+                    <FiSearch className="w-5 h-5" />
+                    <span className="hidden sm:inline">Search</span>
+                  </motion.button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -786,10 +788,11 @@ const Rooms = () => {
                 hidden: { opacity: 0 },
                 visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
               }}
-              className={`grid gap-6 ${viewMode === 'grid'
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                : 'grid-cols-1 max-w-3xl mx-auto'
-                }`}
+              className={`grid gap-4 sm:gap-6 ${
+                viewMode === 'grid'
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                  : 'grid-cols-1 max-w-3xl mx-auto'
+              }`}
             >
               {rooms.map((room) => (
                 <ModernRoomCard

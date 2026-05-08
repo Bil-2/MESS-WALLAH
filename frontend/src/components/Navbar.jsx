@@ -186,6 +186,40 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden overflow-hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 slide-in-up">
           <div className="px-4 py-4 space-y-2">
+            {/* Navigation Links */}
+            <div className="space-y-1 pb-2 border-b border-gray-100 dark:border-gray-800">
+              <Link
+                to="/"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center px-3 py-2 rounded-lg font-medium transition-colors hover-lift ${
+                  location.pathname === '/' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Home className="w-5 h-5 mr-3" />
+                Home
+              </Link>
+              <Link
+                to="/rooms"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center px-3 py-2 rounded-lg font-medium transition-colors hover-lift ${
+                  location.pathname === '/rooms' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                <MapPin className="w-5 h-5 mr-3" />
+                Rooms
+              </Link>
+              <Link
+                to="/about"
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center px-3 py-2 rounded-lg font-medium transition-colors hover-lift ${
+                  location.pathname === '/about' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Shield className="w-5 h-5 mr-3" />
+                About
+              </Link>
+            </div>
+
             {/* Mobile User Menu */}
             <div>
               {user ? (

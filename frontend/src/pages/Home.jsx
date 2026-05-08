@@ -127,9 +127,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gray-900 fade-in">
       {/* Hero Section with Banner Background */}
-      <section className="section-dark relative pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="section-dark relative pt-16 sm:pt-8 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden" style={{ minHeight: '100svh' }}>
         {/* Banner Background Slideshow */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
           {BANNERS.map((src, i) => (
             <div
               key={src}
@@ -138,15 +138,18 @@ const Home = () => {
                 opacity: i === bannerIndex ? 1 : 0,
                 backgroundImage: `url(${src})`,
                 backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                backgroundPosition: 'center center',
+                backgroundRepeat: 'no-repeat',
+                width: '100%',
+                height: '100%',
               }}
             />
           ))}
           {/* Dark overlay so text stays readable in all modes */}
-          <div className="absolute inset-0 bg-black/15" />
+          <div className="absolute inset-0 bg-black/50" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
+        <div className="relative max-w-4xl mx-auto text-center" style={{ zIndex: 1 }}>
           <div className="mb-8">
             <ScrollReveal animation="fade-down" duration={800}>
               <div className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl text-base font-bold mb-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 border border-white/20">
@@ -221,7 +224,7 @@ const Home = () => {
             <ScrollReveal animation="zoom" delay={400}>
               <div className="text-center mb-8">
                 {/* Hero Headline */}
-                <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-4 leading-tight">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 leading-tight">
                   <span className="block bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
                     Find Your Perfect
                   </span>
@@ -231,7 +234,7 @@ const Home = () => {
                 </h1>
 
                 {/* Value Proposition */}
-                <p className="text-xl sm:text-2xl text-white/90 mb-6 max-w-4xl mx-auto font-medium leading-relaxed drop-shadow">
+                <p className="text-base sm:text-xl md:text-2xl text-white/90 mb-6 max-w-4xl mx-auto font-medium leading-relaxed drop-shadow px-2">
                   Discover <span className="text-orange-400 font-bold">verified</span>,
                   <span className="text-pink-400 font-bold"> secure</span>, and
                   <span className="text-purple-400 font-bold"> affordable</span> student housing
@@ -239,22 +242,22 @@ const Home = () => {
                 </p>
 
                 {/* Key Features Pills */}
-                <div className="flex flex-wrap justify-center gap-3 mb-8">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
-                    <Shield className="w-4 h-4 text-green-400" />
-                    <span className="text-green-300 font-semibold text-sm">24/7 Security</span>
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
+                  <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500/20 border border-green-400/30 rounded-full backdrop-blur-sm">
+                    <Shield className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-green-400" />
+                    <span className="text-green-300 font-semibold text-xs sm:text-sm">24/7 Security</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
-                    <Users className="w-4 h-4 text-blue-400" />
-                    <span className="text-blue-300 font-semibold text-sm">Verified Owners</span>
+                  <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-500/20 border border-blue-400/30 rounded-full backdrop-blur-sm">
+                    <Users className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-blue-400" />
+                    <span className="text-blue-300 font-semibold text-xs sm:text-sm">Verified Owners</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
-                    <HomeIcon className="w-4 h-4 text-purple-400" />
-                    <span className="text-purple-300 font-semibold text-sm">Premium Amenities</span>
+                  <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
+                    <HomeIcon className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-purple-400" />
+                    <span className="text-purple-300 font-semibold text-xs sm:text-sm">Premium Amenities</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/20 border border-orange-400/30 rounded-full backdrop-blur-sm">
-                    <MapPin className="w-4 h-4 text-orange-400" />
-                    <span className="text-orange-300 font-semibold text-sm">Prime Locations</span>
+                  <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500/20 border border-orange-400/30 rounded-full backdrop-blur-sm">
+                    <MapPin className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-orange-400" />
+                    <span className="text-orange-300 font-semibold text-xs sm:text-sm">Prime Locations</span>
                   </div>
                 </div>
               </div>
@@ -262,29 +265,29 @@ const Home = () => {
 
             {/* Enhanced Action Buttons */}
             <ScrollReveal animation="fade-up" delay={600}>
-              <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-                {/* Primary CTA - Decreased color intensity */}
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-8">
+                {/* Primary CTA */}
                 <button
                   type="button"
                   onClick={() => navigate('/rooms')}
-                  className="group relative overflow-hidden px-10 py-5 bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-orange-400/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                  className="group relative overflow-hidden px-6 sm:px-10 py-3.5 sm:py-5 bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 text-white rounded-2xl font-bold text-base sm:text-xl shadow-lg hover:shadow-orange-400/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative flex items-center gap-3">
-                    <Search className="w-6 h-6" />
+                  <div className="relative flex items-center justify-center gap-3">
+                    <Search className="w-5 sm:w-6 h-5 sm:h-6" />
                     <span>Find Student Housing</span>
                     <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
                   </div>
                 </button>
 
-                {/* Secondary CTA - Improved colors */}
+                {/* Secondary CTA */}
                 <button
                   type="button"
                   onClick={() => navigate('/register')}
-                  className="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-emerald-500/25"
+                  className="group px-6 sm:px-10 py-3.5 sm:py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-base sm:text-xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-emerald-500/25"
                 >
-                  <div className="flex items-center gap-3">
-                    <Users className="w-6 h-6 text-white" />
+                  <div className="flex items-center justify-center gap-3">
+                    <Users className="w-5 sm:w-6 h-5 sm:h-6 text-white" />
                     <span>Register Now</span>
                   </div>
                 </button>
@@ -293,22 +296,22 @@ const Home = () => {
 
             {/* Trust Indicators */}
             <ScrollReveal animation="fade-up" delay={800}>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
                 <div className="text-center">
-                  <div className="text-3xl font-black text-orange-400 mb-1">25K+</div>
-                  <div className="text-sm text-white/80 font-semibold">Happy Students</div>
+                  <div className="text-2xl sm:text-3xl font-black text-orange-400 mb-1">25K+</div>
+                  <div className="text-xs sm:text-sm text-white/80 font-semibold">Happy Students</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-pink-400 mb-1">7,500+</div>
-                  <div className="text-sm text-white/80 font-semibold">Verified Rooms</div>
+                  <div className="text-2xl sm:text-3xl font-black text-pink-400 mb-1">7,500+</div>
+                  <div className="text-xs sm:text-sm text-white/80 font-semibold">Verified Rooms</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-purple-400 mb-1">3,734+</div>
-                  <div className="text-sm text-white/80 font-semibold">Cities Covered</div>
+                  <div className="text-2xl sm:text-3xl font-black text-purple-400 mb-1">3,734+</div>
+                  <div className="text-xs sm:text-sm text-white/80 font-semibold">Cities Covered</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-green-400 mb-1">4.88/5</div>
-                  <div className="text-sm text-white/80 font-semibold">Safety Rating</div>
+                  <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">4.88/5</div>
+                  <div className="text-xs sm:text-sm text-white/80 font-semibold">Safety Rating</div>
                 </div>
               </div>
             </ScrollReveal>
