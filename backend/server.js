@@ -177,19 +177,22 @@ const checkLocalMongoDB = () => {
   });
 };
 
-const connectDB = async () => {
-  const LOCAL_URI  = 'mongodb://127.0.0.1:27017/mess-wallah';
-  const ATLAS_URI  = process.env.MONGODB_URI; // Cloud Atlas from .env
+const MAX_DB_RETRIES = 5;
+let dbRetryCount = 0;
 
+const connectDB = async () => {
+  const LOCAL_URI = 'mongodb://127.0.0.1:27017/mess-wallah';
+  const ATLAS_URI = process.env.MONGODB_URI; // Cloud Atlas from .env
+
+  // ── Connection Strategy ────────────────────────────────────────────────────
+  // 1. Try LOCAL first  → great for local dev / testing changes
+  // 2. Fall back to ATLAS → used when local is not running (production / cloud)
   console.log('[DB] Checking for local MongoDB server...');
   const isLocalAvailable = await checkLocalMongoDB();
 
-  // Decide which URI to use
   let activeURI = '';
   let label = '';
-  let options = {
-    retryWrites: true,
-  };
+  let options = { retryWrites: true };
 
   if (isLocalAvailable) {
     activeURI = LOCAL_URI;
@@ -203,14 +206,21 @@ const connectDB = async () => {
     options.socketTimeoutMS = 60000;
     options.connectTimeoutMS = 30000;
   } else {
-    console.error('[ERROR] No MongoDB URI available (Local failed, ATLAS not set).');
+    console.error('[ERROR] No MongoDB URI available (Local not running, ATLAS not set).');
     process.exit(1);
   }
 
   try {
     const conn = await mongoose.connect(activeURI, options);
-    
-    const displayURI = conn.connection.host.includes('127.0.0.1') || conn.connection.host.includes('localhost') ? '🏠 LOCAL' : '☁️  ATLAS';
+
+    // Reset retry counter on success
+    dbRetryCount = 0;
+
+    const displayURI =
+      conn.connection.host.includes('127.0.0.1') ||
+      conn.connection.host.includes('localhost')
+        ? '🏠 LOCAL'
+        : '☁️  ATLAS';
     console.log(`\n[SUCCESS] ✅ MongoDB Connected via ${displayURI}`);
     console.log(`[INFO]    Host: ${conn.connection.host}`);
     console.log(`[INFO]    DB:   ${conn.connection.name}\n`);
@@ -222,8 +232,25 @@ const connectDB = async () => {
     return conn;
   } catch (err) {
     console.error(`[ERROR] Failed to connect to ${label}:`, err.message);
-    console.log('[INFO] Retrying connection in 10s...');
-    setTimeout(() => connectDB(), 10000);
+
+    if (err.message.includes('bad auth') || err.message.includes('Authentication failed')) {
+      console.error('[ERROR] ⛔ Authentication failure — check MONGODB_URI credentials in .env.');
+      console.error('[ERROR]    Verify the DB user password in Atlas → Database Access.');
+      console.error('[ERROR]    Stopping retries to prevent memory exhaustion.');
+      return; // Don't retry auth failures — they won't self-heal
+    }
+
+    dbRetryCount++;
+    if (dbRetryCount >= MAX_DB_RETRIES) {
+      console.error(`[ERROR] ⛔ Max DB retry attempts (${MAX_DB_RETRIES}) reached. Giving up.`);
+      console.error('[ERROR]    Server will continue running but DB operations will fail.');
+      return;
+    }
+
+    // Exponential backoff: 10s, 20s, 40s, 80s, 160s
+    const delay = Math.min(10000 * Math.pow(2, dbRetryCount - 1), 160000);
+    console.log(`[INFO] Retrying connection in ${delay / 1000}s... (attempt ${dbRetryCount}/${MAX_DB_RETRIES})`);
+    setTimeout(() => connectDB(), delay);
   }
 };
 

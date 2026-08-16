@@ -1,0 +1,76 @@
+services:
+  - type: web
+    name: mess-wallah-api
+    env: node
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: MONGODB_URI
+        sync: false  # Set in Render Dashboard → Environment
+      - key: JWT_SECRET
+        sync: false  # Set in Render Dashboard → Environment
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: JWT_COOKIE_EXPIRE
+        value: 7
+      - key: CLIENT_URL
+        value: https://mess-wallah.netlify.app
+      - key: FRONTEND_URL
+        value: https://mess-wallah.netlify.app
+      - key: BASE_URL
+        value: https://mess-wallah-api.onrender.com
+      - key: RENDER_URL
+        value: https://mess-wallah-api.onrender.com
+      # Google OAuth — IMPORTANT: add Render callback URL in Google Cloud Console
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Set in Render Dashboard → Environment
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Set in Render Dashboard → Environment
+      - key: GOOGLE_CALLBACK_URL
+        value: https://mess-wallah-api.onrender.com/api/auth/google/callback
+      # Twilio
+      - key: TWILIO_ACCOUNT_SID
+        sync: false  # Set in Render Dashboard → Environment
+      - key: TWILIO_AUTH_TOKEN
+        sync: false  # Set in Render Dashboard → Environment
+      - key: TWILIO_VERIFY_SERVICE_SID
+        sync: false  # Set in Render Dashboard → Environment
+      - key: TWILIO_PHONE_NUMBER
+        sync: false  # Set in Render Dashboard → Environment
+      # Email
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        value: onboarding@resend.dev
+      - key: GMAIL_USER
+        sync: false  # Set in Render Dashboard → Environment
+      - key: GMAIL_PASS
+        sync: false  # Set in Render Dashboard → Environment
+      # Session / Encryption
+      - key: SESSION_SECRET
+        sync: false  # Set in Render Dashboard → Environment
+      - key: ENCRYPTION_KEY
+        sync: false  # Set in Render Dashboard → Environment
+      - key: BCRYPT_ROUNDS
+        value: 12
+      # Self-ping (keep free tier alive)
+      - key: SELF_PING_ENABLED
+        value: "true"
+      - key: SELF_PING_INTERVAL
+        value: "480000"
+      # Firebase
+      - key: FIREBASE_WEB_API_KEY
+        sync: false  # Set in Render Dashboard → Environment
+      # Razorpay
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
