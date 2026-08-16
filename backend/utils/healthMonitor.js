@@ -464,8 +464,8 @@ class HealthMonitor {
     console.log(`[SELF-PING] Starting keep-alive service`);
     console.log(`[SELF-PING] Ping interval: ${intervalMinutes} minutes`);
     
-    // First ping after 15 seconds
-    setTimeout(() => this.selfPing(), 15000);
+    // Wait 60s before first ping — gives Atlas DB time to connect on cold start
+    setTimeout(() => this.selfPing(), 60000);
     this._pingIntervalId = setInterval(() => this.selfPing(), interval);
   }
 
