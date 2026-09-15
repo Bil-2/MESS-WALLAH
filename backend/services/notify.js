@@ -3,19 +3,7 @@ const { Resend } = require('resend');
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 const dns = require('dns');
-const sgMail = require('@sendgrid/mail'); // HTTP REST API — works on Render (no SMTP needed)
-
-// ─── SendGrid (PRIMARY for production — HTTP REST, not SMTP, works on Render) ───
-let sendGridReady = false;
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  sendGridReady = true;
-  console.log('[NOTIFY] ✅ SendGrid email client initialized');
-} else {
-  console.log('[WARNING] SENDGRID_API_KEY not set — falling back to Resend/Gmail');
-}
-
-// ─── Resend (secondary — requires verified custom domain for arbitrary recipients) ───
+// ─── Resend (primary REST API — requires verified custom domain) ───
 let resendClient = null;
 const _rKey = process.env.RESEND_API_KEY;
 if (_rKey && _rKey !== 'YOUR_RESEND_API_KEY_HERE' && _rKey.startsWith('re_')) {
@@ -124,7 +112,7 @@ const sendViaGmail = async (mailOptions) => {
 const sendWelcomeEmail = async (userEmail, userName) => {
   try {
     // Development mode - log to console
-    if (!process.env.SENDGRID_API_KEY) {
+    if (!resendClient) {
       console.log('\n' + '='.repeat(80));
       console.log('[DEVELOPMENT MODE] Welcome Email');
       console.log('='.repeat(80));
@@ -444,7 +432,7 @@ const sendPasswordResetEmail = async (userEmail, resetToken, userName) => {
 const sendPasswordResetSuccessEmail = async (userEmail, userName) => {
   try {
     // Development mode - log to console
-    if (!process.env.SENDGRID_API_KEY) {
+    if (!resendClient) {
       console.log('\n' + '='.repeat(80));
       console.log('[DEVELOPMENT MODE] Password Reset Success Email');
       console.log('='.repeat(80));
@@ -526,38 +514,8 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
     const mailOptions = { to, subject, html: htmlContent };
     if (attachments && attachments.length > 0) mailOptions.attachments = attachments;
 
-    // 1) SendGrid — HTTP REST API, NOT SMTP. Works perfectly on Render.
-    //    Requires SENDGRID_API_KEY + single sender verification at sendgrid.com
-    if (sendGridReady) {
-      try {
-        const msg = {
-          to,
-          from: {
-            email: process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER || 'biltubag29@gmail.com',
-            name: emailConfig.fromName
-          },
-          subject,
-          html: htmlContent
-        };
-        if (attachments && attachments.length > 0) {
-          msg.attachments = attachments.map(a => ({
-            content: a.content?.toString('base64'),
-            filename: a.filename,
-            type: a.contentType,
-            disposition: 'attachment'
-          }));
-        }
-        await sgMail.send(msg);
-        console.log('[SUCCESS] Email sent via SendGrid (HTTP) to:', to);
-        return { success: true, method: 'sendgrid' };
-      } catch (sgError) {
-        const sgErr = sgError.response?.body?.errors?.[0]?.message || sgError.message;
-        console.log('[WARNING] SendGrid failed:', sgErr);
-      }
-    }
-
-    // 2) Try Resend — BUT only if a custom verified domain is set as FROM_EMAIL
-    //    onboarding@resend.dev only works for the account owner's email, NOT for all users
+    // 1) Resend — requires verified custom domain as FROM_EMAIL
+    //    Set FROM_EMAIL=noreply@yourdomain.com in Render after domain is verified
     const fromEmail = emailConfig.from || '';
     const resendHasCustomDomain = resendClient &&
       !fromEmail.includes('onboarding@resend.dev') &&
@@ -571,20 +529,18 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
           subject,
           html: htmlContent
         };
-        if (mailOptions.attachments && mailOptions.attachments.length > 0) {
-          resendArgs.attachments = mailOptions.attachments;
-        }
+        if (attachments && attachments.length > 0) resendArgs.attachments = attachments;
         const { error } = await resendClient.emails.send(resendArgs);
         if (!error) {
           console.log('[SUCCESS] Email sent via Resend to:', to);
           return { success: true, method: 'resend' };
         }
-        console.log('[WARNING] Resend error, falling back to Gmail:', error);
+        console.log('[WARNING] Resend error:', error?.message || error);
       } catch (resendError) {
-        console.log('[WARNING] Resend failed, trying Gmail:', resendError.message);
+        console.log('[WARNING] Resend failed:', resendError.message);
       }
     } else if (resendClient) {
-      console.log('[INFO] Resend using onboarding@resend.dev — skipping (only works for account owner). Using Gmail.');
+      console.log('[INFO] Resend skipped — FROM_EMAIL is still onboarding@resend.dev. Add your verified domain.');
     }
 
     // 3) Gmail SMTP — NOTE: Render free tier blocks ports 465 & 587 (ETIMEDOUT)
@@ -610,7 +566,7 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
 
     // In production, return failure so OTP is NOT silently swallowed
     if (process.env.NODE_ENV === 'production') {
-      return { success: false, error: 'No email provider available in production. Add SENDGRID_API_KEY to Render env.' };
+      return { success: false, error: 'No email provider available. Verify your domain in Resend and set FROM_EMAIL in Render.' };
     }
     return { success: true, method: 'development' };
 
