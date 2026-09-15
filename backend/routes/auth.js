@@ -102,7 +102,23 @@ router.post('/send-otp-email', [
       });
     }
 
+    // KEY FIX: If user registered via Google/social, redirect to Google login
+    // These accounts have no password and cannot receive OTP — must use Google OAuth
+    if (
+      user.registrationMethod === 'google' ||
+      user.accountType === 'social' ||
+      user.accountType === 'google'
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email is linked to a Google account. Please use "Continue with Google" to sign in.',
+        action: 'use_google_login',
+        provider: 'google'
+      });
+    }
+
     // Generate 6-digit OTP
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Save OTP to database
