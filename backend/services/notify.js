@@ -2,6 +2,7 @@
 const { Resend } = require('resend');
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
+const dns = require('dns');  // needed to force IPv4 on Render (avoids IPv6 ENETUNREACH)
 
 // Initialize Resend (primary email provider — works perfectly on Render)
 // Guard: skip if key is missing or still the placeholder value
@@ -72,9 +73,12 @@ const createGmailTransporter = (port = 465) => {
 };
 
 // Helper: send via Gmail, tries port 465 (SSL) first then 587 (STARTTLS)
-// Timeouts are short (8s) so failed ports fail fast instead of hanging
+// Forces IPv4 DNS lookup — Render resolves smtp.gmail.com to IPv6 which is unreachable
 const sendViaGmail = async (mailOptions) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return false;
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    console.log('[WARNING] Gmail credentials not set in environment');
+    return false;
+  }
   for (const port of [465, 587]) {
     try {
       const transporter = nodemailer.createTransport({
@@ -83,16 +87,21 @@ const sendViaGmail = async (mailOptions) => {
         secure: port === 465,
         requireTLS: port === 587,
         auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
-        connectionTimeout: 8000,   // fail fast — don't hang for 25s
-        greetingTimeout: 6000,
-        socketTimeout: 8000,
-        tls: { rejectUnauthorized: false }
+        connectionTimeout: 10000,
+        greetingTimeout: 8000,
+        socketTimeout: 10000,
+        tls: { rejectUnauthorized: false },
+        // CRITICAL FIX: Force IPv4 — Render resolves smtp.gmail.com to IPv6
+        // which is unreachable on Render's free tier (ENETUNREACH error)
+        dnsLookup: (hostname, options, callback) => {
+          dns.lookup(hostname, { ...options, family: 4 }, callback);
+        }
       });
       await transporter.sendMail({
         from: `"${emailConfig.fromName}" <${process.env.GMAIL_USER}>`,
         ...mailOptions
       });
-      console.log(`[SUCCESS] Email sent via Gmail port ${port} to: ${mailOptions.to}`);
+      console.log(`[SUCCESS] Email sent via Gmail port ${port} (IPv4) to: ${mailOptions.to}`);
       return true;
     } catch (err) {
       console.log(`[WARNING] Gmail port ${port} failed (${err.code || err.message})`);
