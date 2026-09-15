@@ -53,24 +53,41 @@ const sendViaResend = async ({ to, subject, html, text }) => {
   }
 };
 
-// Gmail transporter — tries port 465 (SSL) then 587 (STARTTLS)
-// Both ports are allowed on Render's network
-const createGmailTransporter = () => {
+// Gmail transporter — port 465 SSL (works on Render), fallback to 587 STARTTLS
+const createGmailTransporter = (port = 465) => {
   if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
-    // Use port 587 with STARTTLS — most reliable across hosts
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // STARTTLS
-      requireTLS: true,
+      port: port,
+      secure: port === 465,   // true for SSL on 465, false for STARTTLS on 587
+      requireTLS: port === 587,
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
-      connectionTimeout: 20000,
+      connectionTimeout: 25000,
       greetingTimeout: 15000,
-      socketTimeout: 20000,
+      socketTimeout: 25000,
       tls: { rejectUnauthorized: false }
     });
   }
   return null;
+};
+
+// Helper: send via Gmail, tries port 465 first then 587
+const sendViaGmail = async (mailOptions) => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return false;
+  for (const port of [465, 587]) {
+    try {
+      const transporter = createGmailTransporter(port);
+      await transporter.sendMail({
+        from: `"${emailConfig.fromName}" <${process.env.GMAIL_USER}>`,
+        ...mailOptions
+      });
+      console.log(`[SUCCESS] Email sent via Gmail port ${port} to: ${mailOptions.to}`);
+      return true;
+    } catch (err) {
+      console.log(`[WARNING] Gmail port ${port} failed: ${err.message}`);
+    }
+  }
+  return false;
 };
 
 // Send welcome email
@@ -479,11 +496,17 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
     const mailOptions = { to, subject, html: htmlContent };
     if (attachments && attachments.length > 0) mailOptions.attachments = attachments;
 
-    // 1) Try Resend API First
-    if (resendClient) {
+    // 1) Try Resend — BUT only if a custom verified domain is set as FROM_EMAIL
+    //    onboarding@resend.dev only works for the account owner's email, NOT for all users
+    const fromEmail = emailConfig.from || '';
+    const resendHasCustomDomain = resendClient &&
+      !fromEmail.includes('onboarding@resend.dev') &&
+      !fromEmail.includes('resend.dev');
+
+    if (resendHasCustomDomain) {
       try {
         const resendArgs = {
-          from: `${emailConfig.fromName} <${emailConfig.from}>`.trim(),
+          from: `${emailConfig.fromName} <${fromEmail}>`.trim(),
           to,
           subject,
           html: htmlContent
@@ -491,44 +514,44 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
         if (mailOptions.attachments && mailOptions.attachments.length > 0) {
           resendArgs.attachments = mailOptions.attachments;
         }
-        
         const { error } = await resendClient.emails.send(resendArgs);
         if (!error) {
           console.log('[SUCCESS] Email sent via Resend to:', to);
           return { success: true, method: 'resend' };
         }
+        console.log('[WARNING] Resend error, falling back to Gmail:', error);
       } catch (resendError) {
         console.log('[WARNING] Resend failed, trying Gmail:', resendError.message);
       }
+    } else if (resendClient) {
+      console.log('[INFO] Resend using onboarding@resend.dev — skipping (only works for account owner). Using Gmail.');
     }
 
-    // Try Gmail SMTP first
-    const gmailTransporter = createGmailTransporter();
-    if (gmailTransporter) {
-      try {
-        await gmailTransporter.sendMail({
-          from: `"${emailConfig.fromName}" <${process.env.GMAIL_USER}>`,
-          to,
-          subject,
-          html: htmlContent
-        });
-        console.log('[SUCCESS] Email sent via Gmail to:', to);
-        return { success: true, method: 'gmail' };
-      } catch (gmailError) {
-        console.log('[WARNING] Gmail failed (falling back to dev-mode log):', gmailError.message);
-      }
+    // 2) Try Gmail SMTP — port 465 (SSL) first, then 587 (STARTTLS)
+    //    Render allows both ports; 465 is more reliable on cloud hosts
+    const gmailSent = await sendViaGmail({
+      to,
+      subject,
+      html: htmlContent,
+      ...(attachments && attachments.length > 0 ? { attachments } : {})
+    });
+    if (gmailSent) {
+      return { success: true, method: 'gmail' };
     }
 
-
-
-    // Development mode - log to console
+    // 3) Development mode fallback — log to console
     console.log('\n' + '='.repeat(80));
-    console.log('[DEVELOPMENT MODE] Email');
+    console.log('[DEVELOPMENT MODE] Email (no email service reachable)');
     console.log('='.repeat(80));
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
     console.log('Content: [HTML Email - check logs]');
     console.log('='.repeat(80) + '\n');
+
+    // In production, if no email sent — return failure so OTP is not saved
+    if (process.env.NODE_ENV === 'production') {
+      return { success: false, error: 'No email provider available in production' };
+    }
     return { success: true, method: 'development' };
 
   } catch (error) {
