@@ -2,10 +2,20 @@
 const { Resend } = require('resend');
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
-const dns = require('dns');  // needed to force IPv4 on Render (avoids IPv6 ENETUNREACH)
+const dns = require('dns');
+const sgMail = require('@sendgrid/mail'); // HTTP REST API — works on Render (no SMTP needed)
 
-// Initialize Resend (primary email provider — works perfectly on Render)
-// Guard: skip if key is missing or still the placeholder value
+// ─── SendGrid (PRIMARY for production — HTTP REST, not SMTP, works on Render) ───
+let sendGridReady = false;
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  sendGridReady = true;
+  console.log('[NOTIFY] ✅ SendGrid email client initialized');
+} else {
+  console.log('[WARNING] SENDGRID_API_KEY not set — falling back to Resend/Gmail');
+}
+
+// ─── Resend (secondary — requires verified custom domain for arbitrary recipients) ───
 let resendClient = null;
 const _rKey = process.env.RESEND_API_KEY;
 if (_rKey && _rKey !== 'YOUR_RESEND_API_KEY_HERE' && _rKey.startsWith('re_')) {
@@ -516,7 +526,37 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
     const mailOptions = { to, subject, html: htmlContent };
     if (attachments && attachments.length > 0) mailOptions.attachments = attachments;
 
-    // 1) Try Resend — BUT only if a custom verified domain is set as FROM_EMAIL
+    // 1) SendGrid — HTTP REST API, NOT SMTP. Works perfectly on Render.
+    //    Requires SENDGRID_API_KEY + single sender verification at sendgrid.com
+    if (sendGridReady) {
+      try {
+        const msg = {
+          to,
+          from: {
+            email: process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER || 'biltubag29@gmail.com',
+            name: emailConfig.fromName
+          },
+          subject,
+          html: htmlContent
+        };
+        if (attachments && attachments.length > 0) {
+          msg.attachments = attachments.map(a => ({
+            content: a.content?.toString('base64'),
+            filename: a.filename,
+            type: a.contentType,
+            disposition: 'attachment'
+          }));
+        }
+        await sgMail.send(msg);
+        console.log('[SUCCESS] Email sent via SendGrid (HTTP) to:', to);
+        return { success: true, method: 'sendgrid' };
+      } catch (sgError) {
+        const sgErr = sgError.response?.body?.errors?.[0]?.message || sgError.message;
+        console.log('[WARNING] SendGrid failed:', sgErr);
+      }
+    }
+
+    // 2) Try Resend — BUT only if a custom verified domain is set as FROM_EMAIL
     //    onboarding@resend.dev only works for the account owner's email, NOT for all users
     const fromEmail = emailConfig.from || '';
     const resendHasCustomDomain = resendClient &&
@@ -547,8 +587,8 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
       console.log('[INFO] Resend using onboarding@resend.dev — skipping (only works for account owner). Using Gmail.');
     }
 
-    // 2) Try Gmail SMTP — port 465 (SSL) first, then 587 (STARTTLS)
-    //    Render allows both ports; 465 is more reliable on cloud hosts
+    // 3) Gmail SMTP — NOTE: Render free tier blocks ports 465 & 587 (ETIMEDOUT)
+    //    Only works on non-Render environments (local dev, paid hosting, etc.)
     const gmailSent = await sendViaGmail({
       to,
       subject,
@@ -559,7 +599,7 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
       return { success: true, method: 'gmail' };
     }
 
-    // 3) Development mode fallback — log to console
+    // Fallback — log to console (dev mode only)
     console.log('\n' + '='.repeat(80));
     console.log('[DEVELOPMENT MODE] Email (no email service reachable)');
     console.log('='.repeat(80));
@@ -568,9 +608,9 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
     console.log('Content: [HTML Email - check logs]');
     console.log('='.repeat(80) + '\n');
 
-    // In production, if no email sent — return failure so OTP is not saved
+    // In production, return failure so OTP is NOT silently swallowed
     if (process.env.NODE_ENV === 'production') {
-      return { success: false, error: 'No email provider available in production' };
+      return { success: false, error: 'No email provider available in production. Add SENDGRID_API_KEY to Render env.' };
     }
     return { success: true, method: 'development' };
 
@@ -579,6 +619,7 @@ const sendEmail = async (to, subject, htmlContent, attachments = null) => {
     return { success: false, error: error.message };
   }
 };
+
 
 // ============================================
 // SMS NOTIFICATIONS
