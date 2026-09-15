@@ -22,7 +22,7 @@ const useServerWarmup = () => {
 
     const pingServer = async () => {
       try {
-        const res = await api.get('/warmup', { timeout: 30000 });
+        const res = await api.get('/warmup', { timeout: 65000 });
 
         if (res.data?.status === 'warmed' || res.data?.status === 'partial') {
           console.log('[Warmup] Server is warm:', res.data.metrics?.totalResponseTime);
