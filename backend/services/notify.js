@@ -71,12 +71,23 @@ const createGmailTransporter = (port = 465) => {
   return null;
 };
 
-// Helper: send via Gmail, tries port 465 first then 587
+// Helper: send via Gmail, tries port 465 (SSL) first then 587 (STARTTLS)
+// Timeouts are short (8s) so failed ports fail fast instead of hanging
 const sendViaGmail = async (mailOptions) => {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) return false;
   for (const port of [465, 587]) {
     try {
-      const transporter = createGmailTransporter(port);
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: port,
+        secure: port === 465,
+        requireTLS: port === 587,
+        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
+        connectionTimeout: 8000,   // fail fast — don't hang for 25s
+        greetingTimeout: 6000,
+        socketTimeout: 8000,
+        tls: { rejectUnauthorized: false }
+      });
       await transporter.sendMail({
         from: `"${emailConfig.fromName}" <${process.env.GMAIL_USER}>`,
         ...mailOptions
@@ -84,7 +95,7 @@ const sendViaGmail = async (mailOptions) => {
       console.log(`[SUCCESS] Email sent via Gmail port ${port} to: ${mailOptions.to}`);
       return true;
     } catch (err) {
-      console.log(`[WARNING] Gmail port ${port} failed: ${err.message}`);
+      console.log(`[WARNING] Gmail port ${port} failed (${err.code || err.message})`);
     }
   }
   return false;

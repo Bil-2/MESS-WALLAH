@@ -129,7 +129,7 @@ app.use(securityAuditLog);
 app.use(sessionSecurity);
 
 // Production-ready middleware
-app.use(requestTimeout(30000)); // 30 second timeout
+app.use(requestTimeout(90000)); // 90 second timeout — email sends (SMTP) can take 25s on Render
 app.use(memoryMonitor);
 app.use(databaseHealthCheck);
 
